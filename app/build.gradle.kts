@@ -1,6 +1,10 @@
+import org.gradle.testing.jacoco.tasks.JacocoReport
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("jacoco")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 android {
@@ -29,6 +33,9 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug{
+            enableUnitTestCoverage=true
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -55,4 +62,28 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+//Config per jacoco task
+tasks.register<JacocoReport>("jacocoTestReport"){
+    dependsOn("testDebugUnitTest") // prima gli test poi coverage
+    reports{
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    //filtro gli file autogen di android e compose
+    val fileFilter = listOf(
+        "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*",
+        "**/*Test*.*", "android/**/*.*", "**/*Compose*.*", "**/*_Provide*.*"
+    )
+    val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+        exclude(fileFilter)
+    }
+
+    val mainSrc = "$projectDir/src/main/java"
+
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(fileTree(layout.buildDirectory.get()) {
+        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    })
 }

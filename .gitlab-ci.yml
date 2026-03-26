@@ -1,14 +1,20 @@
 #docker img con config per android sdk e java
 image: mingc/android-build-box:latest
+
+default:
+  tags:
+    - linux-ben
+
 #var disabilita daemon
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  KOTLIN_INCREMENTAL: "false"
 #caching opts
 cache:
-  key: ${}
+  key: ${CI_COMMIT_REF_SLUG}
   paths:
     - .gradle/caches/
-    - .greadle/wrapper/
+    - .gradle/wrapper/
 
 #per ora ho definito 4 fasi (non penso che dovremmo definirne altre) della pipeline
 stages:

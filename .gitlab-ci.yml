@@ -3,8 +3,6 @@ image: mingc/android-build-box:latest
 
 default:
   tags:
-    - linux-ben
-
 #var disabilita daemon
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"

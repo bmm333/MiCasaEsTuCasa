@@ -1,8 +1,7 @@
 #docker img con config per android sdk e java
 image: mingc/android-build-box:latest
 
-default:
-  tags:
+
 #var disabilita daemon
 variables:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"

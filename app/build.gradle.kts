@@ -2,18 +2,18 @@ import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
     id("jacoco")
     id("org.jlleitschuh.gradle.ktlint")
 }
 
 android {
     namespace = "com.mobile.micasaestucasa"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.mobile.micasaestucasa"
@@ -38,8 +38,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -64,6 +67,14 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
+    
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
 }
 //Config per jacoco task
 tasks.register<JacocoReport>("jacocoTestReport"){

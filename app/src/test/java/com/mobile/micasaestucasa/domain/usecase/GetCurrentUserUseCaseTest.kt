@@ -1,6 +1,7 @@
 package com.mobile.micasaestucasa.domain.usecase
 
 import com.mobile.micasaestucasa.domain.model.User
+import com.mobile.micasaestucasa.domain.model.UserRole
 import com.mobile.micasaestucasa.domain.repository.UserRepository
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -22,7 +23,7 @@ class GetCurrentUserUseCaseTest {
             id = "1",
             name = "John Doe",
             email = "john@example.com",
-            roles = listOf("ADMIN")
+            roles = listOf(UserRole.ADMIN)
         )
         coEvery { userRepository.getCurrentUser() } returns expectedUser
         val result = useCase()

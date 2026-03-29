@@ -1,30 +1,58 @@
+#docker img con config per android sdk e java
 image: mingc/android-build-box:latest
 
-variables:
-  GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
-  KOTLIN_INCREMENTAL: "true"
 
+#var disabilita daemon
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  KOTLIN_INCREMENTAL: "false"
+#caching opts
 cache:
-  key: gradle-cache
+  key: ${CI_COMMIT_REF_SLUG}
   paths:
     - .gradle/caches/
     - .gradle/wrapper/
-    - app/build/
-  policy: pull-push
 
+#per ora ho definito 4 fasi (non penso che dovremmo definirne altre) della pipeline
 stages:
+  - code_quality
+  - test
   - build
 
-build_all:
-  stage: build
+#Primo analisi statica del code usiamo android lint
+linting:
+  stage: code_quality
   script:
     - chmod +x ./gradlew
-    - ./gradlew lintDebug testDebugUnitTest jacocoTestReport assembleDebug
+    - ./gradlew lintDebug
   artifacts:
-    name: "build-outputs"
+    name: "lint-reports"
+    paths:
+      - app/build/reports/lint-results-debug.html
+    expire_in: 1 week
+
+# Test e code coverage jacoco
+unit_test_and_coverage:
+  stage: test
+  script:
+    - chmod +x ./gradlew
+    - ./gradlew testDebugUnitTest
+    - ./gradlew jacocoTestReport
+  artifacts:
+    name: "test-and-coverage-reports"
     reports:
       junit: app/build/test-results/**/*.xml
     paths:
       - app/build/reports/
-      - app/build/outputs/apk/debug/app-debug.apk
     expire_in: 1 week
+#apk
+build_debug_apk:
+  stage: build
+  script:
+    - chmod +x ./gradlew
+    - ./gradlew assembleDebug
+  artifacts:
+    name: "app-debug-apk"
+    paths:
+      - app/build/outputs/apk/debug/app-debug.apk
+    expire_in: 30 days #apk disp per 1 mese

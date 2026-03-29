@@ -1,8 +1,10 @@
 package com.mobile.micasaestucasa.di
 
 import com.google.firebase.auth.FirebaseAuth
-import com.mobile.micasaestucasa.data.repository.FirebaseUserRepo
-import com.mobile.micasaestucasa.domain.repository.UserRepository
+import com.mobile.micasaestucasa.data.repository.auth.FirebaseAuthRepo
+import com.mobile.micasaestucasa.data.repository.user.FirebaseUserRepo
+import com.mobile.micasaestucasa.domain.repository.auth.AuthRepo
+import com.mobile.micasaestucasa.domain.repository.user.UserRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,4 +22,12 @@ object RepositoryModule {
     fun provideUserRepository(
         firebaseAuth: FirebaseAuth
     ): UserRepository= FirebaseUserRepo(firebaseAuth)
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(
+        firebaseAuth: FirebaseAuth
+    ): AuthRepo{
+        return FirebaseAuthRepo(firebaseAuth)
+    }
 }

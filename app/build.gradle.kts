@@ -71,10 +71,18 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+
+    // Resolve conflict for androidx.concurrent:concurrent-futures
+    configurations.all {
+        resolutionStrategy {
+            force(libs.androidx.concurrent.futures)
+        }
+    }
 }
 //Config per jacoco task
 tasks.register<JacocoReport>("jacocoTestReport"){

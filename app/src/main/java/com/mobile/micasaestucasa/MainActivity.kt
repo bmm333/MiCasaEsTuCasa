@@ -6,13 +6,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
+import com.mobile.micasaestucasa.ui.screens.auth.LoginScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -22,8 +23,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MiCasaEsTuCasaTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) {
-                    Text("Architecture OK", modifier = Modifier.padding(it))
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ){
+                    LoginScreen(
+                        onNavigateToHome = {Log.d("Navigation","Navigazione verso la home!!!!")},
+                        onNavigateToRegister = {Log.d("Navigation","Navigazione verso la registrazione!!!!")}
+                    )
                 }
             }
         }

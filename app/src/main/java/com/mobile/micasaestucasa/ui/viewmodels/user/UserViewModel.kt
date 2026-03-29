@@ -1,14 +1,14 @@
-package com.mobile.micasaestucasa.ui.viewmodels
+package com.mobile.micasaestucasa.ui.viewmodels.user
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobile.micasaestucasa.domain.model.User
-import com.mobile.micasaestucasa.domain.usecase.GetCurrentUserUseCase
+import com.mobile.micasaestucasa.domain.model.user.User
+import com.mobile.micasaestucasa.domain.usecase.user.GetCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class UserViewModel @Inject constructor(private val getCurrentUser: GetCurrentUserUseCase) : ViewModel(){
@@ -16,7 +16,7 @@ class UserViewModel @Inject constructor(private val getCurrentUser: GetCurrentUs
     val user: StateFlow<User?> = _user
     fun loadUser()
     {
-        viewModelScope.launch{
+        viewModelScope.launch {
             _user.value = getCurrentUser()
         }
     }

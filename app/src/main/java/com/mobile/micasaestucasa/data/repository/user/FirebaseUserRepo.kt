@@ -1,10 +1,10 @@
-package com.mobile.micasaestucasa.data.repository
+package com.mobile.micasaestucasa.data.repository.user
 
 import com.google.firebase.auth.FirebaseAuth
 import com.mobile.micasaestucasa.data.dto.UserDTO
 import com.mobile.micasaestucasa.data.mapper.toDomain
-import com.mobile.micasaestucasa.domain.model.User
-import com.mobile.micasaestucasa.domain.repository.UserRepository
+import com.mobile.micasaestucasa.domain.model.user.User
+import com.mobile.micasaestucasa.domain.repository.user.UserRepository
 
 class FirebaseUserRepo(private val firebaseAuth: FirebaseAuth) : UserRepository {
     override suspend fun getCurrentUser(): User? {

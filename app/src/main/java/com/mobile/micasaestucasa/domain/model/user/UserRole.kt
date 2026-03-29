@@ -1,4 +1,4 @@
-package com.mobile.micasaestucasa.domain.model
+package com.mobile.micasaestucasa.domain.model.user
 
 enum class UserRole{
     GUEST,OWNER,ADMIN;

@@ -1,8 +1,8 @@
 package com.mobile.micasaestucasa.data.mapper
 
 import com.mobile.micasaestucasa.data.dto.UserDTO
-import com.mobile.micasaestucasa.domain.model.User
-import com.mobile.micasaestucasa.domain.model.UserRole
+import com.mobile.micasaestucasa.domain.model.user.User
+import com.mobile.micasaestucasa.domain.model.user.UserRole
 
 fun  UserDTO.toDomain(): User{
     return User(

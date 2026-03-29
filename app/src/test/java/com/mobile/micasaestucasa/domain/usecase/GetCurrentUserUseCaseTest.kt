@@ -1,8 +1,9 @@
 package com.mobile.micasaestucasa.domain.usecase
 
-import com.mobile.micasaestucasa.domain.model.User
-import com.mobile.micasaestucasa.domain.model.UserRole
-import com.mobile.micasaestucasa.domain.repository.UserRepository
+import com.mobile.micasaestucasa.domain.model.user.User
+import com.mobile.micasaestucasa.domain.model.user.UserRole
+import com.mobile.micasaestucasa.domain.repository.user.UserRepository
+import com.mobile.micasaestucasa.domain.usecase.user.GetCurrentUserUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest

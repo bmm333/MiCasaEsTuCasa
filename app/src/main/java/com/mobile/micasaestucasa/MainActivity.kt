@@ -12,8 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.mobile.micasaestucasa.ui.navigation.AppNavigation
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import com.mobile.micasaestucasa.ui.screens.auth.LoginScreen
+import com.mobile.micasaestucasa.ui.screens.home.HomeScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -27,10 +29,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ){
-                    LoginScreen(
-                        onNavigateToHome = {Log.d("Navigation","Navigazione verso la home!!!!")},
-                        onNavigateToRegister = {Log.d("Navigation","Navigazione verso la registrazione!!!!")}
-                    )
+                    AppNavigation()
                 }
             }
         }

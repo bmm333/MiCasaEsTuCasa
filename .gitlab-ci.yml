@@ -19,11 +19,14 @@ stages:
   - test
   - build
 
+before_script:
+  - echo $GOOGLE_SERVICES_JSON | base64 -d > app/google-services.json
+  - chmod +x ./gradlew
+
 #Primo analisi statica del code usiamo android lint
 linting:
   stage: code_quality
   script:
-    - chmod +x ./gradlew
     - ./gradlew lintDebug
   artifacts:
     name: "lint-reports"
@@ -35,7 +38,6 @@ linting:
 unit_test_and_coverage:
   stage: test
   script:
-    - chmod +x ./gradlew
     - ./gradlew testDebugUnitTest
     - ./gradlew jacocoTestReport
   artifacts:
@@ -49,7 +51,6 @@ unit_test_and_coverage:
 build_debug_apk:
   stage: build
   script:
-    - chmod +x ./gradlew
     - ./gradlew assembleDebug
   artifacts:
     name: "app-debug-apk"

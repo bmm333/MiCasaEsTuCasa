@@ -1,5 +1,6 @@
 package com.mobile.micasaestucasa.ui.viewmodels.auth
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.usecase.auth.LoginUseCase
@@ -23,21 +24,24 @@ class AuthViewModel @Inject constructor(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
-    
+
     private val _isAuthSuccessful = MutableStateFlow(false)
     val isAuthSuccessful: StateFlow<Boolean> = _isAuthSuccessful.asStateFlow()
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
+            Log.d("AuthViewModel", "Login attempt for email: $email")
             _isLoading.value = true
             _errorMessage.value = null
             val result = loginUseCase(email, password)
             result.fold(
                 onSuccess = {
+                    Log.i("AuthViewModel", "Login successful for email: $email")
                     _isAuthSuccessful.value = true
                     _isLoading.value = false
                 },
                 onFailure = { exception ->
+                    Log.e("AuthViewModel", "Login failed for email: $email", exception)
                     _errorMessage.value = exception.message ?: "Errore di login sconosciuto"
                     _isLoading.value = false
                 }
@@ -47,16 +51,19 @@ class AuthViewModel @Inject constructor(
 
     fun register(email: String, password: String) {
         viewModelScope.launch {
+            Log.d("AuthViewModel", "Registration attempt for email: $email")
             _isLoading.value = true
             _errorMessage.value = null
 
             val result = registerUseCase(email, password)
             result.fold(
                 onSuccess = {
+                    Log.i("AuthViewModel", "Registration successful for email: $email")
                     _isAuthSuccessful.value = true
                     _isLoading.value = false
                 },
                 onFailure = { exception ->
+                    Log.e("AuthViewModel", "Registration failed for email: $email", exception)
                     _errorMessage.value = exception.message ?: "Errore di registrazione sconosciuto"
                     _isLoading.value = false
                 }
@@ -66,8 +73,10 @@ class AuthViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
+            Log.d("AuthViewModel", "Logout initiated")
             logoutUseCase()
             _isAuthSuccessful.value = false
+            Log.i("AuthViewModel", "Logout successful")
         }
     }
 

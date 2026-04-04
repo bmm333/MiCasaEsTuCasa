@@ -1,6 +1,6 @@
-package com.mobile.micasaestucasa.data.mapper
+package com.mobile.micasaestucasa.data.mapper.user
 
-import com.mobile.micasaestucasa.data.dto.UserDTO
+import com.mobile.micasaestucasa.data.dto.user.UserDTO
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserRole
 

@@ -1,19 +1,17 @@
-package com.mobile.micasaestucasa.domain.usecase
+package com.mobile.micasaestucasa.domain.usecase.user
 
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserRole
-import com.mobile.micasaestucasa.domain.repository.user.UserRepository
-import com.mobile.micasaestucasa.domain.usecase.user.GetCurrentUserUseCase
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
-import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class GetCurrentUserUseCaseTest {
     //mock l'interfaccia DIP
-    private val userRepository = mockk<UserRepository>()
+    private val userRepository = mockk<UserRepo>()
     private val useCase = GetCurrentUserUseCase(userRepository)
 
 
@@ -31,10 +29,10 @@ class GetCurrentUserUseCaseTest {
         Assert.assertEquals(expectedUser, result)
     }
     @Test
-    fun `when repo returns null, usecase should return null`() = runTest{
-        coEvery{userRepository.getCurrentUser()} returns null
-        val result= useCase()
+    fun `when repo returns null, usecase should return null`() = runTest {
+        coEvery { userRepository.getCurrentUser() } returns null
+        val result = useCase()
 
-        assertEquals(null,result)
+        Assert.assertEquals(null, result)
     }
 }

@@ -1,4 +1,5 @@
 import org.gradle.testing.jacoco.tasks.JacocoReport
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 
 plugins {
     alias(libs.plugins.android.application)
@@ -34,8 +35,8 @@ android {
                 "proguard-rules.pro"
             )
         }
-        debug{
-            enableUnitTestCoverage=true
+        debug {
+            enableUnitTestCoverage = true
         }
     }
     compileOptions {
@@ -85,6 +86,8 @@ dependencies {
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore.ktx)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     // Resolve conflict for androidx.concurrent:concurrent-futures
     configurations.all {
@@ -93,27 +96,48 @@ dependencies {
         }
     }
 }
-//Config per jacoco task
-tasks.register<JacocoReport>("jacocoTestReport"){
-    dependsOn("testDebugUnitTest") // prima gli test poi coverage
-    reports{
+
+val fileFilter = listOf(
+    "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*",
+    "**/*Test*.*", "android/**/*.*", "**/*Compose*.*", "**/*_Provide*.*",
+    "**/*_Factory*.*", "**/*_HiltModules*.*", "**/*Hilt*.*", "**/dagger/hilt/**/*.*",
+    "**/ui/screens/**/*.*", "**/ui/theme/**/*.*", "**/ui/navigation/**/*.*",
+    "**/*Screen*.*", "**/*Activity*.*"
+)
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+    reports {
         xml.required.set(true)
         html.required.set(true)
     }
-    //filtro gli file autogen di android e compose
-    val fileFilter = listOf(
-        "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*",
-        "**/*Test*.*", "android/**/*.*", "**/*Compose*.*", "**/*_Provide*.*"
-    )
-    val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
-        exclude(fileFilter)
-    }
 
-    val mainSrc = "$projectDir/src/main/java"
+    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") { exclude(fileFilter) }
+    val javaClasses = fileTree("${layout.buildDirectory.get()}/intermediates/javac/debug/classes") { exclude(fileFilter) }
 
-    sourceDirectories.setFrom(files(mainSrc))
-    classDirectories.setFrom(files(debugTree))
+    sourceDirectories.setFrom(files("$projectDir/src/main/java"))
+    classDirectories.setFrom(files(kotlinClasses, javaClasses))
     executionData.setFrom(fileTree(layout.buildDirectory.get()) {
-        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.exec")
     })
+}
+
+tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+    dependsOn("jacocoTestReport")
+    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") { exclude(fileFilter) }
+    val javaClasses = fileTree("${layout.buildDirectory.get()}/intermediates/javac/debug/classes") { exclude(fileFilter) }
+
+    sourceDirectories.setFrom(files("$projectDir/src/main/java"))
+    classDirectories.setFrom(files(kotlinClasses, javaClasses))
+    executionData.setFrom(fileTree(layout.buildDirectory.get()) {
+        include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.exec")
+    })
+
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.80.toBigDecimal()
+            }
+        }
+    }
 }

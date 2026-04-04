@@ -34,12 +34,13 @@ linting:
       - app/build/reports/lint-results-debug.html
     expire_in: 1 week
 
-# Test e code coverage jacoco
+# Test e code coverage jacoco con verifica soglia 80%
 unit_test_and_coverage:
   stage: test
   script:
     - ./gradlew testDebugUnitTest
     - ./gradlew jacocoTestReport
+    - ./gradlew jacocoTestCoverageVerification
   artifacts:
     name: "test-and-coverage-reports"
     reports:

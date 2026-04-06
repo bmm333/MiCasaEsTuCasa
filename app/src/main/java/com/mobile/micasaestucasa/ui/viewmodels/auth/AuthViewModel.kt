@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.usecase.auth.LoginUseCase
-import com.mobile.micasaestucasa.domain.usecase.auth.RegisterUseCase
 import com.mobile.micasaestucasa.domain.usecase.auth.LogoutUseCase
+import com.mobile.micasaestucasa.domain.usecase.auth.RegisterUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -15,36 +15,36 @@ class RegisterUseCaseTest {
     private lateinit var registerUseCase: RegisterUseCase
 
     @Before
-    fun setUp(){
-        authRepo= mockk()
-        registerUseCase= RegisterUseCase(authRepo)
+    fun setUp() {
+        authRepo = mockk()
+        registerUseCase = RegisterUseCase(authRepo)
     }
 
     @Test
-    fun `regiseter con dati validi ritorna success`()= runTest {
-        coEvery { authRepo.register(any(),any()) } returns Result.success(Unit)
-        val result=registerUseCase("test@email.com","Password123!")
+    fun `regiseter con dati validi ritorna success`() = runTest {
+        coEvery { authRepo.register(any(), any()) } returns Result.success(Unit)
+        val result = registerUseCase("test@email.com", "Password123!")
         assertTrue(result.isSuccess)
-        coVerify(exactly=1){authRepo.register("test@email.com","Password123!")}
+        coVerify(exactly = 1) { authRepo.register("test@email.com", "Password123!") }
     }
 
     @Test
-    fun `register con email non valida ritonra failure`()=runTest {
-        val result=registerUseCase("test","Password123!")
+    fun `register con email non valida ritonra failure`() = runTest {
+        val result = registerUseCase("test", "Password123!")
         assertTrue(result.isFailure)
-        coVerify(exactly=0){authRepo.register(any(),any())}
+        coVerify(exactly = 0) { authRepo.register(any(), any()) }
     }
 
     @Test
-    fun `register con pw non valida ritorna failure`()=runTest {
-        val result=registerUseCase("test@email.com","Pasd")
+    fun `register con pw non valida ritorna failure`() = runTest {
+        val result = registerUseCase("test@email.com", "Pasd")
         assertTrue(result.isFailure)
-        coVerify(exactly=0){authRepo.register(any(),any())}
+        coVerify(exactly = 0) { authRepo.register(any(), any()) }
     }
 
     @Test
-    fun `register con campi vuoti ritorna failure`()= runTest {
-        val result=registerUseCase("","")
+    fun `register con campi vuoti ritorna failure`() = runTest {
+        val result = registerUseCase("", "")
         assertTrue(result.isFailure)
         coVerify(exactly = 0) { authRepo.register(any(), any()) }
     }

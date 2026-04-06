@@ -55,5 +55,4 @@ object RepositoryModule {
     fun provideBookingRepository(
         firestore: FirebaseFirestore
     ): BookingRepo = FirebaseBookingRepo(firestore)
-
 }

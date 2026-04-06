@@ -5,12 +5,12 @@ data class Booking(
     val propertyId: String,
     val renterId: String,
     val hostId: String,
-    val startDate: String,  //in formato ISO : yyyy-mm-dd
-    val endDate: String,    // "                         "
+    val startDate: String, // in formato ISO : yyyy-mm-dd
+    val endDate: String, // "                         "
     val guestsCount: Int,
     val pricePerDay: Double,
     val status: BookingStatus,
-    val idempotencyKey: String, //uuid dal req del client , come layer di protezione dai retry
+    val totalPrice: Double,
+    val idempotencyKey: String, // uuid dal req del client , come layer di protezione dai retry
     val createdAt: Long = System.currentTimeMillis()
 )
-

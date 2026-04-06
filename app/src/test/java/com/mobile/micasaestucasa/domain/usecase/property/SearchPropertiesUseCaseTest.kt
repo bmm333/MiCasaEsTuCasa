@@ -7,7 +7,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -104,7 +105,10 @@ class SearchPropertiesUseCaseTest {
         } returns Result.success(listOf(mockProperty))
 
         val result = searchPropertiesUseCase(
-            "Torino", "2026-07-01", "2026-07-10", 2,
+            "Torino",
+            "2026-07-01",
+            "2026-07-10",
+            2,
             keywords = listOf("wifi")
         )
 

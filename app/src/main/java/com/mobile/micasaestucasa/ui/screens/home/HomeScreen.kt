@@ -17,7 +17,7 @@ import com.mobile.micasaestucasa.ui.viewmodels.auth.AuthViewModel
 @Composable
 fun HomeScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onNavigateToLogin: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),

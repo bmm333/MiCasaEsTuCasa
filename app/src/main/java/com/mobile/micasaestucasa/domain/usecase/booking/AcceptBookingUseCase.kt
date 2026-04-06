@@ -9,12 +9,13 @@ class AcceptBookingUseCase @Inject constructor(
     suspend operator fun invoke(
         bookingId: String,
         hostId: String
-    ): Result<Unit>
-    {
-        if(bookingId.isBlank())
+    ): Result<Unit> {
+        if (bookingId.isBlank()) {
             return Result.failure(IllegalArgumentException("bookingId obbligatorio"))
-        if(hostId.isBlank())
+        }
+        if (hostId.isBlank()) {
             return Result.failure(IllegalArgumentException("hostId obbligatorio"))
-        return bookingRepo.acceptBooking(bookingId,hostId)
+        }
+        return bookingRepo.acceptBooking(bookingId, hostId)
     }
 }

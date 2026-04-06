@@ -35,45 +35,42 @@ import javax.inject.Inject
  * */
 class FirebaseBookingRepo @Inject constructor(
     private val firestore: FirebaseFirestore
-): BookingRepo {
+) : BookingRepo {
     private val bookingsCollection = firestore.collection("bookings")
 
     override suspend fun createBooking(
         booking: Booking,
         idempotencyKey: String
-    ): Result<String>
-    {
-        return try{
-            //primo controllo e quello del idempotency, cioe
-            //se il key esiste gia ==> e un retry di una req gia processata
-            val existing=bookingsCollection
-                .whereEqualTo("idempotencyKey",idempotencyKey)
+    ): Result<String> {
+        return try {
+            // primo controllo e quello del idempotency, cioe
+            // se il key esiste gia ==> e un retry di una req gia processata
+            val existing = bookingsCollection
+                .whereEqualTo("idempotencyKey", idempotencyKey)
                 .get().await()
-            if (!existing.isEmpty)
-            {
-                //ritorna id del booking gia creato (safe retry)
+            if (!existing.isEmpty) {
+                // ritorna id del booking gia creato (safe retry)
                 return Result.success(existing.documents.first().id)
             }
-            //Usando Firestore Transaction (usa atomic rd + wr)
-            //risolviamo il race condition senza lock
-            var newBookingId=""
+            // Usando Firestore Transaction (usa atomic rd + wr)
+            // risolviamo il race condition senza lock
+            var newBookingId = ""
             firestore.runTransaction { transaction ->
-                //dentro la transazione leggo i overlapping
-                val lockRef=firestore
+                // dentro la transazione leggo i overlapping
+                val lockRef = firestore
                     .collection("property_locks")
                     .document(booking.propertyId)
-                val lockDoc=transaction.get(lockRef)
-                val lockedUntill=lockDoc.getLong("lockedUntill")?:0L
-                if(lockedUntill> System.currentTimeMillis())
-                {
+                val lockDoc = transaction.get(lockRef)
+                val lockedUntill = lockDoc.getLong("lockedUntill") ?: 0L
+                if (lockedUntill > System.currentTimeMillis()) {
                     throw FirebaseFirestoreException(
                         "property locked",
                         FirebaseFirestoreException.Code.ABORTED
                     )
                 }
-                val docRef=bookingsCollection.document()
-                newBookingId=docRef.id
-                val dto= BookingDto(
+                val docRef = bookingsCollection.document()
+                newBookingId = docRef.id
+                val dto = BookingDto(
                     id = newBookingId,
                     propertyId = booking.propertyId,
                     renterId = booking.renterId,
@@ -87,28 +84,25 @@ class FirebaseBookingRepo @Inject constructor(
                     idempotencyKey = idempotencyKey,
                     createdAt = System.currentTimeMillis()
                 )
-                transaction.set(docRef,dto)
+                transaction.set(docRef, dto)
                 transaction.set(
                     lockRef,
                     mapOf(
-                        "lockedUntill" to System.currentTimeMillis()+30_000L,
+                        "lockedUntill" to System.currentTimeMillis() + 30_000L,
                         "bookingId" to newBookingId
                     )
                 )
             }.await()
             Result.success(newBookingId)
-        }catch (e: FirebaseFirestoreException)
-        {
-            when(e.code)
-            {
-                //aborted = trabsactuib conflict, il caller puo fare retryF
+        } catch (e: FirebaseFirestoreException) {
+            when (e.code) {
+                // aborted = trabsactuib conflict, il caller puo fare retryF
                 FirebaseFirestoreException.Code.ABORTED -> Result.failure(e)
-                //UNAVALIBLE: Firestore dwn/latency spikes
+                // UNAVALIBLE: Firestore dwn/latency spikes
                 FirebaseFirestoreException.Code.UNAVAILABLE -> Result.failure(e)
                 else -> Result.failure(e)
             }
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
@@ -116,135 +110,127 @@ class FirebaseBookingRepo @Inject constructor(
         propertyId: String,
         startDate: String,
         endDate: String
-    ): Result<Boolean>
-    {
-        return try{
-            //q Firestore per booking attivi nella stessa prop.
-            //FS no range overlap nativo su due campi
-            //quindi filtriamo startDate<endDate richiesto
-            //e endDate> startDate req
-            val snapshot=bookingsCollection
-                .whereEqualTo("propertyId",propertyId)
-                .whereIn("status",listOf(
-                    BookingStatus.REQUESTED.name,
-                    BookingStatus.ACCEPTED.name
-                ))
+    ): Result<Boolean> {
+        return try {
+            // q Firestore per booking attivi nella stessa prop.
+            // FS no range overlap nativo su due campi
+            // quindi filtriamo startDate<endDate richiesto
+            // e endDate> startDate req
+            val snapshot = bookingsCollection
+                .whereEqualTo("propertyId", propertyId)
+                .whereIn(
+                    "status",
+                    listOf(
+                        BookingStatus.REQUESTED.name,
+                        BookingStatus.ACCEPTED.name
+                    )
+                )
                 .get().await()
-            val hasOverlap=snapshot.documents.any{
-                doc-> val existingStart=doc.getString("startDate")?: return@any false
-                val existingEnd=doc.getString("endDate")?: return@any false
-                //overlap
+            val hasOverlap = snapshot.documents.any {
+                    doc ->
+                val existingStart = doc.getString("startDate") ?: return@any false
+                val existingEnd = doc.getString("endDate") ?: return@any false
+                // overlap
                 !(endDate<=existingStart||startDate>=existingEnd)
             }
             Result.success(hasOverlap)
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
     override suspend fun acceptBooking(
         bookingId: String,
         hostId: String
-    ): Result<Unit>
-    {
-        return try{
-            //tsx per garantie che solo host corretto posso accettare e che il booking sia ancora in REQ
+    ): Result<Unit> {
+        return try {
+            // tsx per garantie che solo host corretto posso accettare e che il booking sia ancora in REQ
             firestore.runTransaction {
-                transaction->
-                val docRef=bookingsCollection.document(bookingId)
-                val doc=transaction.get(docRef)
-                val currentHostId=doc.getString("hostId")
-                val currentStatus=doc.getString("status")
-                if(currentHostId!=hostId)
-                {
+                    transaction ->
+                val docRef = bookingsCollection.document(bookingId)
+                val doc = transaction.get(docRef)
+                val currentHostId = doc.getString("hostId")
+                val currentStatus = doc.getString("status")
+                if (currentHostId != hostId) {
                     throw FirebaseFirestoreException(
-                        "Non Autorizzato", FirebaseFirestoreException.Code.PERMISSION_DENIED
+                        "Non Autorizzato",
+                        FirebaseFirestoreException.Code.PERMISSION_DENIED
                     )
                 }
-                if(currentStatus!=BookingStatus.REQUESTED.name)
-                {
+                if (currentStatus != BookingStatus.REQUESTED.name) {
                     throw FirebaseFirestoreException(
-                        "Booking non in REQUESTED", FirebaseFirestoreException.Code.FAILED_PRECONDITION
+                        "Booking non in REQUESTED",
+                        FirebaseFirestoreException.Code.FAILED_PRECONDITION
                     )
                 }
-                transaction.update(docRef,"status", BookingStatus.ACCEPTED.name)
+                transaction.update(docRef, "status", BookingStatus.ACCEPTED.name)
             }.await()
             Result.success(Unit)
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
     override suspend fun rejectBooking(
-        bookingId:String,
-        hostId:String
-    ): Result<Unit>
-    {
-        return try{
+        bookingId: String,
+        hostId: String
+    ): Result<Unit> {
+        return try {
             firestore.runTransaction { transaction ->
-                val docRef=bookingsCollection.document(bookingId)
-                val doc=transaction.get(docRef)
-                if(doc.getString("hostId")!=hostId)
-                {
+                val docRef = bookingsCollection.document(bookingId)
+                val doc = transaction.get(docRef)
+                if (doc.getString("hostId") != hostId) {
                     throw FirebaseFirestoreException(
-                        "Non Autorizzato", FirebaseFirestoreException.Code.PERMISSION_DENIED
+                        "Non Autorizzato",
+                        FirebaseFirestoreException.Code.PERMISSION_DENIED
                     )
                 }
-                transaction.update(docRef,"status",BookingStatus.REJECTED.name)
+                transaction.update(docRef, "status", BookingStatus.REJECTED.name)
             }.await()
             Result.success(Unit)
-            }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
     override suspend fun cancelBooking(
-        bookingId:String,
-        userId:String
-    ): Result<Unit>
-    {
+        bookingId: String,
+        userId: String
+    ): Result<Unit> {
         return try {
-            firestore.runTransaction { transaction->
-                val docRef=bookingsCollection.document(bookingId)
-                val doc=transaction.get(docRef)
-                val renterId=doc.getString("renterId")
-                val hostId=doc.getString("hostId")
-                val status=doc.getString("status")
-                //solo renterid o hostid possono cancerlare
-                if(renterId!=userId&&hostId!=userId)
-                {
+            firestore.runTransaction { transaction ->
+                val docRef = bookingsCollection.document(bookingId)
+                val doc = transaction.get(docRef)
+                val renterId = doc.getString("renterId")
+                val hostId = doc.getString("hostId")
+                val status = doc.getString("status")
+                // solo renterid o hostid possono cancerlare
+                if (renterId != userId && hostId != userId) {
                     throw FirebaseFirestoreException(
                         "Non autorizzato",
                         FirebaseFirestoreException.Code.PERMISSION_DENIED
                     )
                 }
-                //non si puo cancellare un booking gia completto
-                if(status==BookingStatus.COMPLETED.name)
-                {
+                // non si puo cancellare un booking gia completto
+                if (status == BookingStatus.COMPLETED.name) {
                     throw FirebaseFirestoreException(
                         "Booking gia completato",
                         FirebaseFirestoreException.Code.FAILED_PRECONDITION
                     )
                 }
-                transaction.update(docRef,"status",BookingStatus.CANCELLED.name)
+                transaction.update(docRef, "status", BookingStatus.CANCELLED.name)
             }.await()
             Result.success(Unit)
-            }catch (e: Exception)
-        {
-                Result.failure(e)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
-    override suspend fun getBookingsForRenter(renterId:String): Result<List<Booking>>
-    {
-        return try{
-            val snapshot=bookingsCollection
-                .whereEqualTo("renterId",renterId)
+    override suspend fun getBookingsForRenter(renterId: String): Result<List<Booking>> {
+        return try {
+            val snapshot = bookingsCollection
+                .whereEqualTo("renterId", renterId)
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get().await()
             Result.success(snapshot.documents.mapNotNull { it.toObject(BookingDto::class.java)?.toDomain() })
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
@@ -254,9 +240,11 @@ class FirebaseBookingRepo @Inject constructor(
                 .whereEqualTo("hostId", hostId)
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get().await()
-            Result.success(snapshot.documents.mapNotNull {
-                it.toObject(BookingDto::class.java)?.toDomain()
-            })
+            Result.success(
+                snapshot.documents.mapNotNull {
+                    it.toObject(BookingDto::class.java)?.toDomain()
+                }
+            )
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -1,6 +1,5 @@
 package com.mobile.micasaestucasa.data.dto.property
 
-
 data class PropertyDto(
     val id: String? = null,
     val ownerId: String? = null,

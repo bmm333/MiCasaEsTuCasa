@@ -6,8 +6,7 @@ import javax.inject.Inject
 
 class GetOwnerPropertiesUseCase @Inject constructor(private val propertyRepo: PropertyRepo) {
     suspend operator fun invoke(ownerId: String): Result<List<Property>> {
-        if(ownerId.isBlank())
-        {
+        if (ownerId.isBlank()) {
             return Result.failure(IllegalArgumentException("Id Proprietario obbligatorio"))
         }
         return propertyRepo.getPropertiesByOwner(ownerId)

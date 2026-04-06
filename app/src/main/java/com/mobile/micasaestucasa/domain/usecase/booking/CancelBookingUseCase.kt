@@ -6,14 +6,15 @@ import javax.inject.Inject
 class CancelBookingUseCase @Inject constructor(private val bookingRepo: BookingRepo) {
 
     suspend operator fun invoke(
-        bookingId:String,
-        userId:String
-    ): Result<Unit>
-    {
-        if(bookingId.isBlank())
+        bookingId: String,
+        userId: String
+    ): Result<Unit> {
+        if (bookingId.isBlank()) {
             return Result.failure(IllegalArgumentException("bookingId obbligatorio"))
-        if(userId.isBlank())
+        }
+        if (userId.isBlank()) {
             return Result.failure(IllegalArgumentException("userId obbligatorio"))
-        return bookingRepo.cancelBooking(bookingId,userId)
+        }
+        return bookingRepo.cancelBooking(bookingId, userId)
     }
 }

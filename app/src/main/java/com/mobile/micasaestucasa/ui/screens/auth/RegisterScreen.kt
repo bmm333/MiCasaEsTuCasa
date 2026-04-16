@@ -18,30 +18,28 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.mobile.micasaestucasa.ui.viewmodels.auth.AuthViewModel
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.setValue
-
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.mobile.micasaestucasa.ui.viewmodels.auth.AuthViewModel
 
 @Composable
-fun RegisterScreen(viewModel: AuthViewModel= hiltViewModel(),
-                   onNavigateToLogin: () -> Unit,
-                   onNavigateToHome: () -> Unit)
-{
+fun RegisterScreen(
+    viewModel: AuthViewModel = hiltViewModel(),
+    onNavigateToLogin: () -> Unit,
+    onNavigateToHome: () -> Unit
+) {
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val isAuthSuccssful by viewModel.isAuthSuccessful.collectAsState()
 
-    var email by remember {mutableStateOf("")}
-    var password by remember {mutableStateOf("")}
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     LaunchedEffect(isAuthSuccssful) {
-
-        if(isAuthSuccssful)
-        {
+        if (isAuthSuccssful) {
             onNavigateToHome()
         }
     }
@@ -98,8 +96,4 @@ fun RegisterScreen(viewModel: AuthViewModel= hiltViewModel(),
             Text("Hai già un account? Accedi")
         }
     }
-
-
-
-
 }

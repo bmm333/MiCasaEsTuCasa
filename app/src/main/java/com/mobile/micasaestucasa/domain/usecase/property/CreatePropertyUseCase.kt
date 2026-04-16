@@ -17,8 +17,7 @@ class CreatePropertyUseCase @Inject constructor(
         if (property.capacity <= 0) {
             return Result.failure(IllegalArgumentException("Capacita deve essere maggiore di 0"))
         }
-        if (property.city.isBlank())
-        {
+        if (property.city.isBlank()) {
             return Result.failure(IllegalArgumentException("Citta obbligatoria"))
         }
         return propertyRepo.createProperty(property)

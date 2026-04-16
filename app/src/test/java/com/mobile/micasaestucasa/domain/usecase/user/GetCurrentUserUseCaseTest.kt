@@ -10,10 +10,9 @@ import org.junit.Assert
 import org.junit.Test
 
 class GetCurrentUserUseCaseTest {
-    //mock l'interfaccia DIP
+    // mock l'interfaccia DIP
     private val userRepository = mockk<UserRepo>()
     private val useCase = GetCurrentUserUseCase(userRepository)
-
 
     @Test
     fun `Repo returns user, usecase should return same user`() = runTest {
@@ -28,6 +27,7 @@ class GetCurrentUserUseCaseTest {
         val result = useCase()
         Assert.assertEquals(expectedUser, result)
     }
+
     @Test
     fun `when repo returns null, usecase should return null`() = runTest {
         coEvery { userRepository.getCurrentUser() } returns null

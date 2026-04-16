@@ -1,13 +1,25 @@
 package com.mobile.micasaestucasa.ui.screens.auth
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -18,22 +30,22 @@ import com.mobile.micasaestucasa.ui.viewmodels.auth.AuthViewModel
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    //funzione per nav
+    // funzione per nav
     onNavigateToHome: () -> Unit,
-    //verso reg
+    // verso reg
     onNavigateToRegister: () -> Unit
 ) {
-    //observe dei stati del viewmodel
-    //usiamo collectASState
+    // observe dei stati del viewmodel
+    // usiamo collectASState
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val isAuthSuccessful by viewModel.isAuthSuccessful.collectAsState()
 
-    //var di stato locali per i campi di testo
+    // var di stato locali per i campi di testo
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    //se login successo m navigiamo all home
+    // se login successo m navigiamo all home
     LaunchedEffect(isAuthSuccessful) {
         if (isAuthSuccessful) {
             onNavigateToHome()
@@ -49,7 +61,8 @@ fun LoginScreen(
         Text(text = "Benvenuto", style = MaterialTheme.typography.headlineLarge)
         Spacer(modifier = Modifier.height(32.dp))
         OutlinedTextField(
-            value = email, onValueChange = { email = it },
+            value = email,
+            onValueChange = { email = it },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -84,5 +97,4 @@ fun LoginScreen(
             Text("Non hai un account? Registrati")
         }
     }
-
 }

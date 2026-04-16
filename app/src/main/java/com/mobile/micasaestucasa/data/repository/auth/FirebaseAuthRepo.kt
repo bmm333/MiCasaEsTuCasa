@@ -5,24 +5,22 @@ import com.mobile.micasaestucasa.domain.repository.auth.AuthRepo
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class FirebaseAuthRepo @Inject constructor(private val firebaseAuth: FirebaseAuth): AuthRepo{
+class FirebaseAuthRepo @Inject constructor(private val firebaseAuth: FirebaseAuth) : AuthRepo {
     override suspend fun login(email: String, password: String): Result<Unit> {
-        return try{
-            //chiamo firebase
-            firebaseAuth.signInWithEmailAndPassword(email,password).await()
+        return try {
+            // chiamo firebase
+            firebaseAuth.signInWithEmailAndPassword(email, password).await()
             Result.success(Unit)
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     override suspend fun register(email: String, password: String): Result<Unit> {
-        return try{
-            firebaseAuth.createUserWithEmailAndPassword(email,password).await()
+        return try {
+            firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             Result.success(Unit)
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }

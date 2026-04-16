@@ -11,11 +11,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class UserViewModel @Inject constructor(private val getCurrentUser: GetCurrentUserUseCase) : ViewModel(){
+class UserViewModel @Inject constructor(private val getCurrentUser: GetCurrentUserUseCase) : ViewModel() {
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user
-    fun loadUser()
-    {
+    fun loadUser() {
         viewModelScope.launch {
             _user.value = getCurrentUser()
         }

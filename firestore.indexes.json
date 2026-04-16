@@ -1,0 +1,36 @@
+{
+    "indexes":[
+        {
+            "collectionGroup":"bookings",
+            "queryScope":"COLLECTION",
+            "fields":[
+                {"fieldPath":"propertyId","order":"ASCENDING"},
+                {"fieldPath":"status","order":"ASCENDING"}
+            ]
+        },
+        {
+            "collectionGroup":"bookings",
+            "queryScope":"COLLECTION",
+            "fields":[
+                {"fieldPath":"renterId","order":"ASCENDING"},
+                {"fieldPath":"createdAt","order":"DESCENDING"}
+            ]
+        },
+        {
+            "collectionGroup": "bookings",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "hostId", "order": "ASCENDING" },
+                { "fieldPath": "createdAt", "order": "DESCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "properties",
+            "queryScope": "COLLECTION",
+            "fields": [
+                { "fieldPath": "city", "order": "ASCENDING" },
+                { "fieldPath": "capacity", "order": "ASCENDING" }
+            ]
+        }
+    ]
+}

@@ -1,12 +1,12 @@
 package com.mobile.micasaestucasa.domain.usecase.property
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
-import com.mobile.micasaestucasa.domain.usecase.property.CreatePropertyUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -29,12 +29,13 @@ class CreatePropertyUseCaseTest {
         availableFrom = "2026-06-01",
         availableTo = "2026-08-31"
     )
+
     @Before
-    fun setUp()
-    {
+    fun setUp() {
         propertyRepository = mockk()
-        createPropertyUseCase= CreatePropertyUseCase(propertyRepository)
+        createPropertyUseCase = CreatePropertyUseCase(propertyRepository)
     }
+
     @Test
     fun `crea property con dati validi ritorna id`() = runTest {
         coEvery { propertyRepository.createProperty(any()) } returns Result.success("newId123")
@@ -44,6 +45,7 @@ class CreatePropertyUseCaseTest {
         assertTrue(result.isSuccess)
         assertEquals("newId123", result.getOrNull())
     }
+
     @Test
     fun `crea property con titolo vuoto ritorna failure`() = runTest {
         val property = validProperty.copy(title = "")
@@ -100,7 +102,7 @@ class CreatePropertyUseCaseTest {
     @Test
     fun `crea property propaga errore Firestore`() = runTest {
         coEvery { propertyRepository.createProperty(any()) } returns
-                Result.failure(Exception("Firestore error"))
+            Result.failure(Exception("Firestore error"))
 
         val result = createPropertyUseCase(validProperty)
 

@@ -4,7 +4,7 @@ import com.mobile.micasaestucasa.data.dto.user.UserDTO
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserRole
 
-fun  UserDTO.toDomain(): User{
+fun UserDTO.toDomain(): User {
     return User(
         id = id ?: "",
         name = name ?: "",

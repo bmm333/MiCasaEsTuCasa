@@ -46,9 +46,11 @@ class FirebasePropertyRepoTest {
         assertTrue(result.isSuccess)
         assertEquals("new-id", result.getOrNull())
         verify(exactly = 1) {
-            document.set(match<PropertyDto> { dto ->
-                dto.id == "new-id" && dto.title == property.title && dto.ownerId == property.ownerId
-            })
+            document.set(
+                match<PropertyDto> { dto ->
+                    dto.id == "new-id" && dto.title == property.title && dto.ownerId == property.ownerId
+                }
+            )
         }
     }
 

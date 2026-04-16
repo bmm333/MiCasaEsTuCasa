@@ -34,4 +34,6 @@ interface ChatRepo {
      * Returns all the conversations of an unser ordered by last message timestamp
      * */
     suspend fun getConversationsForUser(userId:String):Result<List<Conversation>>
+
+
 }

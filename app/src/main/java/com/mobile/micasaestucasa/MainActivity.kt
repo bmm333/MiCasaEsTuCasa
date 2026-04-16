@@ -14,8 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.mobile.micasaestucasa.ui.navigation.AppNavigation
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
-import com.mobile.micasaestucasa.ui.screens.auth.LoginScreen
-import com.mobile.micasaestucasa.ui.screens.home.HomeScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -28,7 +26,7 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
-                ){
+                ) {
                     AppNavigation()
                 }
             }

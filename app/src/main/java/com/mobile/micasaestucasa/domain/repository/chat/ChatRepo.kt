@@ -20,7 +20,7 @@ interface ChatRepo {
                             text:String,
                             imageUrl:String?=null): Result<Message>
 
-    suspend fun getOrCreateConversation(hostId:String, renterId:String, propertyId:String): Result<String>
+    suspend fun getOrCreateConversation(hostId:String, renterId:String, propertyId:String): Result<Conversation>
 
     /**
      * this function marks all not read messages as read for the current user
@@ -34,6 +34,7 @@ interface ChatRepo {
      * Returns all the conversations of an unser ordered by last message timestamp
      * */
     suspend fun getConversationsForUser(userId:String):Result<List<Conversation>>
+
 
 
 

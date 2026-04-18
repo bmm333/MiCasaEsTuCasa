@@ -22,6 +22,7 @@ interface ChatRepo {
 
     suspend fun getOrCreateConversation(hostId:String, renterId:String, propertyId:String): Result<Conversation>
 
+    //suspend fun  observeMessages(conversationId: String)
     /**
      * this function marks all not read messages as read for the current user
      *

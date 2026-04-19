@@ -1,6 +1,39 @@
 {
     "indexes":[
         {
+            "collectionGroup":"conversations",
+            "queryScope":"COLLECTION",
+            "fields":[
+                {"fieldPath":"hostId","order":"ASCENDING"},
+                {"fieldPath":"renterId","order":"ASCENDING"},
+                {"fieldPath":"propertyId","order":"ASCENDING"}
+            ]
+        },
+        {
+            "collectionGroup":"conversations",
+            "queryScope":"COLLECTION",
+            "fields":[
+                {"fieldPath":"hostId","order":"ASCENDING"},
+                {"fieldPath":"lastMessageTimestamp","order":"DESCENDING"}
+            ]
+        },
+        {
+            "collectionGroup":"conversations",
+            "queryScope":"COLLECTION",
+            "fields":[
+                {"fieldPath":"renterId","order":"ASCENDING"},
+                {"fieldPath":"lastMessageTimestamp","order":"DESCENDING"}
+            ]
+        },
+        {
+            "collectionGroup":"messages",
+            "queryScope":"COLLECTION_GROUP",
+            "fields":[
+                {"fieldPath":"isRead","order":"ASCENDING"},
+                {"fieldPath":"senderId","order":"ASCENDING"}
+            ]
+        },
+        {
             "collectionGroup":"bookings",
             "queryScope":"COLLECTION",
             "fields":[

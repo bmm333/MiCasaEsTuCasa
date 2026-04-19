@@ -2,6 +2,7 @@ package com.mobile.micasaestucasa.domain.repository.chat
 
 import com.mobile.micasaestucasa.domain.model.chat.Conversation
 import com.mobile.micasaestucasa.domain.model.chat.Message
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Real time chat operations Contract
@@ -22,7 +23,7 @@ interface ChatRepo {
 
     suspend fun getOrCreateConversation(hostId:String, renterId:String, propertyId:String): Result<Conversation>
 
-    //suspend fun  observeMessages(conversationId: String)
+    suspend fun  observeMessages(conversationId: String): Flow<List<Message>>
     /**
      * this function marks all not read messages as read for the current user
      *

@@ -18,7 +18,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
+import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 
+@Preview(showBackground = true, name = "JournalSection")
 @Composable
 fun JournalSection() {
     Card(

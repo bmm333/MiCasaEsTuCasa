@@ -21,14 +21,16 @@ import androidx.compose.ui.unit.dp
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Secondary
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
+@Preview(showBackground = true, name = "Test")
 fun PropertyCard(
-    imageRes: Int,
-    name: String,
-    rating: Double,
-    location: String,
-    price: Int,
+    imageRes: Int = android.R.drawable.ic_menu_gallery,
+    name: String = "Villa Test",
+    rating: Double = 4.5,
+    location: String = "Roma",
+    price: Int = 100,
     isAvailable: Boolean = false
 ) {
     Card(

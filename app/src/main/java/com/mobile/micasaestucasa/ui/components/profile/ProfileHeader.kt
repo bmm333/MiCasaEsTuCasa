@@ -18,13 +18,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
+@Preview(showBackground = true, name = "Test")
 fun ProfileHeader(
-    name: String,
-    memberSince: String,
-    bio: String,
-    imageRes: Int
+    name: String = "Mario Rossi",
+    memberSince: String = "2022",
+    bio: String = "Amo viaggiare",
+    imageRes: Int = android.R.drawable.ic_menu_gallery
 ) {
     Column(
         modifier = Modifier

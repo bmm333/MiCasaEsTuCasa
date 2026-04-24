@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -12,9 +13,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun SettingsRow(icon: ImageVector, label: String, onClick: () -> Unit) {
+@Preview(showBackground = true, name = "Test")
+fun SettingsRow(
+    icon: ImageVector = Icons.Default.Settings,
+    label: String = "Settings",
+    onClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

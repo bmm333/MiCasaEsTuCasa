@@ -9,13 +9,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
+@Preview(showBackground = true, name = "Test")
 fun PersonalInfoCard(
-    fullName: String,
-    email: String,
-    phone: String,
-    address: String
+    fullName: String = "Mario Rossi",
+    email: String = "mario.rossi@example.com",
+    phone: String = "+39 123 456 7890",
+    address: String = "Via Roma 1, Milano"
 ) {
     ProfileSectionCard(
         title = "Personal Information",

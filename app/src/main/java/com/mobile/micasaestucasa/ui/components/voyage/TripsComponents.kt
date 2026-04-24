@@ -25,10 +25,15 @@ import androidx.compose.ui.unit.sp
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Secondary
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
 
 // 1. Intestazione della pagina
 @Composable
-fun TripsHeader(title: String, subtitle: String) {
+@Preview(showBackground = true, name = "Test")
+fun TripsHeader(
+    title: String = "Your Journeys",
+    subtitle: String = "Curated memories and upcoming escapes."
+) {
     Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 32.dp)) {
         Text(
             text = title, 
@@ -45,7 +50,8 @@ fun TripsHeader(title: String, subtitle: String) {
 
 // 2. Badge "Upcoming" con conteggio
 @Composable
-fun UpcomingHeader(count: Int) {
+@Preview(showBackground = true, name = "Test")
+fun UpcomingHeader(count: Int = 2) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -68,7 +74,14 @@ fun UpcomingHeader(count: Int) {
 
 // 3. Card Viaggio Principale
 @Composable
-fun FeaturedTripCard(title: String, date: String, location: String, host: String, imageRes: Int) {
+@Preview(showBackground = true, name = "Test")
+fun FeaturedTripCard(
+    title: String = "The Cedar Sanctum",
+    date: String = "Dec 12 – Dec 18, 2024",
+    location: String = "Lake Tahoe, California",
+    host: String = "Elena Vance",
+    imageRes: Int = android.R.drawable.ic_menu_gallery
+) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
         shape = RoundedCornerShape(24.dp),
@@ -163,7 +176,13 @@ fun TripInfoRow(icon: ImageVector, text: String) {
 
 // 4. Elemento Ricordi Passati
 @Composable
-fun PastMemoryItem(title: String, date: String, rating: Int, imageRes: Int) {
+@Preview(showBackground = true, name = "Test")
+fun PastMemoryItem(
+    title: String = "The Artist's Loft",
+    date: String = "October 2023 • Paris, France",
+    rating: Int = 5,
+    imageRes: Int = android.R.drawable.ic_menu_gallery
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -203,6 +222,7 @@ fun PastMemoryItem(title: String, date: String, rating: Int, imageRes: Int) {
 
 // 5. Placeholder tratteggiato
 @Composable
+@Preview(showBackground = true, name = "Test")
 fun NextStepPlaceholder() {
     val outlineVariant = MaterialTheme.colorScheme.outlineVariant
     Box(

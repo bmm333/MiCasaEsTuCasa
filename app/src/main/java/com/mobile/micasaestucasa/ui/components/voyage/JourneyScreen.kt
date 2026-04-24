@@ -9,8 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mobile.micasaestucasa.ui.components.home.BottomNavigationBar
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
+@Preview(showBackground = true, name = "Test")
 fun JourneysScreen() {
     Scaffold(
         bottomBar = { BottomNavigationBar() }

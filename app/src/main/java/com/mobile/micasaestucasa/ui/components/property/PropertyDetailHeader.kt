@@ -17,13 +17,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
+@Preview(showBackground = true, name = "Test")
 fun PropertyDetailHeader(
-    title: String,
-    location: String,
-    hostName: String,
-    hostImageRes: Int
+    title: String = "Luxury Villa",
+    location: String = "Amalfi, Italy",
+    hostName: String = "Elena",
+    hostImageRes: Int = android.R.drawable.ic_menu_gallery
 ) {
     Row(
         modifier = Modifier

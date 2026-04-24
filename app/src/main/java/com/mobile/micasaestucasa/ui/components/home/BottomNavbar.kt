@@ -10,8 +10,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
+@Preview(showBackground = true, name = "Test")
 fun BottomNavigationBar() {
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Explore", "Saved", "Trips", "Profile")

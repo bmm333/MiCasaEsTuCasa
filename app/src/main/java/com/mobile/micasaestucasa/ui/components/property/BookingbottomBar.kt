@@ -15,9 +15,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun BookingBottomBar(price: String, dates: String) {
+@Preview(showBackground = true, name = "Test")
+fun BookingBottomBar(
+    price: String = "450",
+    dates: String = "Jun 12 - 18"
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 16.dp,

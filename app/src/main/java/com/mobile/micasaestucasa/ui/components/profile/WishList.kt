@@ -15,9 +15,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun WishlistCard(count: Int) {
+@Preview(showBackground = true, name = "Test")
+fun WishlistCard(count: Int = 5) {
     ProfileSectionCard(
         title = "Wishlist",
         icon = Icons.Default.Favorite

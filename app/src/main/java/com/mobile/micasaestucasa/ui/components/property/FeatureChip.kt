@@ -2,6 +2,8 @@ package com.mobile.micasaestucasa.ui.components.property
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -12,12 +14,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
+@Preview(showBackground = true, name = "Test")
 fun FeatureChip(
-    icon: ImageVector,
-    label: String,
-    value: String
+    icon: ImageVector = Icons.Default.Wifi,
+    label: String = "Beds",
+    value: String = "2 Bedrooms"
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,

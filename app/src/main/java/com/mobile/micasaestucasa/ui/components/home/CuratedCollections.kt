@@ -15,8 +15,10 @@ import androidx.compose.ui.unit.dp
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Secondary
 import com.mobile.micasaestucasa.ui.theme.Typography
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
+@Preview(showBackground = true, name = "Test")
 fun CuratedCollections() {
     Column(modifier = Modifier.padding(16.dp)) {
         Row(

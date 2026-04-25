@@ -12,7 +12,7 @@ import javax.inject.Inject
  *
  * @property notificationRepo repo for the fCM operations
  * */
-class SaveFCMTokenUseCase @Inject constructor(private val notificationRepo: NotificationRepo){
+class SaveFCMTokenUseCase @Inject constructor(private val notificationRepo: NotificationRepo) {
 
     /**
      * @param userId UID of the logged user cant be blank
@@ -20,15 +20,13 @@ class SaveFCMTokenUseCase @Inject constructor(private val notificationRepo: Noti
      * @return Result.success if saved otherwise result.failure with illegalArgExcp if params not valid
      *
      * */
-    suspend operator fun invoke(userId:String,token:String): Result<Unit>{
-        if(userId.isBlank())
-        {
+    suspend operator fun invoke(userId: String, token: String): Result<Unit> {
+        if (userId.isBlank()) {
             return Result.failure(IllegalArgumentException("userID not valid"))
         }
-        if(token.isBlank())
-        {
+        if (token.isBlank()) {
             return Result.failure(IllegalArgumentException("Invalid FCM token"))
         }
-        return notificationRepo.saveFCMToken(userId,token)
+        return notificationRepo.saveFCMToken(userId, token)
     }
 }

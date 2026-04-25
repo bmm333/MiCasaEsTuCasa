@@ -69,7 +69,8 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseMessaging(): FirebaseMessaging= FirebaseMessaging.getInstance()
+    fun provideFirebaseMessaging(): FirebaseMessaging = FirebaseMessaging.getInstance()
+
     @Provides
     @Singleton
     fun provideNotificationRepository(

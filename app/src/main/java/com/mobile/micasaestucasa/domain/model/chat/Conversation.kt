@@ -14,12 +14,11 @@ package com.mobile.micasaestucasa.domain.model.chat
  * @property unreadCount Number of unread messages of the current user
  * */
 data class Conversation(
-    val id:String,
-    val hostId:String,
-    val renterId:String,
-    val propertyId:String,
-    val lastMessage:String="",
-    val lastMessageTimestamp:Long=0L,
-    val unreadCount: Int=0
+    val id: String,
+    val hostId: String,
+    val renterId: String,
+    val propertyId: String,
+    val lastMessage: String = "",
+    val lastMessageTimestamp: Long = 0L,
+    val unreadCount: Int = 0
 )
-

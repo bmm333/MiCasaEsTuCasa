@@ -18,7 +18,8 @@ interface NotificationRepo {
      * @param token current FCM TOken of thedevice
      * @param [Result.success] if saved [Result.failure] in case of firestore error
      * */
-    suspend fun saveFCMToken(userId:String,token:String):Result<Unit>
+    suspend fun saveFCMToken(userId: String, token: String): Result<Unit>
+
     /**
      * Removes FCM token of the user on logout.
      * without this operation the user would continue to recive notifications
@@ -26,7 +27,8 @@ interface NotificationRepo {
      * @param userUID Uid Friestore of the user logging out
      * @param Result.success if removed [Result.failure] in case of firestore error
      * */
-    suspend fun removeFCMToken(userId:String): Result<Unit>
+    suspend fun removeFCMToken(userId: String): Result<Unit>
+
     /**
      * Gets the current FCM token of the device from firebase messaging.
      *

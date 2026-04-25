@@ -17,20 +17,23 @@ import javax.inject.Inject
  *  @property chatRepo Repository of the chat operations
  *
  * */
-class SendMessageUseCase @Inject constructor(private val chatRepo: ChatRepo){
+class SendMessageUseCase @Inject constructor(private val chatRepo: ChatRepo) {
 
     suspend operator fun invoke(
         conversationId: String,
         senderId: String,
-        text:String,
-        imageUrl:String?=null
-    ): Result<Message>{
-        if(conversationId.isBlank())
+        text: String,
+        imageUrl: String? = null
+    ): Result<Message> {
+        if (conversationId.isBlank()) {
             return Result.failure(IllegalArgumentException("ConversationId non valido"))
-        if (senderId.isBlank())
+        }
+        if (senderId.isBlank()) {
             return Result.failure(IllegalArgumentException("SenderId non valido"))
-        if (text.isBlank() && imageUrl == null)
+        }
+        if (text.isBlank() && imageUrl == null) {
             return Result.failure(IllegalArgumentException("Messaggio non può essere vuoto"))
-        return chatRepo.sendMessage(conversationId, senderId, text, imageUrl);
+        }
+        return chatRepo.sendMessage(conversationId, senderId, text, imageUrl)
     }
 }

@@ -16,14 +16,17 @@ interface ChatRepo {
      *  repo dose not handle image upload
      *
      * */
-    suspend fun sendMessage(conversationId:String,
-                            senderId:String,
-                            text:String,
-                            imageUrl:String?=null): Result<Message>
+    suspend fun sendMessage(
+        conversationId: String,
+        senderId: String,
+        text: String,
+        imageUrl: String? = null
+    ): Result<Message>
 
-    suspend fun getOrCreateConversation(hostId:String, renterId:String, propertyId:String): Result<Conversation>
+    suspend fun getOrCreateConversation(hostId: String, renterId: String, propertyId: String): Result<Conversation>
 
-    suspend fun  observeMessages(conversationId: String): Flow<List<Message>>
+    suspend fun observeMessages(conversationId: String): Flow<List<Message>>
+
     /**
      * this function marks all not read messages as read for the current user
      *
@@ -32,12 +35,9 @@ interface ChatRepo {
         conversationId: String,
         userId: String
     ): Result<Unit>
+
     /**
      * Returns all the conversations of an unser ordered by last message timestamp
      * */
-    suspend fun getConversationsForUser(userId:String):Result<List<Conversation>>
-
-
-
-
+    suspend fun getConversationsForUser(userId: String): Result<List<Conversation>>
 }

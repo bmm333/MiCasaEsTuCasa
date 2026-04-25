@@ -16,7 +16,7 @@ data class Message(
     val conversationId: String,
     val senderId: String,
     val text: String,
-    val imageUrl: String?=null,
-    val timestamp: Long=System.currentTimeMillis(),
-    val isRead: Boolean=false
+    val imageUrl: String? = null,
+    val timestamp: Long = System.currentTimeMillis(),
+    val isRead: Boolean = false
 )

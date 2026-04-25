@@ -1,15 +1,18 @@
 package com.mobile.micasaestucasa.ui.components.voyage
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mobile.micasaestucasa.ui.components.home.BottomNavigationBar
-import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview(showBackground = true, name = "Test")

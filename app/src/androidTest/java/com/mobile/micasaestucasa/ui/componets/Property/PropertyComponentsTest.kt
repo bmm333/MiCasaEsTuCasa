@@ -1,16 +1,22 @@
 package com.mobile.micasaestucasa.ui.componets.Property
 
-import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
-import com.mobile.micasaestucasa.ui.components.property.*
-import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import com.mobile.micasaestucasa.ui.components.property.AmenityItem
+import com.mobile.micasaestucasa.ui.components.property.BookingBottomBar
+import com.mobile.micasaestucasa.ui.components.property.FeatureChip
+import com.mobile.micasaestucasa.ui.components.property.PropertyDetailHeader
+import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import org.junit.Rule
 import org.junit.Test
 
 class PropertyComponentsTest {
-    @get:Rule 
+    @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
@@ -18,9 +24,9 @@ class PropertyComponentsTest {
         composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
                 PropertyDetailHeader(
-                    title = "Luxury Villa", 
-                    location = "Amalfi", 
-                    hostName = "Elena", 
+                    title = "Luxury Villa",
+                    location = "Amalfi",
+                    hostName = "Elena",
                     hostImageRes = android.R.drawable.ic_menu_gallery
                 )
             }
@@ -46,17 +52,17 @@ class PropertyComponentsTest {
     fun bookingBar_automation_test() {
         val testPrice = "450"
         val testDates = "Jun 12 - 18"
-        
+
         composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
                 BookingBottomBar(price = testPrice, dates = testDates)
             }
         }
-        
+
         // Verifica prezzo e date
         composeTestRule.onNodeWithText(testPrice, substring = true).assertIsDisplayed()
         composeTestRule.onNodeWithText(testDates).assertIsDisplayed()
-        
+
         // Verifica e simula il click sul pulsante prenota
         val bookButton = composeTestRule.onNodeWithText("Book Now", ignoreCase = true)
         bookButton.assertIsDisplayed()

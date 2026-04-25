@@ -53,6 +53,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.material3)
+    implementation(libs.compose.material.icons.extended)
     val nav_version = "2.9.7"
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -127,28 +128,36 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         html.required.set(true)
     }
 
-    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") { exclude(fileFilter) }
+    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/intermediates/kotlin-classes/debug") { exclude(fileFilter) }
     val javaClasses = fileTree("${layout.buildDirectory.get()}/intermediates/javac/debug/classes") { exclude(fileFilter) }
 
     sourceDirectories.setFrom(files("$projectDir/src/main/java"))
     classDirectories.setFrom(files(kotlinClasses, javaClasses))
     executionData.setFrom(
         fileTree(layout.buildDirectory.get()) {
-            include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.exec")
+            include(
+                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+                "jacoco/testDebugUnitTest.exec",
+                "outputs/jacoco/testDebugUnitTest.exec"
+            )
         }
     )
 }
 
 tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     dependsOn("jacocoTestReport")
-    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") { exclude(fileFilter) }
+    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/intermediates/kotlin-classes/debug") { exclude(fileFilter) }
     val javaClasses = fileTree("${layout.buildDirectory.get()}/intermediates/javac/debug/classes") { exclude(fileFilter) }
 
     sourceDirectories.setFrom(files("$projectDir/src/main/java"))
     classDirectories.setFrom(files(kotlinClasses, javaClasses))
     executionData.setFrom(
         fileTree(layout.buildDirectory.get()) {
-            include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.exec")
+            include(
+                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+                "jacoco/testDebugUnitTest.exec",
+                "outputs/jacoco/testDebugUnitTest.exec"
+            )
         }
     )
 

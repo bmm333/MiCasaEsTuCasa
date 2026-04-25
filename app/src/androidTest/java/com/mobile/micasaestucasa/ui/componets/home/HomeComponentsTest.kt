@@ -1,15 +1,21 @@
 package com.mobile.micasaestucasa.ui.componets.home
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.mobile.micasaestucasa.ui.components.home.*
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
+import com.mobile.micasaestucasa.ui.components.home.JournalSection
+import com.mobile.micasaestucasa.ui.components.home.PropertyCard
+import com.mobile.micasaestucasa.ui.components.home.SearchBar
+import com.mobile.micasaestucasa.ui.components.home.Topnavigation
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import org.junit.Rule
 import org.junit.Test
 
 class HomeComponentsTest {
-    @get:Rule 
-    val composeTestRule = createComposeRule()
+    @get:Rule val composeTestRule = createComposeRule()
 
     @Test
     fun topAppBar_automation_test() {
@@ -28,11 +34,11 @@ class HomeComponentsTest {
                 SearchBar()
             }
         }
-        
+
         // Trova il TextField tramite il testo del placeholder e inserisce testo
         composeTestRule.onNodeWithText("Dove vai?", substring = true).performTextInput("Milano")
         composeTestRule.onNodeWithText("Milano").assertExists()
-        
+
         // Sostituisce il testo
         composeTestRule.onNodeWithText("Milano").performTextReplacement("Roma")
         composeTestRule.onNodeWithText("Roma").assertExists()
@@ -43,15 +49,15 @@ class HomeComponentsTest {
         composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
                 PropertyCard(
-                    imageRes = android.R.drawable.ic_menu_gallery, 
-                    name = "Villa Test", 
-                    rating = 4.5, 
-                    location = "Roma", 
+                    imageRes = android.R.drawable.ic_menu_gallery,
+                    name = "Villa Test",
+                    rating = 4.5,
+                    location = "Roma",
                     price = 100
                 )
             }
         }
-        
+
         composeTestRule.onNodeWithText("Villa Test").assertIsDisplayed()
         composeTestRule.onNodeWithText("100", substring = true).assertIsDisplayed()
     }
@@ -63,7 +69,7 @@ class HomeComponentsTest {
                 JournalSection()
             }
         }
-        
+
         composeTestRule.onNodeWithText("THE JOURNAL", ignoreCase = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("Join Us", ignoreCase = true).performClick()
     }

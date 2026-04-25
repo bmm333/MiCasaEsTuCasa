@@ -53,6 +53,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.material3)
+    implementation(libs.compose.material.icons.extended)
     val nav_version = "2.9.7"
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -62,9 +63,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material.icons.extended)
-
-    // Unit Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -79,13 +77,18 @@ dependencies {
     // Debug dependencies
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation("app.cash.turbine:turbine:1.1.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    implementation("com.google.firebase:firebase-messaging")
 
     // Navigation
     implementation("androidx.navigation:navigation-compose:$nav_version")
     implementation("androidx.navigation:navigation-fragment:$nav_version")
     implementation("androidx.navigation:navigation-ui:$nav_version")
     implementation("androidx.navigation:navigation-dynamic-features-fragment:$nav_version")
-    
+
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
     // Hilt
@@ -125,28 +128,36 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         html.required.set(true)
     }
 
-    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") { exclude(fileFilter) }
+    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/intermediates/kotlin-classes/debug") { exclude(fileFilter) }
     val javaClasses = fileTree("${layout.buildDirectory.get()}/intermediates/javac/debug/classes") { exclude(fileFilter) }
 
     sourceDirectories.setFrom(files("$projectDir/src/main/java"))
     classDirectories.setFrom(files(kotlinClasses, javaClasses))
     executionData.setFrom(
         fileTree(layout.buildDirectory.get()) {
-            include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.exec")
+            include(
+                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+                "jacoco/testDebugUnitTest.exec",
+                "outputs/jacoco/testDebugUnitTest.exec"
+            )
         }
     )
 }
 
 tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     dependsOn("jacocoTestReport")
-    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") { exclude(fileFilter) }
+    val kotlinClasses = fileTree("${layout.buildDirectory.get()}/intermediates/kotlin-classes/debug") { exclude(fileFilter) }
     val javaClasses = fileTree("${layout.buildDirectory.get()}/intermediates/javac/debug/classes") { exclude(fileFilter) }
 
     sourceDirectories.setFrom(files("$projectDir/src/main/java"))
     classDirectories.setFrom(files(kotlinClasses, javaClasses))
     executionData.setFrom(
         fileTree(layout.buildDirectory.get()) {
-            include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec", "jacoco/testDebugUnitTest.exec")
+            include(
+                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+                "jacoco/testDebugUnitTest.exec",
+                "outputs/jacoco/testDebugUnitTest.exec"
+            )
         }
     )
 

@@ -27,8 +27,9 @@ import javax.inject.Inject
  *
  * @property firestore instance of FirebaseFirestore injected by hilt
  * */
-class FirebaseChatRepo @Inject constructor(private val firestore: FirebaseFirestore): ChatRepo {
-    private val conversationsCollection=firestore.collection("conversations")
+class FirebaseChatRepo @Inject constructor(private val firestore: FirebaseFirestore) : ChatRepo {
+    private val conversationsCollection = firestore.collection("conversations")
+
     /**
      * Creates the message doc and updates atomically lastmsg
      * of the conversation using batch wr
@@ -40,38 +41,36 @@ class FirebaseChatRepo @Inject constructor(private val firestore: FirebaseFirest
         text: String,
         imageUrl: String?
     ): Result<Message> {
-        return try{
-            val messageRef=conversationsCollection
+        return try {
+            val messageRef = conversationsCollection
                 .document(conversationId)
                 .collection("messages")
                 .document()
-            val message=Message(
-                id  =messageRef.id,
+            val message = Message(
+                id = messageRef.id,
                 conversationId = conversationId,
-                senderId= senderId,
-                text= text,
-                imageUrl= imageUrl,
-                timestamp= System.currentTimeMillis(),
-                isRead=false
+                senderId = senderId,
+                text = text,
+                imageUrl = imageUrl,
+                timestamp = System.currentTimeMillis(),
+                isRead = false
             )
-            //batch msg + update preview conv
-            val batch=firestore.batch()
-            batch.set(messageRef,message.toDto())
+            // batch msg + update preview conv
+            val batch = firestore.batch()
+            batch.set(messageRef, message.toDto())
             batch.update(
                 conversationsCollection.document(conversationId),
                 mapOf(
-                    "lastMessage" to text.ifBlank {"Image"},
+                    "lastMessage" to text.ifBlank { "Image" },
                     "lastMessageTimestamp" to message.timestamp
                 )
             )
             batch.commit().await()
             Result.success(message)
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
 
     override suspend fun observeMessages(conversationId: String): Flow<List<Message>> {
         return callbackFlow {
@@ -93,6 +92,7 @@ class FirebaseChatRepo @Inject constructor(private val firestore: FirebaseFirest
             awaitClose { listener.remove() }
         }
     }
+
     /**
      * Query to find existing conversation before creating a new one.
      * query based on three indexed fields (hostId,renterId,propertyId)
@@ -102,36 +102,33 @@ class FirebaseChatRepo @Inject constructor(private val firestore: FirebaseFirest
         renterId: String,
         propertyId: String
     ): Result<Conversation> {
-        return try{
-            val existing=conversationsCollection
-                .whereEqualTo("hostId",hostId)
-                .whereEqualTo("renterId",renterId)
-                .whereEqualTo("propertyId",propertyId)
-                .limit(1) //as per business logic rules only one conv can exist
+        return try {
+            val existing = conversationsCollection
+                .whereEqualTo("hostId", hostId)
+                .whereEqualTo("renterId", renterId)
+                .whereEqualTo("propertyId", propertyId)
+                .limit(1) // as per business logic rules only one conv can exist
                 .get().await()
-            if(!existing.isEmpty)
-            {
-                val conversations=existing.documents.first().toObject(ConversationDto::class.java)?.toDomain()?:return Result.failure(Exception("Error deserializzazione conversatzione"))
+            if (!existing.isEmpty) {
+                val conversations = existing.documents.first().toObject(ConversationDto::class.java)?.toDomain() ?: return Result.failure(Exception("Error deserializzazione conversatzione"))
                 return Result.success(conversations)
             }
-            val docRef=conversationsCollection.document()
-            val conversation= Conversation(
-                id=docRef.id,
-                hostId=hostId,
-                renterId=renterId,
-                propertyId=propertyId,
+            val docRef = conversationsCollection.document()
+            val conversation = Conversation(
+                id = docRef.id,
+                hostId = hostId,
+                renterId = renterId,
+                propertyId = propertyId,
                 lastMessage = "",
                 lastMessageTimestamp = System.currentTimeMillis(),
                 unreadCount = 0
             )
             docRef.set(conversation.toDto()).await()
             Result.success(conversation)
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
 
     override suspend fun markMessagesAsRead(
         conversationId: String,
@@ -144,7 +141,7 @@ class FirebaseChatRepo @Inject constructor(private val firestore: FirebaseFirest
                 .whereEqualTo("isRead", false)
                 .whereNotEqualTo("senderId", userId)
                 .get().await()
-            //respecting firestore limit
+            // respecting firestore limit
             unread.documents.chunked(500).forEach { chunk ->
                 val batch = firestore.batch()
                 chunk.forEach { doc ->
@@ -153,29 +150,28 @@ class FirebaseChatRepo @Inject constructor(private val firestore: FirebaseFirest
                 batch.commit().await()
             }
             Result.success(Unit)
-        } catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     override suspend fun getConversationsForUser(userId: String): Result<List<Conversation>> {
         return try {
-            //no or on multiple fields in same query so two queries and merge
-            val asHost=conversationsCollection
-                .whereEqualTo("hostId",userId)
+            // no or on multiple fields in same query so two queries and merge
+            val asHost = conversationsCollection
+                .whereEqualTo("hostId", userId)
                 .orderBy("lastMessageTimestamp", Query.Direction.DESCENDING)
                 .get().await()
                 .documents.mapNotNull { it.toObject(ConversationDto::class.java)?.toDomain() }
-            val asRenter=conversationsCollection
-                .whereEqualTo("renterId",userId)
+            val asRenter = conversationsCollection
+                .whereEqualTo("renterId", userId)
                 .orderBy("lastMessageTimestamp", Query.Direction.DESCENDING)
                 .get().await()
                 .documents.mapNotNull {
                     it.toObject(ConversationDto::class.java)?.toDomain()
                 }
-            //merge dedup and resorting
-            val merged=(asHost+asRenter)
+            // merge dedup and resorting
+            val merged = (asHost + asRenter)
                 .distinctBy { it.id }
                 .sortedByDescending { it.lastMessageTimestamp }
             Result.success(merged)
@@ -183,5 +179,4 @@ class FirebaseChatRepo @Inject constructor(private val firestore: FirebaseFirest
             Result.failure(e)
         }
     }
-
 }

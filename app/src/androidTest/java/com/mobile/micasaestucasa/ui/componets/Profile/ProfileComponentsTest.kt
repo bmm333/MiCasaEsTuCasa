@@ -1,18 +1,24 @@
 package com.mobile.micasaestucasa.ui.componets.Profile
 
-import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createComposeRule
-import com.mobile.micasaestucasa.ui.components.profile.*
-import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import com.mobile.micasaestucasa.ui.components.profile.HostBanner
+import com.mobile.micasaestucasa.ui.components.profile.PersonalInfoCard
+import com.mobile.micasaestucasa.ui.components.profile.ProfileHeader
+import com.mobile.micasaestucasa.ui.components.profile.SettingsRow
+import com.mobile.micasaestucasa.ui.components.profile.WishlistCard
+import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
 class ProfileComponentsTest {
-    @get:Rule 
-    val composeTestRule = createComposeRule()
+    @get:Rule val composeTestRule = createComposeRule()
 
     @Test
     fun profileHeader_showsNameAndBio() {
@@ -45,9 +51,9 @@ class ProfileComponentsTest {
 
     @Test
     fun wishlist_showsCount_andIsClickable() {
-        composeTestRule.setContent { 
+        composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
-                WishlistCard(count = 5) 
+                WishlistCard(count = 5)
             }
         }
         composeTestRule.onNodeWithText("+5").assertIsDisplayed()
@@ -56,9 +62,9 @@ class ProfileComponentsTest {
 
     @Test
     fun hostBanner_automation_test() {
-        composeTestRule.setContent { 
+        composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
-                HostBanner() 
+                HostBanner()
             }
         }
         composeTestRule.onNodeWithText("Host Your Home", ignoreCase = true).assertIsDisplayed()
@@ -80,7 +86,7 @@ class ProfileComponentsTest {
                 )
             }
         }
-        
+
         composeTestRule.onNodeWithText("Settings Test").performClick()
         assertTrue("L'azione onClick di SettingsRow non è stata attivata!", clicked)
     }

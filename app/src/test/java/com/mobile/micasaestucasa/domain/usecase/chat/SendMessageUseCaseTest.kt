@@ -11,7 +11,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-
 /**
  * Test for SendMessagEUseCAse
  *
@@ -24,7 +23,7 @@ import org.junit.Test
 class SendMessageUseCaseTest {
     private lateinit var chatRepo: ChatRepo
     private lateinit var sendMessageUseCase: SendMessageUseCase
-    private val mockMessage= Message(
+    private val mockMessage = Message(
         id = "msg1",
         conversationId = "conv1",
         senderId = "user1",
@@ -33,21 +32,23 @@ class SendMessageUseCaseTest {
         timestamp = 1000L,
         isRead = false
     )
+
     @Before
-    fun setUp(){
-        chatRepo=mockk()
-        sendMessageUseCase=SendMessageUseCase(chatRepo)
+    fun setUp() {
+        chatRepo = mockk()
+        sendMessageUseCase = SendMessageUseCase(chatRepo)
     }
-    //happy tests
+
+    // happy tests
     @Test
-    fun `messagio testo valido inviato correttamente`()= runTest {
+    fun `messagio testo valido inviato correttamente`() = runTest {
         coEvery {
-            chatRepo.sendMessage("conv1","user1","Hello",null)
-        }returns  Result.success(mockMessage)
-        val result=sendMessageUseCase("conv1","user1","Hello")
+            chatRepo.sendMessage("conv1", "user1", "Hello", null)
+        } returns Result.success(mockMessage)
+        val result = sendMessageUseCase("conv1", "user1", "Hello")
         assertTrue(result.isSuccess)
-        assertEquals("msg1",result.getOrNull()?.id)
-        coVerify(exactly = 1) { chatRepo.sendMessage("conv1","user1","Hello",null) }
+        assertEquals("msg1", result.getOrNull()?.id)
+        coVerify(exactly = 1) { chatRepo.sendMessage("conv1", "user1", "Hello", null) }
     }
 
     @Test
@@ -57,14 +58,15 @@ class SendMessageUseCaseTest {
             chatRepo.sendMessage("conv1", "user1", "", "https://storage.url/img.jpg")
         } returns Result.success(imageMessage)
         val result = sendMessageUseCase(
-            conversationId ="conv1",
+            conversationId = "conv1",
             senderId = "user1",
-            text= "",
+            text = "",
             imageUrl = "https://storage.url/img.jpg"
         )
         assertTrue(result.isSuccess)
         assertEquals("https://storage.url/img.jpg", result.getOrNull()?.imageUrl)
     }
+
     @Test
     fun `messaggio con testo e immagine inviato correttamente`() = runTest {
         val mixedMessage = mockMessage.copy(imageUrl = "https://storage.url/img.jpg")
@@ -75,20 +77,22 @@ class SendMessageUseCaseTest {
         assertTrue(result.isSuccess)
     }
 
-    //validation
+    // validation
     @Test
-    fun `conservationId vuoto rituna failue`()=runTest{
-        val result=sendMessageUseCase("","user1","Hello")
+    fun `conservationId vuoto rituna failue`() = runTest {
+        val result = sendMessageUseCase("", "user1", "Hello")
         assertTrue(result.isFailure)
-        assertEquals("ConversationId non valido",result.exceptionOrNull()?.message)
-        coVerify(exactly = 0) { chatRepo.sendMessage(any(),any(),any())}
+        assertEquals("ConversationId non valido", result.exceptionOrNull()?.message)
+        coVerify(exactly = 0) { chatRepo.sendMessage(any(), any(), any()) }
     }
+
     @Test
-    fun `senderId vuoto ritonra failure`()=runTest {
-        val result=sendMessageUseCase("conv1","","Hello" )
+    fun `senderId vuoto ritonra failure`() = runTest {
+        val result = sendMessageUseCase("conv1", "", "Hello")
         assertTrue(result.isFailure)
         coVerify(exactly = 0) { chatRepo.sendMessage(any(), any(), any(), any()) }
     }
+
     @Test
     fun `testo solo spazi senza immagine ritorna failure`() = runTest {
         val result = sendMessageUseCase("conv1", "user1", "   ", null)
@@ -96,6 +100,7 @@ class SendMessageUseCaseTest {
         assertTrue(result.isFailure)
         coVerify(exactly = 0) { chatRepo.sendMessage(any(), any(), any(), any()) }
     }
+
     @Test
     fun `testo vuoto senza immagine ritorna failure`() = runTest {
         val result = sendMessageUseCase("conv1", "user1", "", null)
@@ -104,6 +109,7 @@ class SendMessageUseCaseTest {
         assertEquals("Messaggio non può essere vuoto", result.exceptionOrNull()?.message)
         coVerify(exactly = 0) { chatRepo.sendMessage(any(), any(), any(), any()) }
     }
+
     @Test
     fun `Firestore propogates error correctly`() = runTest {
         coEvery {

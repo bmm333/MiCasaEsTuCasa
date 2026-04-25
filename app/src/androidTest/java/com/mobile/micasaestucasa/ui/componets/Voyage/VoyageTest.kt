@@ -1,10 +1,14 @@
 package com.mobile.micasaestucasa.ui.componets.Voyage
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.mobile.micasaestucasa.ui.components.voyage.*
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import com.mobile.micasaestucasa.ui.components.voyage.FeaturedTripCard
+import com.mobile.micasaestucasa.ui.components.voyage.JourneysScreen
+import com.mobile.micasaestucasa.ui.components.voyage.NextStepPlaceholder
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -17,17 +21,17 @@ class VoyageTest {
         composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
                 FeaturedTripCard(
-                    title = "Cedar House", 
-                    date = "Dec 1", 
-                    location = "USA", 
-                    host = "Elena", 
-                    imageRes = android.R.drawable.ic_menu_gallery,
+                    title = "Cedar House",
+                    date = "Dec 1",
+                    location = "USA",
+                    host = "Elena",
+                    imageRes = android.R.drawable.ic_menu_gallery
                 )
             }
         }
         composeTestRule.onNodeWithText("Cedar House").assertIsDisplayed()
         composeTestRule.onNodeWithText("Confirmed").assertIsDisplayed()
-        
+
         val guideButton = composeTestRule.onNodeWithText("Check-in Guide", ignoreCase = true)
         guideButton.assertHasClickAction()
         guideButton.performClick()
@@ -35,9 +39,9 @@ class VoyageTest {
 
     @Test
     fun nextStep_interaction_test() {
-        composeTestRule.setContent { 
+        composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
-                NextStepPlaceholder() 
+                NextStepPlaceholder()
             }
         }
         composeTestRule.onNodeWithText("Where will you go next?", substring = true).assertIsDisplayed()
@@ -47,15 +51,15 @@ class VoyageTest {
 
     @Test
     fun journeysScreen_fullLoad_andScrollTest() {
-        composeTestRule.setContent { 
+        composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
-                JourneysScreen() 
+                JourneysScreen()
             }
         }
         // Verifica caricamento sezioni
         composeTestRule.onNodeWithText("Your Journeys", ignoreCase = true).assertIsDisplayed()
         composeTestRule.onNodeWithText("Upcoming", ignoreCase = true).assertIsDisplayed()
-        
+
         // Verifica presenza ricordi passati
         composeTestRule.onNodeWithText("Past Memories", ignoreCase = true).assertIsDisplayed()
     }

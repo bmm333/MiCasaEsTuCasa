@@ -14,21 +14,31 @@ val Typography = Typography(
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
+    ) ,
+    headlineLarge = TextStyle(
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 52.sp,
+        fontFamily = FontFamily.Default // Sostituisci con Plus Jakarta Sans
+    ),
     titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
+        fontFamily = FontFamily.Default // Sostituisci con Plus Jakarta Sans
+    ),
+    titleMedium = TextStyle(
+        fontWeight = FontWeight.Bold,
+        fontSize = 18.sp,
+        fontFamily = FontFamily.Default
+    ),
+    bodyMedium = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
+        fontSize = 14.sp,
+        fontFamily = FontFamily.Default
     ),
     labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+        letterSpacing = 1.1.sp,
+        fontFamily = FontFamily.Default
     )
-    */
 )

@@ -1,6 +1,6 @@
-package com.mobile.micasaestucasa.domain.model.review
+package com.mobile.micasaestucasa.data.dto.review
 
-data class Review(
+data class ReviewDto(
     val id: String = "",
     val title: String = "",
     val body: String = "",

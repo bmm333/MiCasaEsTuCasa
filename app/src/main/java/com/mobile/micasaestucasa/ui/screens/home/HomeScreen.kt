@@ -26,12 +26,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.ui.components.atomics.CollectionCategoryItem
 import com.mobile.micasaestucasa.ui.components.atomics.ShimmerEffect
 import com.mobile.micasaestucasa.ui.components.home.*
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
+import com.mobile.micasaestucasa.ui.viewmodels.home.Category
+import com.mobile.micasaestucasa.ui.viewmodels.home.HomeUiState
 import com.mobile.micasaestucasa.ui.viewmodels.home.HomeViewModel
 
 @Composable
@@ -41,6 +44,17 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    HomeScreenContent(
+        uiState = uiState,
+        onNavigateToProperty = onNavigateToProperty
+    )
+}
+
+@Composable
+fun HomeScreenContent(
+    uiState: HomeUiState,
+    onNavigateToProperty: (String) -> Unit = {}
+) {
     Scaffold(
         topBar = { Topnavigation() },
         bottomBar = { BottomNavigationBar() }
@@ -188,6 +202,34 @@ fun ShimmerPropertyCard() {
 @Composable
 fun HomeScreenPreview() {
     MiCasaEsTuCasaTheme {
-        HomeScreen()
+        HomeScreenContent(
+            uiState = HomeUiState(
+                properties = listOf(
+                    Property(
+                        id = "1",
+                        ownerId = "owner1",
+                        title = "Luxury Villa",
+                        description = "A beautiful luxury villa in the heart of Rome.",
+                        latitude = 41.9028,
+                        longitude = 12.4964,
+                        city = "Rome",
+                        pricePerDay = 250.0,
+                        capacity = 4,
+                        keywords = listOf("luxury", "villa"),
+                        imageUrls = listOf("https://images.unsplash.com/photo-1512917774080-9991f1c4c750"),
+                        availableFrom = "2024-01-01",
+                        availableTo = "2024-12-31",
+                        rating = 4.8,
+                        reviewsCount = 12
+                    )
+                ),
+                categories = listOf(
+                    Category("Modern", "holiday_village"),
+                    Category("Rustic", "cabin"),
+                    Category("Beachfront", "beach_access"),
+                    Category("Historic", "castle")
+                )
+            )
+        )
     }
 }

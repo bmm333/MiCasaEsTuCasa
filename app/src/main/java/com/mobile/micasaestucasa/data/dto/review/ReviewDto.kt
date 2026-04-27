@@ -1,11 +1,15 @@
 package com.mobile.micasaestucasa.data.dto.review
 
 data class ReviewDto(
-    val id: String = "",
-    val title: String = "",
-    val body: String = "",
-    val stars: Int = 0,
-    val createdAt: Long = System.currentTimeMillis(),
-    val propertyId: String = "",
-    val authorId: String = ""
+    val id: String?=null,
+    val bookingId: String?=null,
+    val reviewType: String? = null,
+    val propertyId: String?=null,
+    val authorId: String?=null,
+    val targetId:String?=null,
+    val title: String? =null,
+    val body: String?=null,
+    val stars: Int?=null,
+    val hostReply: String? = null,
+    val createdAt: Long = System.currentTimeMillis()
 )

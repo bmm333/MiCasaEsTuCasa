@@ -160,23 +160,36 @@ fun GradientButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    brush: Brush = Brush.horizontalGradient(listOf(Primario, Secondary))
+    baseColor: Color = Primario,
 ) {
+    val gradientBrush = Brush.horizontalGradient(
+        colors = listOf(
+            baseColor,
+            baseColor.copy(alpha = 0.7f)
+        )
+    )
+
     Button(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = HomeAtomics.buttonShape,
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent
+        ),
         contentPadding = PaddingValues()
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(brush = brush, shape = HomeAtomics.buttonShape)
+                .background(brush = gradientBrush)
                 .padding(vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = text, color = Color.White, fontWeight = FontWeight.Bold)
+            Text(
+                text = text,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

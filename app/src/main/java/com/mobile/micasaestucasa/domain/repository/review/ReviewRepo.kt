@@ -16,7 +16,7 @@ interface ReviewRepo {
 
     suspend fun editReview(review: Review, userId: String): Result<Unit>
 
-    suspend fun replyToReview(reviewId:String,reply:String):Result<Unit>
+    suspend fun replyToReview(reviewId:String,hostId:String,reply:String):Result<Unit>
 
     suspend fun hasUserAlreadyReviewed(userId:String,propertyId: String): Result<Boolean>
 

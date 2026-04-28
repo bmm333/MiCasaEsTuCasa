@@ -1,4 +1,4 @@
-package com.mobile.micasaestucasa.ui.componets.Voyage
+package com.mobile.micasaestucasa.ui.components.Voyage
 
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed

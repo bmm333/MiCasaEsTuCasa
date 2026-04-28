@@ -69,7 +69,7 @@ class PropertyCardTest {
 
         val input = composeTestRule.onNodeWithTag("search_input_location")
         input.performTextInput("Milano")
-        
+
         composeTestRule.onNodeWithTag("search_button").performClick()
         assert(searchClicked)
     }
@@ -88,7 +88,7 @@ class PropertyCardTest {
 
         composeTestRule.onNodeWithTag("nav_item_Profile").performClick()
         assert(selectedIndex == 3)
-        
+
         composeTestRule.onNodeWithTag("nav_item_Saved").performClick()
         assert(selectedIndex == 1)
     }

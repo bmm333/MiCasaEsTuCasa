@@ -1,4 +1,4 @@
-package com.mobile.micasaestucasa.ui.componets.Profile
+package com.mobile.micasaestucasa.ui.components.Profile
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings

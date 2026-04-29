@@ -1,4 +1,4 @@
-package com.mobile.micasaestucasa.ui.componets.Property
+package com.mobile.micasaestucasa.ui.components.Property
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Wifi

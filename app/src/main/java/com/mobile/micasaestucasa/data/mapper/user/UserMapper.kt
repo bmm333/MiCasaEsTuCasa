@@ -11,7 +11,23 @@ fun UserDTO.toDomain(): User {
         email = email ?: "",
         roles = roles
             ?.mapNotNull { UserRole.fromString(it) }
-            ?: listOf(UserRole.GUEST)
+            ?: listOf(UserRole.GUEST),
+        bio = bio ?: "",
+        profileImageUrl = profileImageUrl,
+        address = address ?: "",
+        phone = phone ?: ""
+    )
+}
 
+fun User.toDto(): UserDTO {
+    return UserDTO(
+        id = id,
+        name = name,
+        email = email,
+        roles = roles.map { it.name },
+        bio = bio,
+        profileImageUrl = profileImageUrl,
+        address = address,
+        phone = phone
     )
 }

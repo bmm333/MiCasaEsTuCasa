@@ -1,12 +1,16 @@
 package com.mobile.micasaestucasa.data.repository.property
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.toObject
 import com.mobile.micasaestucasa.data.dto.property.PropertyDto
 import com.mobile.micasaestucasa.data.mapper.property.toDomain
 import com.mobile.micasaestucasa.data.mapper.property.toDto
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
+import com.mobile.micasaestucasa.domain.util.Resource
+import com.mobile.micasaestucasa.ui.viewmodels.home.Category
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import javax.inject.Inject
@@ -15,11 +19,12 @@ class FirebasePropertyRepo @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : PropertyRepo {
 
-    private val collection = firestore.collection("properties")
+    private val propertiesCollection = firestore.collection("properties")
+    private val categoriesCollection = firestore.collection("categories")
 
     override suspend fun createProperty(property: Property): Result<String> {
         return try {
-            val docRef = collection.document()
+            val docRef = propertiesCollection.document()
             val dto = property.copy(id = docRef.id).toDto()
             docRef.set(dto).await()
             Result.success(docRef.id)
@@ -30,7 +35,7 @@ class FirebasePropertyRepo @Inject constructor(
 
     override suspend fun updateProperty(property: Property): Result<String> {
         return try {
-            collection.document(property.id).set(property.toDto()).await()
+            propertiesCollection.document(property.id).set(property.toDto()).await()
             Result.success(property.id)
         } catch (e: Exception) {
             Result.failure(e)
@@ -39,7 +44,7 @@ class FirebasePropertyRepo @Inject constructor(
 
     override suspend fun deleteProperty(id: String): Result<String> {
         return try {
-            collection.document(id).delete().await()
+            propertiesCollection.document(id).delete().await()
             Result.success(id)
         } catch (e: Exception) {
             Result.failure(e)
@@ -48,7 +53,7 @@ class FirebasePropertyRepo @Inject constructor(
 
     override suspend fun getPropertiesByOwner(ownerId: String): Result<List<Property>> {
         return try {
-            val snapshot = collection
+            val snapshot = propertiesCollection
                 .whereEqualTo("ownerId", ownerId)
                 .get().await()
             val properties = snapshot.documents
@@ -67,9 +72,10 @@ class FirebasePropertyRepo @Inject constructor(
         keywords: List<String>
     ): Result<List<Property>> {
         return try {
-            val query = collection
+            val query = propertiesCollection
                 .whereEqualTo("city", city)
                 .whereGreaterThanOrEqualTo("capacity", capacity)
+
             val snapshot = query.get().await()
             var results = snapshot.documents
                 .mapNotNull { it.toObject(PropertyDto::class.java)?.toDomain() }
@@ -100,12 +106,51 @@ class FirebasePropertyRepo @Inject constructor(
 
     override suspend fun getPropertyById(id: String): Result<Property> {
         return try {
-            val doc = collection.document(id).get().await()
+            val doc = propertiesCollection.document(id).get().await()
             val property = doc.toObject(PropertyDto::class.java)?.toDomain()
                 ?: return Result.failure(Exception("Proprietà non trovata"))
             Result.success(property)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    override fun getAllPropertiesFlow(): Flow<Resource<List<Property>>> = callbackFlow {
+        trySend(Resource.Loading)
+        val subscription = propertiesCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(Resource.Error(error.message ?: "Errore Firestore", error))
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val properties = snapshot.documents
+                    .mapNotNull { it.toObject(PropertyDto::class.java)?.toDomain() }
+                trySend(Resource.Success(properties))
+            }
+        }
+        awaitClose { subscription.remove() }
+    }
+
+    override suspend fun getCategories(): Result<List<Category>> {
+        return try {
+            val snapshot = categoriesCollection.get().await()
+            val categories = snapshot.documents.mapNotNull { doc ->
+                val name = doc.getString("name") ?: return@mapNotNull null
+                val icon = doc.getString("icon") ?: "home"
+                Category(name, icon)
+            }
+            Result.success(categories)
+        } catch (e: Exception) {
+            // Se la collezione non esiste, restituisco default
+            Result.success(
+                listOf(
+                    Category("Modern", "holiday_village"),
+                    Category("Rustic", "cabin"),
+                    Category("Beachfront", "beach_access"),
+                    Category("Historic", "castle"),
+                    Category("Urban", "apartment")
+                )
+            )
         }
     }
 

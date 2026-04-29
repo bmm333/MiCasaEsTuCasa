@@ -1,5 +1,7 @@
 package com.mobile.micasaestucasa.ui.navigation
+
 import kotlinx.serialization.Serializable
+
 sealed interface Route {
     @Serializable
     data object Login : Route

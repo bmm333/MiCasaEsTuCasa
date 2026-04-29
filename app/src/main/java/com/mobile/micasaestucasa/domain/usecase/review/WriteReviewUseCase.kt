@@ -10,7 +10,7 @@ import javax.inject.Inject
 class WriteReviewUseCase @Inject constructor(private val reviewRepo: ReviewRepo,private
 val bookingRepo: BookingRepo) {
     suspend operator fun invoke(review: Review,userId: String): Result<Unit> {
-        if(userId.isEmpty())
+        if(userId.isBlank())
             return Result.failure(IllegalArgumentException("Id utente non puo essere vuoto"))
         if(review.title.isBlank())
             return Result.failure(IllegalArgumentException("Titolo obbligatorio"))
@@ -18,6 +18,12 @@ val bookingRepo: BookingRepo) {
             return Result.failure(IllegalArgumentException("Descrizione obbligatoria"))
         if (review.stars < 1 || review.stars > 5)
             return Result.failure(IllegalArgumentException("Valutazione obbligatoria compresa tra 1 e 5"))
+        if (review.bookingId.isBlank())
+            return Result.failure(IllegalArgumentException("BookingId obbligatorio"))
+        if (review.propertyId.isBlank())
+            return Result.failure(IllegalArgumentException("PropertyId obbligatorio"))
+        if (review.targetId.isBlank())
+            return Result.failure(IllegalArgumentException("TargetId obbligatorio"))
         val bookingResult=bookingRepo.getBookingById(review.bookingId)
         if(bookingResult.isFailure)
             return Result.failure(

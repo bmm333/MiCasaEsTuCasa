@@ -1,6 +1,7 @@
 package com.mobile.micasaestucasa.ui.components.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,12 +47,14 @@ fun PropertyCard(
     price: Double,
     imageUrl: String,
     modifier: Modifier = Modifier,
-    isAvailable: Boolean = false
+    isAvailable: Boolean = false,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onClick() }
             .testTag("property_card_$name"),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -60,7 +63,7 @@ fun PropertyCard(
         Column {
             Box(modifier = Modifier.aspectRatio(1.2f)) {
                 AsyncImage(
-                    model = imageUrl,
+                    model = if (imageUrl.isNotEmpty()) imageUrl else "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
                     contentDescription = name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -86,7 +89,7 @@ fun PropertyCard(
                 ) {
                     Icon(
                         Icons.Default.FavoriteBorder,
-                        contentDescription = "Aggiungi ai preferiti",
+                        contentDescription = "Add to favorites",
                         tint = Color.White
                     )
                 }

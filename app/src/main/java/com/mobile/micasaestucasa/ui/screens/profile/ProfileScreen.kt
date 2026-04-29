@@ -35,6 +35,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.util.Resource
@@ -51,11 +53,11 @@ import com.mobile.micasaestucasa.ui.viewmodels.user.UserViewModel
 
 @Composable
 fun ProfileScreen(
+    navController: NavController,
     userViewModel: UserViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
     onNavigateToSettings: (String) -> Unit = {},
     onLogoutNavigate: () -> Unit = {},
-    onNavigateToTab: (Int) -> Unit = {},
     onNavigateBack: () -> Boolean
 ) {
     // Osservazione corretta dello stato utente e autenticazione
@@ -71,26 +73,23 @@ fun ProfileScreen(
 
     ProfileContent(
         userState = userState,
+        navController = navController,
         onLogout = { authViewModel.logout() },
-        onNavigateToSettings = onNavigateToSettings,
-        onNavigateToTab = onNavigateToTab
+        onNavigateToSettings = onNavigateToSettings
     )
 }
 
 @Composable
 fun ProfileContent(
     userState: Resource<User?>,
+    navController: NavController,
     onLogout: () -> Unit,
-    onNavigateToSettings: (String) -> Unit,
-    onNavigateToTab: (Int) -> Unit = {}
+    onNavigateToSettings: (String) -> Unit
 ) {
     Scaffold(
         containerColor = Color(0xFFF7F7F7),
         bottomBar = {
-            BottomNavigationBar(
-                selectedItem = 3,
-                onItemSelected = onNavigateToTab
-            )
+            BottomNavigationBar(navController = navController)
         }
     ) { paddingValues ->
         when (userState) {
@@ -200,6 +199,7 @@ private fun PaddingWrapper(content: @Composable () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
+    val dummyNavController = rememberNavController()
     MiCasaEsTuCasaTheme {
         ProfileContent(
             userState = Resource.Success(
@@ -214,6 +214,7 @@ fun ProfileScreenPreview() {
                     phone = "+39 333 1234567"
                 )
             ),
+            navController = dummyNavController,
             onLogout = {},
             onNavigateToSettings = {}
         )

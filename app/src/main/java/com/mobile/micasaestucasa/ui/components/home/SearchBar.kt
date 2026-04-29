@@ -25,9 +25,9 @@ import com.mobile.micasaestucasa.ui.components.atomics.SearchInput
 
 @Composable
 fun SearchBar(
-    location: String = "",
-    onLocationChange: (String) -> Unit = {},
-    onSearchClick: () -> Unit = {}
+    query: String = "",
+    onQueryChange: (String) -> Unit = {},
+    onSearchClick: (String) -> Unit = {}
 ) {
     var dates by remember { mutableStateOf("") }
 
@@ -44,9 +44,9 @@ fun SearchBar(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             SearchInput(
-                value = location,
-                onValueChange = onLocationChange,
-                placeholder = "Dove vai?",
+                value = query,
+                onValueChange = onQueryChange,
+                placeholder = "Where are you going?",
                 leadingIcon = Icons.Default.LocationOn,
                 modifier = Modifier.testTag("search_input_location")
             )
@@ -54,13 +54,13 @@ fun SearchBar(
             SearchInput(
                 value = dates,
                 onValueChange = { dates = it },
-                placeholder = "Aggiungi date",
+                placeholder = "Add dates",
                 leadingIcon = Icons.Default.CalendarToday
             )
 
             GradientButton(
-                text = "Cerca",
-                onClick = onSearchClick,
+                text = "Search",
+                onClick = { onSearchClick(query) },
                 modifier = Modifier.testTag("search_button")
             )
         }
@@ -70,5 +70,5 @@ fun SearchBar(
 @Preview(showBackground = true, name = "SearchBar Preview")
 @Composable
 fun SearchBarPreview() {
-    SearchBar()
+    SearchBar(query = "Malibu")
 }

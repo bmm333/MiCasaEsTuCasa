@@ -51,16 +51,23 @@ fun AppNavigation(
 
         composable<Route.Home> {
             HomeScreen(
-                onNavigateToProfile = {
-                    navController.navigate(Route.Profile)
+                navController = navController,
+                onNavigateToProperty = { propertyId ->
+                    // navController.navigate(Route.PropertyDetail(propertyId))
                 }
             )
         }
 
         composable<Route.Profile> {
             ProfileScreen(
+                navController = navController,
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onLogoutNavigate = {
+                    navController.navigate(Route.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }

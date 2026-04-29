@@ -43,6 +43,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.ui.components.atomics.CollectionCategoryItem
 import com.mobile.micasaestucasa.ui.components.atomics.ShimmerEffect
@@ -52,6 +54,7 @@ import com.mobile.micasaestucasa.ui.components.home.JournalSection
 import com.mobile.micasaestucasa.ui.components.home.PropertyCard
 import com.mobile.micasaestucasa.ui.components.home.SearchBar
 import com.mobile.micasaestucasa.ui.components.home.Topnavigation
+import com.mobile.micasaestucasa.ui.navigation.Route
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
@@ -61,26 +64,41 @@ import com.mobile.micasaestucasa.ui.viewmodels.home.HomeViewModel
 
 @Composable
 fun HomeScreen(
+    navController: NavController,
     viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToProperty: (String) -> Unit = {},
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit = { navController.navigate(Route.Profile) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     HomeScreenContent(
         uiState = uiState,
-        onNavigateToProperty = onNavigateToProperty
+        navController = navController,
+        onSearchQueryChanged = viewModel::onSearchQueryChanged,
+        onSearchClick = { query -> viewModel.onSearchQueryChanged(query) },
+        onNavigateToProperty = onNavigateToProperty,
+        onNavigateToProfile = onNavigateToProfile
     )
 }
 
 @Composable
 fun HomeScreenContent(
     uiState: HomeUiState,
-    onNavigateToProperty: (String) -> Unit = {}
+    navController: NavController,
+    onSearchQueryChanged: (String) -> Unit = {},
+    onSearchClick: (String) -> Unit = {},
+    onNavigateToProperty: (String) -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
     Scaffold(
-        topBar = { Topnavigation() },
-        bottomBar = { BottomNavigationBar() }
+        topBar = { 
+            Topnavigation(
+                onProfileClick = onNavigateToProfile
+            ) 
+        },
+        bottomBar = { 
+            BottomNavigationBar(navController = navController) 
+        }
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -111,7 +129,11 @@ fun HomeScreenContent(
 
             // 2. Search Bar Molecule
             item {
-                SearchBar()
+                SearchBar(
+                    query = uiState.searchQuery,
+                    onQueryChange = onSearchQueryChanged,
+                    onSearchClick = onSearchClick
+                )
             }
 
             // 3. Curated Collections
@@ -177,8 +199,9 @@ fun HomeScreenContent(
                         rating = property.rating,
                         location = property.city,
                         price = property.pricePerDay,
-                        imageUrl = property.imageUrls.firstOrNull() ?: "",
-                        isAvailable = true, // Simplified for this view
+                        imageUrl = property.imageUrls.firstOrNull() ?: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750",
+                        isAvailable = true,
+                        onClick = { onNavigateToProperty(property.id) },
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
@@ -186,7 +209,9 @@ fun HomeScreenContent(
 
             // 5. Journal Section
             item {
-                JournalSection()
+                JournalSection(
+                    onReadMoreClick = { /* Hoisting example */ }
+                )
             }
 
             // 6. Footer
@@ -224,6 +249,7 @@ fun ShimmerPropertyCard() {
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
+    val dummyNavController = rememberNavController()
     MiCasaEsTuCasaTheme {
         HomeScreenContent(
             uiState = HomeUiState(
@@ -231,19 +257,19 @@ fun HomeScreenPreview() {
                     Property(
                         id = "1",
                         ownerId = "owner1",
-                        title = "Luxury Villa",
-                        description = "A beautiful luxury villa in the heart of Rome.",
-                        latitude = 41.9028,
-                        longitude = 12.4964,
-                        city = "Rome",
-                        pricePerDay = 250.0,
-                        capacity = 4,
-                        keywords = listOf("luxury", "villa"),
+                        title = "Luxury Villa in Malibu",
+                        description = "A beautiful luxury villa with ocean view.",
+                        latitude = 34.0259,
+                        longitude = -118.7798,
+                        city = "Malibu",
+                        pricePerDay = 450.0,
+                        capacity = 6,
+                        keywords = listOf("luxury", "ocean", "villa"),
                         imageUrls = listOf("https://images.unsplash.com/photo-1512917774080-9991f1c4c750"),
                         availableFrom = "2024-01-01",
                         availableTo = "2024-12-31",
-                        rating = 4.8,
-                        reviewsCount = 12
+                        rating = 4.9,
+                        reviewsCount = 24
                     )
                 ),
                 categories = listOf(
@@ -252,7 +278,8 @@ fun HomeScreenPreview() {
                     Category("Beachfront", "beach_access"),
                     Category("Historic", "castle")
                 )
-            )
+            ),
+            navController = dummyNavController
         )
     }
 }

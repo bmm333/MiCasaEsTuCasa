@@ -1,6 +1,5 @@
 package com.mobile.micasaestucasa.ui.components.home
 
-import android.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -30,8 +29,10 @@ import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
 
 @Composable
-@Preview(showBackground = true, name = "JournalSection Atomized")
-fun JournalSection() {
+fun JournalSection(
+    onJoinClick: (String) -> Unit = {},
+    onReadMoreClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -72,15 +73,15 @@ fun JournalSection() {
 
             GradientButton(
                 text = "Join Us",
-                onClick = { /* Azione di iscrizione */ }
+                onClick = { onJoinClick("") }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Immagine di interior design inclinata
+            // Brand-consistent interior image
             Image(
-                painter = painterResource(id = android.R.drawable.ic_menu_gallery),
-                contentDescription = null,
+                painter = painterResource(id = android.R.drawable.ic_menu_gallery), // To be replaced with brand asset
+                contentDescription = "Interior design inspiration",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -91,4 +92,10 @@ fun JournalSection() {
             )
         }
     }
+}
+
+@Preview(showBackground = true, name = "JournalSection Preview")
+@Composable
+fun JournalSectionPreview() {
+    JournalSection()
 }

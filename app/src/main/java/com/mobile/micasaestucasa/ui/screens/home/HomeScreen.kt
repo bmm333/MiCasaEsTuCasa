@@ -62,7 +62,8 @@ import com.mobile.micasaestucasa.ui.viewmodels.home.HomeViewModel
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToProperty: (String) -> Unit = {}
+    onNavigateToProperty: (String) -> Unit = {},
+    onNavigateToProfile: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 

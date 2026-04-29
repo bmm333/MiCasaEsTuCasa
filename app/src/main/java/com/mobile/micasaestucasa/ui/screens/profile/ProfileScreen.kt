@@ -55,7 +55,8 @@ fun ProfileScreen(
     authViewModel: AuthViewModel = hiltViewModel(),
     onNavigateToSettings: (String) -> Unit = {},
     onLogoutNavigate: () -> Unit = {},
-    onNavigateToTab: (Int) -> Unit = {}
+    onNavigateToTab: (Int) -> Unit = {},
+    onNavigateBack: () -> Boolean
 ) {
     // Osservazione corretta dello stato utente e autenticazione
     val userState by userViewModel.userState.collectAsStateWithLifecycle()

@@ -49,13 +49,7 @@ fun AppNavigation(
         }
 
         composable<Route.Home> {
-            HomeScreen(
-                onNavigateToLogin = {
-                    navController.navigate(Route.Login) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
+            HomeScreen()
         }
     }
 }

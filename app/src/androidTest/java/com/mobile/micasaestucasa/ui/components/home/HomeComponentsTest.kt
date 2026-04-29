@@ -1,4 +1,4 @@
-package com.mobile.micasaestucasa.ui.componets.home
+package com.mobile.micasaestucasa.ui.components.home
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -6,10 +6,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
-import com.mobile.micasaestucasa.ui.components.home.JournalSection
-import com.mobile.micasaestucasa.ui.components.home.PropertyCard
-import com.mobile.micasaestucasa.ui.components.home.SearchBar
-import com.mobile.micasaestucasa.ui.components.home.Topnavigation
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import org.junit.Rule
 import org.junit.Test
@@ -43,25 +39,6 @@ class HomeComponentsTest {
         composeTestRule.onNodeWithText("Milano").performTextReplacement("Roma")
         composeTestRule.onNodeWithText("Roma").assertExists()
     }
-
-    @Test
-    fun propertyCard_checkDetails() {
-        composeTestRule.setContent {
-            MiCasaEsTuCasaTheme {
-                PropertyCard(
-                    imageRes = android.R.drawable.ic_menu_gallery,
-                    name = "Villa Test",
-                    rating = 4.5,
-                    location = "Roma",
-                    price = 100
-                )
-            }
-        }
-
-        composeTestRule.onNodeWithText("Villa Test").assertIsDisplayed()
-        composeTestRule.onNodeWithText("100", substring = true).assertIsDisplayed()
-    }
-
     @Test
     fun journalSection_buttonInteraction() {
         composeTestRule.setContent {

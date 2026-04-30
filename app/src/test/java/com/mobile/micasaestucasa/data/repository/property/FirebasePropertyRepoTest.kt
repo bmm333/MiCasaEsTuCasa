@@ -11,8 +11,11 @@ import com.mobile.micasaestucasa.data.dto.property.PropertyDto
 import com.mobile.micasaestucasa.domain.model.property.Property
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -26,10 +29,16 @@ class FirebasePropertyRepoTest {
 
     @Before
     fun setUp() {
-        firestore = mockk()
-        collection = mockk()
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
+        firestore = mockk(relaxed = true)
+        collection = mockk(relaxed = true)
         every { firestore.collection("properties") } returns collection
         repo = FirebasePropertyRepo(firestore)
+    }
+
+    @After
+    fun tearDown() {
+        unmockkStatic("kotlinx.coroutines.tasks.TasksKt")
     }
 
     @Test

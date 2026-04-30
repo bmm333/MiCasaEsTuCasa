@@ -9,6 +9,7 @@ import com.mobile.micasaestucasa.ui.screens.auth.LoginScreen
 import com.mobile.micasaestucasa.ui.screens.auth.RegisterScreen
 import com.mobile.micasaestucasa.ui.screens.home.HomeScreen
 import com.mobile.micasaestucasa.ui.viewmodels.MainViewModel
+import com.mobile.micasaestucasa.ui.screens.profile.ProfileScreen
 
 @Composable
 fun AppNavigation(
@@ -50,7 +51,20 @@ fun AppNavigation(
 
         composable<Route.Home> {
             HomeScreen(
-                onNavigateToLogin = {
+                navController = navController,
+                onNavigateToProperty = { propertyId ->
+                    // navController.navigate(Route.PropertyDetail(propertyId))
+                }
+            )
+        }
+
+        composable<Route.Profile> {
+            ProfileScreen(
+                navController = navController,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onLogoutNavigate = {
                     navController.navigate(Route.Login) {
                         popUpTo(0) { inclusive = true }
                     }

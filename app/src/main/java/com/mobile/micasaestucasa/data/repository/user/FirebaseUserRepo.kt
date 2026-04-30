@@ -1,12 +1,13 @@
 package com.mobile.micasaestucasa.data.repository.user
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.mobile.micasaestucasa.data.dto.user.UserDTO
 import com.mobile.micasaestucasa.data.mapper.user.toDomain
+import com.mobile.micasaestucasa.data.mapper.user.toDto
 import com.mobile.micasaestucasa.domain.model.user.User
+import com.mobile.micasaestucasa.domain.model.user.UserBadge
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
-
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -14,32 +15,57 @@ class FirebaseUserRepo @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore
 ) : UserRepo {
+
+    private val usersCollection = firestore.collection("users")
+
     override suspend fun getCurrentUser(): User? {
         val firebaseUser = firebaseAuth.currentUser ?: return null
+        return getUserProfile(firebaseUser.uid).getOrNull()
+    }
+
+    override suspend fun getUserProfile(uid: String): Result<User> {
         return try {
-            val doc = firestore.collection("users")
-                .document(firebaseUser.uid)
-                .get().await()
-            doc.toObject(UserDTO::class.java)?.toDomain()
+            val document = usersCollection.document(uid).get().await()
+            val dto = document.toObject(UserDTO::class.java)
+
+            if (dto != null) {
+                Result.success(dto.toDomain())
+            } else {
+                Result.failure(Exception("User not found in Firestore"))
+            }
+
         } catch (e: Exception) {
-            null
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateUserProfile(user: User): Result<Unit> {
+        return try {
+            usersCollection.document(user.id)
+                .set(user.toDto())
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
     override suspend fun updateBadge(
         hostId: String,
-        badge: com.mobile.micasaestucasa.domain.model.user.UserBadge,
+        badge: UserBadge,
         avgRating: Double,
         reviewsCount: Int
     ): Result<Unit> {
         return try {
-            firestore.collection("users").document(hostId).update(
+            usersCollection.document(hostId).update(
                 mapOf(
                     "badge" to badge.name,
                     "avgRating" to avgRating,
                     "reviewsCount" to reviewsCount
                 )
             ).await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -52,12 +78,13 @@ class FirebaseUserRepo @Inject constructor(
         renterReviewsCount: Int
     ): Result<Unit> {
         return try {
-            firestore.collection("users").document(renterId).update(
+            usersCollection.document(renterId).update(
                 mapOf(
-                    "reliabilityScore"   to reliabilityScore,
+                    "reliabilityScore" to reliabilityScore,
                     "renterReviewsCount" to renterReviewsCount
                 )
             ).await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

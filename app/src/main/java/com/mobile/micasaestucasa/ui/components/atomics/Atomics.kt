@@ -1,15 +1,37 @@
 package com.mobile.micasaestucasa.ui.components.atomics
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,7 +47,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mobile.micasaestucasa.ui.theme.*
+import com.mobile.micasaestucasa.ui.theme.AppShapes
+import com.mobile.micasaestucasa.ui.theme.IconSize
+import com.mobile.micasaestucasa.ui.theme.Primario
+import com.mobile.micasaestucasa.ui.theme.Secondary
+import com.mobile.micasaestucasa.ui.theme.Spacing
+import com.mobile.micasaestucasa.ui.theme.Typography
 
 object HomeAtomics {
     val paddingCard = 16.dp
@@ -41,12 +68,12 @@ fun ShimmerEffect(
     modifier: Modifier = Modifier,
     widthOfShadowBrush: Int = 500,
     angleOfAxisY: Float = 270f,
-    durationMillis: Int = 1000,
+    durationMillis: Int = 1000
 ) {
     val shimmerColors = listOf(
         Color.LightGray.copy(alpha = 0.6f),
         Color.LightGray.copy(alpha = 0.2f),
-        Color.LightGray.copy(alpha = 0.6f),
+        Color.LightGray.copy(alpha = 0.6f)
     )
 
     val transition = rememberInfiniteTransition(label = "")
@@ -56,17 +83,17 @@ fun ShimmerEffect(
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = durationMillis,
-                easing = LinearEasing,
+                easing = LinearEasing
             ),
-            repeatMode = RepeatMode.Restart,
+            repeatMode = RepeatMode.Restart
         ),
-        label = "Shimmer loading animation",
+        label = "Shimmer loading animation"
     )
 
     val brush = Brush.linearGradient(
         colors = shimmerColors,
         start = Offset(x = translateAnimation.value - widthOfShadowBrush, y = 0.0f),
-        end = Offset(x = translateAnimation.value, y = angleOfAxisY),
+        end = Offset(x = translateAnimation.value, y = angleOfAxisY)
     )
 
     Box(
@@ -160,7 +187,7 @@ fun GradientButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    baseColor: Color = Primario,
+    baseColor: Color = Primario
 ) {
     val gradientBrush = Brush.horizontalGradient(
         colors = listOf(
@@ -208,7 +235,9 @@ fun SearchInput(
         placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.outline) },
         leadingIcon = if (leadingIcon != null) {
             { Icon(leadingIcon, contentDescription = null, tint = Primario) }
-        } else null,
+        } else {
+            null
+        },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
         colors = TextFieldDefaults.colors(
@@ -236,8 +265,11 @@ fun CollectionCategoryItem(
         Surface(
             modifier = Modifier.size(80.dp),
             shape = HomeAtomics.chipShape,
-            color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer
-            else MaterialTheme.colorScheme.surfaceVariant,
+            color = if (isSelected) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            },
             tonalElevation = 2.dp,
             onClick = onClick
         ) {
@@ -246,7 +278,11 @@ fun CollectionCategoryItem(
                     imageVector = icon,
                     contentDescription = label,
                     modifier = Modifier.size(32.dp).scale(if (isSelected) 1.1f else 1f),
-                    tint = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else Secondary
+                    tint = if (isSelected) {
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                    } else {
+                        Secondary
+                    }
                 )
             }
         }

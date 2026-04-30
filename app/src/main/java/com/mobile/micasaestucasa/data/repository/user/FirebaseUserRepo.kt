@@ -2,7 +2,6 @@ package com.mobile.micasaestucasa.data.repository.user
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.mobile.micasaestucasa.data.dto.user.UserDTO
 import com.mobile.micasaestucasa.data.mapper.user.toDomain
 import com.mobile.micasaestucasa.data.mapper.user.toDto
 import com.mobile.micasaestucasa.domain.model.user.User

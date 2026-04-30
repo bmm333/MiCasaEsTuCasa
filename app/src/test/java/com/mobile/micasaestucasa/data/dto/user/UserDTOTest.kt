@@ -1,5 +1,6 @@
 package com.mobile.micasaestucasa.data.dto.user
 
+import UserDTO
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test

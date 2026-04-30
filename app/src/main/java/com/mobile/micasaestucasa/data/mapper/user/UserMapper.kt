@@ -1,5 +1,5 @@
 package com.mobile.micasaestucasa.data.mapper.user
-import com.mobile.micasaestucasa.data.dto.user.UserDTO
+import UserDTO
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserBadge
 import com.mobile.micasaestucasa.domain.model.user.UserRole
@@ -23,7 +23,6 @@ fun UserDTO.toDomain(): User = User(
     fcmToken = fcmToken,
     createdAt = createdAt ?: System.currentTimeMillis(),
 
-    // PROFILE SYSTEM
     bio = bio ?: "",
     profileImageUrl = profileImageUrl,
     address = address ?: "",
@@ -36,7 +35,6 @@ fun User.toDto(): UserDTO = UserDTO(
     email = email,
     roles = roles.map { it.name },
 
-    // REVIEW SYSTEM
     badge = badge.name,
     avgRating = avgRating,
     reviewsCount = reviewsCount,

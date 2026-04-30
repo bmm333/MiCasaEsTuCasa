@@ -11,37 +11,67 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.mobile.micasaestucasa.ui.navigation.Route
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
 
+sealed class BottomNavItem(val route: Any, val icon: ImageVector, val label: String) {
+    object Explore : BottomNavItem(Route.Home, Icons.Default.Search, "Explore")
+    object Saved : BottomNavItem("saved", Icons.Default.Favorite, "Saved") // Placeholder for now
+    object Trips : BottomNavItem("trips", Icons.Default.TravelExplore, "Trips") // Placeholder for now
+    object Profile : BottomNavItem(Route.Profile, Icons.Default.Person, "Profile")
+}
+
 @Composable
 fun BottomNavigationBar(
-    selectedItem: Int = 0,
-    onItemSelected: (Int) -> Unit = {}
+    navController: NavController,
+    modifier: Modifier = Modifier
 ) {
-    val items = listOf("Explore", "Saved", "Trips", "Profile")
-    val icons = listOf(
-        Icons.Default.Search,
-        Icons.Default.Favorite,
-        Icons.Default.TravelExplore,
-        Icons.Default.Person
+    val items = listOf(
+        BottomNavItem.Explore,
+        BottomNavItem.Saved,
+        BottomNavItem.Trips,
+        BottomNavItem.Profile
     )
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
 
     NavigationBar(
         containerColor = Color.White,
-        modifier = Modifier.testTag("bottom_nav_bar")
+        modifier = modifier.testTag("bottom_nav_bar")
     ) {
-        items.forEachIndexed { index, item ->
+        items.forEach { item ->
+            val isSelected = currentDestination?.hierarchy?.any {
+                it.hasRoute(item.route::class)
+            } == true
+
             NavigationBarItem(
-                icon = { Icon(icons[index], contentDescription = item) },
-                label = { Text(item, style = Typography.labelSmall) },
-                selected = selectedItem == index,
-                onClick = { onItemSelected(index) },
-                modifier = Modifier.testTag("nav_item_$item"),
+                icon = { Icon(item.icon, contentDescription = item.label) },
+                label = { Text(item.label, style = Typography.labelSmall) },
+                selected = isSelected,
+                onClick = {
+                    if (item.route is Route) {
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                },
+                modifier = Modifier.testTag("nav_item_${item.label}"),
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Primario,
                     selectedTextColor = Primario,
@@ -52,10 +82,4 @@ fun BottomNavigationBar(
             )
         }
     }
-}
-
-@Composable
-@Preview(showBackground = true, name = "Bottom Navbar Preview")
-fun BottomNavigationBarPreview() {
-    BottomNavigationBar()
 }

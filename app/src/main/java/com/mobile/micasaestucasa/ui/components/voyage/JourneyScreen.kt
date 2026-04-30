@@ -12,13 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.mobile.micasaestucasa.ui.components.home.BottomNavigationBar
 
 @Composable
-@Preview(showBackground = true, name = "Test")
-fun JourneysScreen() {
+fun JourneysScreen(navController: NavController) {
     Scaffold(
-        bottomBar = { BottomNavigationBar() }
+        bottomBar = { BottomNavigationBar(navController = navController) }
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -74,4 +75,11 @@ fun JourneysScreen() {
             item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
+}
+
+@Preview(showBackground = true, name = "Test")
+@Composable
+fun JourneysScreenPreview() {
+    val navController = rememberNavController()
+    JourneysScreen(navController = navController)
 }

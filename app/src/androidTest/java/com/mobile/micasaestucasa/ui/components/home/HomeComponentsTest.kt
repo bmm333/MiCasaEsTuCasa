@@ -11,7 +11,8 @@ import org.junit.Rule
 import org.junit.Test
 
 class HomeComponentsTest {
-    @get:Rule val composeTestRule = createComposeRule()
+    @get:Rule
+    val composeTestRule = createComposeRule()
 
     @Test
     fun topAppBar_automation_test() {
@@ -39,6 +40,7 @@ class HomeComponentsTest {
         composeTestRule.onNodeWithText("Milano").performTextReplacement("Roma")
         composeTestRule.onNodeWithText("Roma").assertExists()
     }
+
     @Test
     fun journalSection_buttonInteraction() {
         composeTestRule.setContent {

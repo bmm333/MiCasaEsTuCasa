@@ -4,10 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
+import com.mobile.micasaestucasa.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,57 +40,71 @@ class HomeViewModel @Inject constructor(
     }
 
     fun loadHomeData() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            
-            val categories = listOf(
-                Category("Modern", "holiday_village"),
-                Category("Rustic", "cabin"),
-                Category("Beachfront", "beach_access"),
-                Category("Historic", "castle"),
-                Category("Urban", "apartment")
-            )
+        viewModelScope.launch(Dispatchers.IO) {
+            // Caricamento categorie (asincrono)
+            propertyRepo.getCategories().onSuccess { cats ->
+                _uiState.update { it.copy(categories = cats) }
+            }
 
-            val searchResult = propertyRepo.searchProperties("Roma", "2024-01-01", "2024-12-31", 1)
-
-            searchResult.onSuccess { properties ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    properties = properties,
-                    categories = categories
-                )
-            }.onFailure { exception ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = exception.message ?: "Errore durante il caricamento dei dati"
-                )
+            // Sottoscrizione real-time alle proprietà di Firestore
+            propertyRepo.getAllPropertiesFlow().collect { resource ->
+                when (resource) {
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
+                    }
+                    is Resource.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                properties = resource.data,
+                                error = null
+                            )
+                        }
+                    }
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = resource.message
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 
     fun onSearchQueryChanged(query: String) {
-        _uiState.value = _uiState.value.copy(searchQuery = query)
-        // Logica di filtraggio/ricerca
+        _uiState.update { it.copy(searchQuery = query) }
         if (query.length >= 3) {
             performSearch(query)
+        } else if (query.isEmpty()) {
+            loadHomeData()
         }
     }
 
     private fun performSearch(query: String) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            val result = propertyRepo.searchProperties(query, "2024-01-01", "2024-12-31", 1)
-            result.onSuccess { properties ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    properties = properties
-                )
-            }.onFailure { exception ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = exception.message ?: "Errore nella ricerca"
-                )
-            }
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isLoading = true) }
+            // Esempio di ricerca per città (Roma di default se non specificato meglio nella query)
+            propertyRepo.searchProperties(query, "2024-01-01", "2024-12-31", 1)
+                .onSuccess { results ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            properties = results,
+                            error = null
+                        )
+                    }
+                }
+                .onFailure { exception ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Errore nella ricerca"
+                        )
+                    }
+                }
         }
     }
 }

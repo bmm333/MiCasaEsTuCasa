@@ -1,10 +1,17 @@
 package com.mobile.micasaestucasa.ui.components.home
 
-import android.R
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,13 +25,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobile.micasaestucasa.ui.components.atomics.GradientButton
 import com.mobile.micasaestucasa.ui.components.atomics.SearchInput
-import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
 
 @Composable
-@Preview(showBackground = true, name = "JournalSection Atomized")
-fun JournalSection() {
+fun JournalSection(
+    onJoinClick: (String) -> Unit = {},
+    onReadMoreClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -65,15 +73,15 @@ fun JournalSection() {
 
             GradientButton(
                 text = "Join Us",
-                onClick = { /* Azione di iscrizione */ }
+                onClick = { onJoinClick("") }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Immagine di interior design inclinata
+            // Brand-consistent interior image
             Image(
-                painter = painterResource(id = android.R.drawable.ic_menu_gallery),
-                contentDescription = null,
+                painter = painterResource(id = android.R.drawable.ic_menu_gallery), // To be replaced with brand asset
+                contentDescription = "Interior design inspiration",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -84,4 +92,10 @@ fun JournalSection() {
             )
         }
     }
+}
+
+@Preview(showBackground = true, name = "JournalSection Preview")
+@Composable
+fun JournalSectionPreview() {
+    JournalSection()
 }

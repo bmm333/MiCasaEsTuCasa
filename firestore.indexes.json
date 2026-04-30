@@ -1,6 +1,28 @@
 {
     "indexes":[
         {
+          "collectionGroup":"reviews",
+            "fields":[
+                {"fieldPath":"propertyId","order":"ASCENDING"},
+                {"fieldPath":"createdAt","order":"DESCENDING"}
+            ]
+        },
+        {
+          "collectionGroup":"reviews",
+            "fields":[
+                { "fieldPath": "authorId", "order": "ASCENDING" },
+                { "fieldPath": "bookingId", "order": "ASCENDING" },
+                { "fieldPath": "reviewType", "order": "ASCENDING" }
+            ]
+        },
+        {
+            "collectionGroup": "reviews",
+            "fields": [
+                { "fieldPath": "targetId", "order": "ASCENDING" },
+                { "fieldPath": "reviewType", "order": "ASCENDING" }
+            ]
+        },
+        {
             "collectionGroup":"conversations",
             "queryScope":"COLLECTION",
             "fields":[

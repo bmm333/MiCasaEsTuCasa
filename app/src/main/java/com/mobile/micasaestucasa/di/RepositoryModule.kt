@@ -17,6 +17,7 @@ import com.mobile.micasaestucasa.domain.repository.chat.ChatRepo
 import com.mobile.micasaestucasa.domain.repository.notification.NotificationRepo
 import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+import com.mobile.micasaestucasa.domain.usecase.search.SearchAvaliblePropertiesUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -80,4 +81,11 @@ object RepositoryModule {
         firestore,
         messaging
     )
+    @Provides
+    @Singleton
+    fun provideSearchAvailablePropertiesUseCase(
+        propertyRepo: PropertyRepo,
+        bookingRepo: BookingRepo
+    ): SearchAvaliblePropertiesUseCase =
+        SearchAvaliblePropertiesUseCase(propertyRepo, bookingRepo)
 }

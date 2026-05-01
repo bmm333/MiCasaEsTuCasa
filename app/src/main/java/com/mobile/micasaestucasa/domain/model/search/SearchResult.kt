@@ -2,7 +2,6 @@ package com.mobile.micasaestucasa.domain.model.search
 
 import com.mobile.micasaestucasa.domain.model.property.Property
 
-
 /**
  * Represents the result of a search query.
  *
@@ -13,7 +12,7 @@ import com.mobile.micasaestucasa.domain.model.property.Property
  * */
 data class SearchResult(
     val property: Property,
-    val totalPrice:Double,
-    val nights:Int,
+    val totalPrice: Double,
+    val nights: Int,
     val isAvalible: Boolean
 )

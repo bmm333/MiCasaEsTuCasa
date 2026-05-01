@@ -1,6 +1,5 @@
 package com.mobile.micasaestucasa.domain.model.search
 
-
 /**
  * Encapsulates all the parameters used to search for properties
  * respecting the OCP.

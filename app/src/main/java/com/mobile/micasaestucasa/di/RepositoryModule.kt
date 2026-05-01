@@ -81,6 +81,7 @@ object RepositoryModule {
         firestore,
         messaging
     )
+
     @Provides
     @Singleton
     fun provideSearchAvailablePropertiesUseCase(

@@ -19,6 +19,7 @@ import com.mobile.micasaestucasa.domain.repository.notification.NotificationRepo
 import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
 import com.mobile.micasaestucasa.domain.repository.review.ReviewRepo
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+import com.mobile.micasaestucasa.domain.usecase.search.SearchAvaliblePropertiesUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -86,7 +87,14 @@ object RepositoryModule {
 
     @Provides
     @Singleton
+    fun provideSearchAvailablePropertiesUseCase(
+        propertyRepo: PropertyRepo,
+        bookingRepo: BookingRepo
+    ): SearchAvaliblePropertiesUseCase =
+        SearchAvaliblePropertiesUseCase(propertyRepo, bookingRepo)
+
     fun provideReviewRepository(
         firestore: FirebaseFirestore
     ): ReviewRepo = FirebaseReviewRepo(firestore)
+
 }

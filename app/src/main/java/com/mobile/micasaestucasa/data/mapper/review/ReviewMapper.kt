@@ -5,31 +5,31 @@ import com.mobile.micasaestucasa.domain.model.review.Review
 import com.mobile.micasaestucasa.domain.model.review.ReviewType
 
 fun ReviewDto.toDomain(): Review = Review(
-    id         = id ?: "",
-    bookingId  = bookingId ?: "",
+    id = id ?: "",
+    bookingId = bookingId ?: "",
     reviewType = reviewType?.let {
         ReviewType.valueOf(it)
     } ?: ReviewType.PROPERTY_REVIEW,
-    authorId   = authorId ?: "",
-    targetId   = targetId ?: "",
+    authorId = authorId ?: "",
+    targetId = targetId ?: "",
     propertyId = propertyId ?: "",
-    title      = title ?: "",
-    body       = body ?: "",
-    stars      = stars ?: 0,
-    hostReply  = hostReply,
-    createdAt  = createdAt ?: 0L
+    title = title ?: "",
+    body = body ?: "",
+    stars = stars ?: 0,
+    hostReply = hostReply,
+    createdAt = createdAt ?: 0L
 )
 
 fun Review.toDto(): ReviewDto = ReviewDto(
-    id         = id,
-    bookingId  = bookingId,
+    id = id,
+    bookingId = bookingId,
     reviewType = reviewType.name,
-    authorId   = authorId,
-    targetId   = targetId,
+    authorId = authorId,
+    targetId = targetId,
     propertyId = propertyId,
-    title      = title,
-    body       = body,
-    stars      = stars,
-    hostReply  = hostReply,
-    createdAt  = createdAt
+    title = title,
+    body = body,
+    stars = stars,
+    hostReply = hostReply,
+    createdAt = createdAt
 )

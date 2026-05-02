@@ -87,14 +87,15 @@ object RepositoryModule {
 
     @Provides
     @Singleton
+    fun provideReviewRepository(
+        firestore: FirebaseFirestore
+    ): ReviewRepo = FirebaseReviewRepo(firestore)
+
+    @Provides
+    @Singleton
     fun provideSearchAvailablePropertiesUseCase(
         propertyRepo: PropertyRepo,
         bookingRepo: BookingRepo
     ): SearchAvaliblePropertiesUseCase =
         SearchAvaliblePropertiesUseCase(propertyRepo, bookingRepo)
-
-    fun provideReviewRepository(
-        firestore: FirebaseFirestore
-    ): ReviewRepo = FirebaseReviewRepo(firestore)
-
 }

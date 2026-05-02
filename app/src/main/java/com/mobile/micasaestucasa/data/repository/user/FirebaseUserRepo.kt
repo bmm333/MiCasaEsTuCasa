@@ -32,7 +32,6 @@ class FirebaseUserRepo @Inject constructor(
             } else {
                 Result.failure(Exception("User not found in Firestore"))
             }
-
         } catch (e: Exception) {
             Result.failure(e)
         }

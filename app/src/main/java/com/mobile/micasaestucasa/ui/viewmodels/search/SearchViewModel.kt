@@ -13,14 +13,17 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SearchViewModel @Inject constructor(private val searchUseCase: SearchAvaliblePropertiesUseCase) : ViewModel(){
-    private val _uiState= MutableStateFlow<SearchUiState>(SearchUiState.Idle)
+class SearchViewModel @Inject constructor(private val searchUseCase: SearchAvaliblePropertiesUseCase) : ViewModel() {
+    private val _uiState = MutableStateFlow<SearchUiState>(SearchUiState.Idle)
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
-    //needed for the maps ui
-    private val _selectedPropertyId= MutableStateFlow<String?>(null)
-    val selectedPropertyId:StateFlow<String?> = _selectedPropertyId.asStateFlow()
-    //current filters
-    private var currentQuery: SearchQuery?=null;
+
+    // needed for the maps ui
+    private val _selectedPropertyId = MutableStateFlow<String?>(null)
+    val selectedPropertyId: StateFlow<String?> = _selectedPropertyId.asStateFlow()
+
+    // current filters
+    private var currentQuery: SearchQuery? = null
+
     /**
      * Executes a query with given parameters
      * Updates currentQuery for the next modification of filters
@@ -37,10 +40,11 @@ class SearchViewModel @Inject constructor(private val searchUseCase: SearchAvali
         endDate: String,
         guestsCount: Int,
         keywords: List<String> = emptyList()
-    ){
-        val query= SearchQuery(city=city, startDate=startDate, endDate=endDate, guestsCount=guestsCount, keywords=keywords)
+    ) {
+        val query = SearchQuery(city = city, startDate = startDate, endDate = endDate, guestsCount = guestsCount, keywords = keywords)
         executeSearch(query)
     }
+
     /**
      * Simply applies new order to precedent results without recaling firestore
      * */
@@ -52,7 +56,8 @@ class SearchViewModel @Inject constructor(private val searchUseCase: SearchAvali
         val query = currentQuery ?: return
         executeSearch(query.copy(maxPricePerDay = maxPrice))
     }
-    //choose in map
+
+    // choose in map
     fun selectProperty(propertyId: String?) {
         _selectedPropertyId.value = propertyId
     }
@@ -61,20 +66,20 @@ class SearchViewModel @Inject constructor(private val searchUseCase: SearchAvali
         _selectedPropertyId.value = null
         _uiState.value = SearchUiState.Idle
     }
-    private fun executeSearch(query: SearchQuery)
-    {
-        currentQuery=query
+    private fun executeSearch(query: SearchQuery) {
+        currentQuery = query
         viewModelScope.launch {
-            _uiState.value= SearchUiState.Loading
+            _uiState.value = SearchUiState.Loading
             searchUseCase(query)
                 .onSuccess { results ->
-                    _uiState.value=if (results.isEmpty())
+                    _uiState.value = if (results.isEmpty()) {
                         SearchUiState.Empty
-                    else
+                    } else {
                         SearchUiState.Results(results, query)
+                    }
                 }
                 .onFailure {
-                    _uiState.value=SearchUiState.Error(it.message?:"Errore nella ricerca")
+                    _uiState.value = SearchUiState.Error(it.message ?: "Errore nella ricerca")
                 }
         }
     }

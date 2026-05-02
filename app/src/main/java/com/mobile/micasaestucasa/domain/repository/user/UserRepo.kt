@@ -14,5 +14,4 @@ interface UserRepo {
 
     suspend fun updateUserProfile(user: User): Result<Unit>
     suspend fun getUserProfile(uid: String): Result<User>
-
 }

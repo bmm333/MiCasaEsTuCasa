@@ -8,12 +8,14 @@ import com.mobile.micasaestucasa.domain.usecase.review.EditReviewUseCase
 import com.mobile.micasaestucasa.domain.usecase.review.WriteReviewUseCase
 import com.mobile.micasaestucasa.domain.usecase.user.UpdateBadgeUseCase
 import com.mobile.micasaestucasa.domain.usecase.user.UpdateRenterScoreUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@HiltViewModel
 class ReviewViewModel @Inject constructor(
     private val writeReviewUseCase: WriteReviewUseCase,
     private val editReviewUseCase: EditReviewUseCase,
@@ -30,49 +32,45 @@ class ReviewViewModel @Inject constructor(
      * @param review Review to be written
      * @param userId UID of th author
      * */
-    fun writeReview(review: Review, userId:String)
-    {
+    fun writeReview(review: Review, userId: String) {
         viewModelScope.launch {
-            _uiState.value= ReviewUiState.Loading
-            writeReviewUseCase(review,userId)
+            _uiState.value = ReviewUiState.Loading
+            writeReviewUseCase(review, userId)
                 .onSuccess {
-                    //background task , should not block
+                    // background task , should not block
                     launch {
-                        when (review.reviewType)
-                        {
+                        when (review.reviewType) {
                             ReviewType.PROPERTY_REVIEW -> updateBadgeUseCase(review.targetId)
                             ReviewType.RENTER_REVIEW -> updateRenterScoreUseCase(review.targetId)
-
                         }
                     }
-                    _uiState.value= ReviewUiState.ReviewSubmitted
+                    _uiState.value = ReviewUiState.ReviewSubmitted
                 }
                 .onFailure {
-                    _uiState.value= ReviewUiState.Error(
-                        it.message?:"Error sending the review."
+                    _uiState.value = ReviewUiState.Error(
+                        it.message ?: "Error sending the review."
                     )
                 }
         }
-        /**
-         * Modifies an exisint review
-         * @param review Review to be modified
-         * @param userId UID of the author
-         * */
-        fun editReview(review: Review, userId: String) {
-            viewModelScope.launch {
-                _uiState.value = ReviewUiState.Loading
-                editReviewUseCase(review, userId)
-                    .onSuccess { _uiState.value = ReviewUiState.ReviewSubmitted }
-                    .onFailure {
-                        _uiState.value = ReviewUiState.Error(
-                            it.message ?: "Errore nella modifica della recensione"
-                        )
-                    }
-            }
-        }
-
-        fun resetState() { _uiState.value = ReviewUiState.Idle }
-
     }
 
+    /**
+     * Modifies an exisint review
+     * @param review Review to be modified
+     * @param userId UID of the author
+     * */
+    fun editReview(review: Review, userId: String) {
+        viewModelScope.launch {
+            _uiState.value = ReviewUiState.Loading
+            editReviewUseCase(review, userId)
+                .onSuccess { _uiState.value = ReviewUiState.ReviewSubmitted }
+                .onFailure {
+                    _uiState.value = ReviewUiState.Error(
+                        it.message ?: "Errore nella modifica della recensione"
+                    )
+                }
+        }
+    }
+
+    fun resetState() { _uiState.value = ReviewUiState.Idle }
 }

@@ -6,8 +6,9 @@ import javax.inject.Inject
 
 class GetUserReviewsUseCase @Inject constructor(private val reviewRepo: ReviewRepo) {
     suspend operator fun invoke(userId: String): Result<List<Review>> {
-        if(userId.isBlank())
+        if (userId.isBlank()) {
             return Result.failure(IllegalArgumentException("UserID obbligatorio"))
+        }
         return reviewRepo.getUserReviews(userId)
     }
 }

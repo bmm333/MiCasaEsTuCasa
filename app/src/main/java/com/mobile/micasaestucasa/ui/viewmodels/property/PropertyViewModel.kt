@@ -14,13 +14,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class PropertyViewModel @Inject constructor(private val searchPropertiesUseCase: SearchPropertiesUseCase,
+class PropertyViewModel @Inject constructor(
+    private val searchPropertiesUseCase: SearchPropertiesUseCase,
     private val getOwnerPropertiesUseCase: GetOwnerPropertiesUseCase,
-    private val createPropertyUseCase: CreatePropertyUseCase): ViewModel()
-{
+    private val createPropertyUseCase: CreatePropertyUseCase
+) : ViewModel() {
     private val _uiState = MutableStateFlow<PropertyUiState>(PropertyUiState.Idle)
     val uiState: StateFlow<PropertyUiState> = _uiState.asStateFlow()
-    //cache last search - lower the firestore rate if city and params dont change
+
+    // cache last search - lower the firestore rate if city and params dont change
     private var lastSearchParams: SearchParams? = null
 
     /**
@@ -31,7 +33,7 @@ class PropertyViewModel @Inject constructor(private val searchPropertiesUseCase:
      * @param startDate Begining date
      * @param endDate End date of the stay
      * @param capacity Minum number of the guests
-     * @param  keywords List of keywords to search
+     * @param keywords List of keywords to search
      * */
     fun searchProperties(
         city: String,
@@ -56,22 +58,23 @@ class PropertyViewModel @Inject constructor(private val searchPropertiesUseCase:
                 }
         }
     }
+
     /**
      * Loads all the properties of the logged
      * owner
      * @param ownerId Firebase UID of the owner
      * */
-    fun loadOwnerProperties(ownerId:String)
-    {
+    fun loadOwnerProperties(ownerId: String) {
         viewModelScope.launch {
-            _uiState.value= PropertyUiState.Loading
+            _uiState.value = PropertyUiState.Loading
             getOwnerPropertiesUseCase(ownerId)
-                .onSuccess { _uiState.value= PropertyUiState.OwnerSuccess(it) }
+                .onSuccess { _uiState.value = PropertyUiState.OwnerSuccess(it) }
                 .onFailure {
-                    _uiState.value= PropertyUiState.Error(it.message?:"Error on loading properties")
+                    _uiState.value = PropertyUiState.Error(it.message ?: "Error on loading properties")
                 }
         }
     }
+
     /**
      * Creates a new property
      * After the creation it reloads the list of the properties of the owner
@@ -80,8 +83,7 @@ class PropertyViewModel @Inject constructor(private val searchPropertiesUseCase:
      * @param property Property to be created
      * @param ownerId Firebase UID of the owner
      * */
-    fun createProperty(property: Property, ownerId:String)
-    {
+    fun createProperty(property: Property, ownerId: String) {
         viewModelScope.launch {
             _uiState.value = PropertyUiState.Loading
             createPropertyUseCase(property)
@@ -104,9 +106,3 @@ class PropertyViewModel @Inject constructor(private val searchPropertiesUseCase:
         val keywords: List<String>
     )
 }
-
-
-
-
-
-

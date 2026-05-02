@@ -98,5 +98,4 @@ object RepositoryModule {
         bookingRepo: BookingRepo
     ): SearchAvaliblePropertiesUseCase =
         SearchAvaliblePropertiesUseCase(propertyRepo, bookingRepo)
-
 }

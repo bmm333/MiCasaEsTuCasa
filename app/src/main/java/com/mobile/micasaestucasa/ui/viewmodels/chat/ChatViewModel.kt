@@ -13,18 +13,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
     private val getOrCreateConversationUseCase: GetOrCreateConversationUseCase,
     private val chatRepo: ChatRepo
-): ViewModel() {
+) : ViewModel() {
     private val _uiState = MutableStateFlow<ChatUiState>(ChatUiState.Idle)
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages.asStateFlow()
+
     /**
      * Opens or creates the conversations and starts the observer
      *
@@ -32,19 +32,22 @@ class ChatViewModel @Inject constructor(
      * @param renterId UID of the renter
      * @param propertyId Id of the property
      * */
-    fun openConversation(hostId:String,renterId:String,propertyId:String){
+    fun openConversation(hostId: String, renterId: String, propertyId: String) {
         viewModelScope.launch {
-            _uiState.value= ChatUiState.Loading
-            getOrCreateConversationUseCase(hostId,renterId,propertyId)
+            _uiState.value = ChatUiState.Loading
+            getOrCreateConversationUseCase(hostId, renterId, propertyId)
                 .onSuccess { conversation ->
-                    _uiState.value= ChatUiState.ConversationReady(conversation)
+                    _uiState.value = ChatUiState.ConversationReady(conversation)
                     observeMessages(conversation.id)
                 }
-                .onFailure { _uiState.value= ChatUiState.Error(
-                    it.message?:"Error opening the conversation"
-                ) }
+                .onFailure {
+                    _uiState.value = ChatUiState.Error(
+                        it.message ?: "Error opening the conversation"
+                    )
+                }
         }
     }
+
     /**
      * observes messages in realtime through firesotre snapshotlisnter
      * collects is deleted automaitcally with viewmodelscope
@@ -57,6 +60,7 @@ class ChatViewModel @Inject constructor(
                 }
         }
     }
+
     /**
      * sends a textual message
      * @param conversationId Id of the conversation

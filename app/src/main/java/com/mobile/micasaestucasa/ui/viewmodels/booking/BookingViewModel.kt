@@ -15,16 +15,15 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
-
 @HiltViewModel
 class BookingViewModel @Inject constructor(
     private val createBookingUseCase: CreateBookingUseCase,
     private val acceptBookingUseCase: AcceptBookingUseCase,
     private val cancelBookingUseCase: CancelBookingUseCase
-): ViewModel(){
-    private val _uiState= MutableStateFlow<BookingUiState>(BookingUiState.Idle)
-    val uiState: StateFlow<BookingUiState> =_uiState.asStateFlow()
-    private val _paymentStatus= MutableStateFlow<PaymentUiStatus>(PaymentUiStatus.Idle)
+) : ViewModel() {
+    private val _uiState = MutableStateFlow<BookingUiState>(BookingUiState.Idle)
+    val uiState: StateFlow<BookingUiState> = _uiState.asStateFlow()
+    private val _paymentStatus = MutableStateFlow<PaymentUiStatus>(PaymentUiStatus.Idle)
     val paymentState: StateFlow<PaymentUiStatus> = _paymentStatus.asStateFlow()
 
     /**
@@ -32,22 +31,22 @@ class BookingViewModel @Inject constructor(
      * the idemp. key is the UUID generated in this portion of code. Explanation in ADR
      * @param booking Booking to be created
      * */
-    fun createBooking(booking: Booking)
-    {
-        val idemKey=UUID.randomUUID().toString()
+    fun createBooking(booking: Booking) {
+        val idemKey = UUID.randomUUID().toString()
         viewModelScope.launch {
-            _uiState.value= BookingUiState.Loading
-            createBookingUseCase(booking,idemKey)
-                .onSuccess { bookingId->
-                    _uiState.value= BookingUiState.BookingCreated(bookingId)
+            _uiState.value = BookingUiState.Loading
+            createBookingUseCase(booking, idemKey)
+                .onSuccess { bookingId ->
+                    _uiState.value = BookingUiState.BookingCreated(bookingId)
                 }
                 .onFailure {
-                    _uiState.value= BookingUiState.Error(
-                        it.message?:"Error creating the booking"
+                    _uiState.value = BookingUiState.Error(
+                        it.message ?: "Error creating the booking"
                     )
                 }
         }
     }
+
     /**
      * Host accepts the request
      * Verification that hostid matches the booking is done server side
@@ -66,6 +65,7 @@ class BookingViewModel @Inject constructor(
                 }
         }
     }
+
     /**
      * Cancells a booking
      * both renter and host can cancell it. verified in repo
@@ -84,6 +84,7 @@ class BookingViewModel @Inject constructor(
                 }
         }
     }
+
     /**
      * Mock payument flow: simulating a payment with a 2 second delay
      * @param bookingId id of the booking for wich we are simulating a payment

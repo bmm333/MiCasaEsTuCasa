@@ -13,8 +13,7 @@ fun UserDTO.toDomain(): User = User(
 
     // REVIEW SYSTEM
     badge = badge?.let {
-        try { UserBadge.valueOf(it) }
-        catch (_: Exception) { UserBadge.NEW_HOST }
+        try { UserBadge.valueOf(it) } catch (_: Exception) { UserBadge.NEW_HOST }
     } ?: UserBadge.NEW_HOST,
     avgRating = avgRating ?: 0.0,
     reviewsCount = reviewsCount ?: 0,

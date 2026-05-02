@@ -25,7 +25,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobile.micasaestucasa.ui.components.atomics.AppAvatar
-import com.mobile.micasaestucasa.ui.theme.IconSize
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
 

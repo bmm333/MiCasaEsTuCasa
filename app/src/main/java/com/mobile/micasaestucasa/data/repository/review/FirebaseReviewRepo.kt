@@ -34,32 +34,32 @@ class FirebaseReviewRepo @Inject constructor(
     override suspend fun getPropertyReviews(
         propertyId: String
     ): Result<List<Review>> {
-        return try{
-            val snapshot=collection
-                .whereEqualTo("propertyId",propertyId)
-                .orderBy("createdAt",Query.Direction.DESCENDING)
+        return try {
+            val snapshot = collection
+                .whereEqualTo("propertyId", propertyId)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get().await()
             Result.success(
                 snapshot.documents.mapNotNull {
                     it.toObject(ReviewDto::class.java)?.toDomain()
                 }
             )
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
     override suspend fun getUserReviews(userId: String): Result<List<Review>> {
         return try {
-            val snapshot=collection
-                .whereEqualTo("authorId",userId)
-                .orderBy("createdAt",Query.Direction.DESCENDING)
+            val snapshot = collection
+                .whereEqualTo("authorId", userId)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get().await()
             Result.success(
                 snapshot.documents.mapNotNull {
-                    it.toObject(ReviewDto::class.java)?.toDomain()})
-        }catch(e: Exception)
-        {
+                    it.toObject(ReviewDto::class.java)?.toDomain()
+                }
+            )
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
@@ -68,14 +68,14 @@ class FirebaseReviewRepo @Inject constructor(
         userId: String
     ): Result<Unit> {
         return try {
-            //ownershipt check before proceeding
-            val doc=collection.document(reviewId).get().await()
-            if(doc.getString("authorId")!=userId)
+            // ownershipt check before proceeding
+            val doc = collection.document(reviewId).get().await()
+            if (doc.getString("authorId") != userId) {
                 return Result.failure(SecurityException("User not authorized to delete this reivew1!!! [H-01]"))
+            }
             collection.document(reviewId).delete().await()
             Result.success(Unit)
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
@@ -83,28 +83,29 @@ class FirebaseReviewRepo @Inject constructor(
         review: Review,
         userId: String
     ): Result<Unit> {
-        //samething as before we do an ownership check before proceeding
-        return try{
-            val doc=collection.document(review.id).get().await()
-            if(doc.getString("authorId")!=userId)
+        // samething as before we do an ownership check before proceeding
+        return try {
+            val doc = collection.document(review.id).get().await()
+            if (doc.getString("authorId") != userId) {
                 return Result.failure(SecurityException("User not authorized to edit this review!! [H-02]"))
+            }
             collection.document(review.id).set(review.toDto()).await()
             Result.success(Unit)
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     override suspend fun replyToReview(
         reviewId: String,
-        hostId:String,
+        hostId: String,
         reply: String
     ): Result<Unit> {
         return try {
             val doc = collection.document(reviewId).get().await()
-            if (doc.getString("hostId") != hostId)
+            if (doc.getString("hostId") != hostId) {
                 return Result.failure(SecurityException("Non autorizzato [H-03]"))
+            }
             collection.document(reviewId)
                 .update("hostReply", reply).await()
             Result.success(Unit)
@@ -117,15 +118,13 @@ class FirebaseReviewRepo @Inject constructor(
         userId: String,
         propertyId: String
     ): Result<Boolean> {
-        return try{
-            val snapshot=collection.whereEqualTo("authorId",userId).whereEqualTo("propertyId",propertyId).limit(1).get().await()
+        return try {
+            val snapshot = collection.whereEqualTo("authorId", userId).whereEqualTo("propertyId", propertyId).limit(1).get().await()
             Result.success(!snapshot.isEmpty)
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
 
     override suspend fun hasUserAlreadyReviewedBooking(
         userId: String,

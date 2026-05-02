@@ -91,14 +91,12 @@ fun HomeScreenContent(
     onNavigateToProfile: () -> Unit = {}
 ) {
     Scaffold(
-        topBar = { 
+        topBar = {
             Topnavigation(
                 onProfileClick = onNavigateToProfile
-            ) 
+            )
         },
-        bottomBar = { 
-            BottomNavigationBar(navController = navController) 
-        }
+        bottomBar = { BottomNavigationBar(navController = navController) }
     ) { padding ->
         LazyColumn(
             modifier = Modifier

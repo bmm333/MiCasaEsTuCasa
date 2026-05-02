@@ -45,42 +45,44 @@ class WriteReviewUseCaseTest {
     )
 
     private val validRenterReview = Review(
-        id          = "",
-        bookingId   = "booking123",
-        reviewType  = ReviewType.RENTER_REVIEW,
-        authorId    = "host789",
-        targetId    = "renter456",
-        propertyId  = "prop123",
-        title       = "Ospite eccellente",
-        body        = "Lasciato tutto pulito e ordinato",
-        stars       = 5
+        id = "",
+        bookingId = "booking123",
+        reviewType = ReviewType.RENTER_REVIEW,
+        authorId = "host789",
+        targetId = "renter456",
+        propertyId = "prop123",
+        title = "Ospite eccellente",
+        body = "Lasciato tutto pulito e ordinato",
+        stars = 5
     )
+
     @Before
-    fun setUp()
-    {
-        reviewRepo= mockk()
-        bookingRepo=mockk()
-        useCase= WriteReviewUseCase(reviewRepo,bookingRepo)
-    }
-    @Test
-    fun `Property_review valid written correctly by renter`()= runTest {
-        coEvery{bookingRepo.getBookingById("booking123")} returns Result.success(completedBooking)
-        coEvery { reviewRepo.hasUserAlreadyReviewedBooking("renter456","booking123", ReviewType.PROPERTY_REVIEW) } returns Result.success(false)
-        coEvery { reviewRepo.writeReview(any(),any()) } returns Result.success(Unit)
-        val result=useCase(validPropertyReview,"renter456")
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { reviewRepo.writeReview(validPropertyReview,"renter456")  }
+    fun setUp() {
+        reviewRepo = mockk()
+        bookingRepo = mockk()
+        useCase = WriteReviewUseCase(reviewRepo, bookingRepo)
     }
 
     @Test
-    fun `RENTER_Review valid written by host`()=runTest {
-        coEvery{bookingRepo.getBookingById("booking123")} returns Result.success(completedBooking)
-        coEvery { reviewRepo.hasUserAlreadyReviewedBooking("host789","booking123", ReviewType.RENTER_REVIEW) } returns Result.success(false)
-        coEvery { reviewRepo.writeReview(any(),any()) } returns Result.success(Unit)
-        val result=useCase(validRenterReview,"host789")
+    fun `Property_review valid written correctly by renter`() = runTest {
+        coEvery { bookingRepo.getBookingById("booking123") } returns Result.success(completedBooking)
+        coEvery { reviewRepo.hasUserAlreadyReviewedBooking("renter456", "booking123", ReviewType.PROPERTY_REVIEW) } returns Result.success(false)
+        coEvery { reviewRepo.writeReview(any(), any()) } returns Result.success(Unit)
+        val result = useCase(validPropertyReview, "renter456")
         assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { reviewRepo.writeReview(validRenterReview,"host789") }
+        coVerify(exactly = 1) { reviewRepo.writeReview(validPropertyReview, "renter456") }
     }
+
+    @Test
+    fun `RENTER_Review valid written by host`() = runTest {
+        coEvery { bookingRepo.getBookingById("booking123") } returns Result.success(completedBooking)
+        coEvery { reviewRepo.hasUserAlreadyReviewedBooking("host789", "booking123", ReviewType.RENTER_REVIEW) } returns Result.success(false)
+        coEvery { reviewRepo.writeReview(any(), any()) } returns Result.success(Unit)
+        val result = useCase(validRenterReview, "host789")
+        assertTrue(result.isSuccess)
+        coVerify(exactly = 1) { reviewRepo.writeReview(validRenterReview, "host789") }
+    }
+
     @Test
     fun `userId blank ritorna failure senza chiamare repo`() = runTest {
         val result = useCase(validPropertyReview, "")
@@ -104,6 +106,7 @@ class WriteReviewUseCaseTest {
         assertEquals("Titolo obbligatorio", result.exceptionOrNull()?.message)
         coVerify(exactly = 0) { bookingRepo.getBookingById(any()) }
     }
+
     @Test
     fun `body vuoto ritorna failure`() = runTest {
         val result = useCase(validPropertyReview.copy(body = ""), "renter456")
@@ -146,6 +149,7 @@ class WriteReviewUseCaseTest {
         assertTrue(result.isFailure)
         coVerify(exactly = 0) { bookingRepo.getBookingById(any()) }
     }
+
     @Test
     fun `booking non trovato ritorna failure`() = runTest {
         coEvery { bookingRepo.getBookingById(any()) } returns Result.failure(Exception("Booking not found"))
@@ -182,10 +186,11 @@ class WriteReviewUseCaseTest {
         assertTrue(result.isFailure)
         coVerify(exactly = 0) { reviewRepo.writeReview(any(), any()) }
     }
+
     @Test
     fun `PROPERTY_REVIEW scritta dall host ritorna failure`() = runTest {
         coEvery { bookingRepo.getBookingById(any()) } returns
-                Result.success(completedBooking)
+            Result.success(completedBooking)
         val result = useCase(validPropertyReview, "host789")
         assertTrue(result.isFailure)
         assertEquals(
@@ -204,6 +209,7 @@ class WriteReviewUseCaseTest {
         assertEquals("Dose not match the property", result.exceptionOrNull()?.message)
         coVerify(exactly = 0) { reviewRepo.writeReview(any(), any()) }
     }
+
     @Test
     fun `RENTER_REVIEW scritta dal renter ritorna failure`() = runTest {
         coEvery { bookingRepo.getBookingById(any()) } returns Result.success(completedBooking)
@@ -222,11 +228,13 @@ class WriteReviewUseCaseTest {
         assertEquals("Dose not match the renter", result.exceptionOrNull()?.message)
         coVerify(exactly = 0) { reviewRepo.writeReview(any(), any()) }
     }
+
     @Test
     fun `PROPERTY_REVIEW doppia per stesso booking ritorna failure`() = runTest {
         coEvery { bookingRepo.getBookingById(any()) } returns
-                Result.success(completedBooking)
-        coEvery { reviewRepo.hasUserAlreadyReviewedBooking("renter456", "booking123", ReviewType.PROPERTY_REVIEW)
+            Result.success(completedBooking)
+        coEvery {
+            reviewRepo.hasUserAlreadyReviewedBooking("renter456", "booking123", ReviewType.PROPERTY_REVIEW)
         } returns Result.success(true)
         val result = useCase(validPropertyReview, "renter456")
         assertTrue(result.isFailure)
@@ -237,9 +245,10 @@ class WriteReviewUseCaseTest {
     @Test
     fun `RENTER_REVIEW doppia per stesso booking ritorna failure`() = runTest {
         coEvery { bookingRepo.getBookingById(any()) } returns
-                Result.success(completedBooking)
+            Result.success(completedBooking)
         coEvery {
-            reviewRepo.hasUserAlreadyReviewedBooking("host789", "booking123", ReviewType.RENTER_REVIEW) } returns Result.success(true)
+            reviewRepo.hasUserAlreadyReviewedBooking("host789", "booking123", ReviewType.RENTER_REVIEW)
+        } returns Result.success(true)
         val result = useCase(validRenterReview, "host789")
         assertTrue(result.isFailure)
         coVerify(exactly = 0) { reviewRepo.writeReview(any(), any()) }
@@ -250,11 +259,12 @@ class WriteReviewUseCaseTest {
         coEvery { bookingRepo.getBookingById(any()) } returns Result.success(completedBooking)
         coEvery {
             reviewRepo.hasUserAlreadyReviewedBooking("renter456", "booking123", ReviewType.PROPERTY_REVIEW)
-        } returns Result.success(false)  // PROPERTY_REVIEW non ancora scritta
+        } returns Result.success(false) // PROPERTY_REVIEW non ancora scritta
         coEvery { reviewRepo.writeReview(any(), any()) } returns Result.success(Unit)
         val result = useCase(validPropertyReview, "renter456")
         assertTrue(result.isSuccess)
     }
+
     @Test
     fun `errore Firestore in writeReview propagato correttamente`() = runTest {
         coEvery { bookingRepo.getBookingById(any()) } returns Result.success(completedBooking)

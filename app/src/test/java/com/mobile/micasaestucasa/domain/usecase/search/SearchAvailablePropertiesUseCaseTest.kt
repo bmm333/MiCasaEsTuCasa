@@ -13,7 +13,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
-class SearchAvailablePropertiesUseCaseTest{
+class SearchAvailablePropertiesUseCaseTest {
     private lateinit var propertyRepository: PropertyRepo
     private lateinit var bookingRepository: BookingRepo
     private lateinit var useCase: SearchAvaliblePropertiesUseCase
@@ -49,20 +49,21 @@ class SearchAvailablePropertiesUseCaseTest{
         rating = rating,
         reviewsCount = 5
     )
+
     @Before
-    fun setUp()
-    {
-        propertyRepository= mockk()
-        bookingRepository= mockk()
-        useCase= SearchAvaliblePropertiesUseCase(propertyRepository, bookingRepository)
+    fun setUp() {
+        propertyRepository = mockk()
+        bookingRepository = mockk()
+        useCase = SearchAvaliblePropertiesUseCase(propertyRepository, bookingRepository)
     }
+
     @Test
-    fun `valid query returns properties that are avalible with total price` () = runTest {
+    fun `valid query returns properties that are avalible with total price`() = runTest {
         val props = listOf(makeProperty("p1"), makeProperty("p2"))
         coEvery { propertyRepository.searchProperties(any(), any(), any(), any(), any()) } returns
-                Result.success(props)
+            Result.success(props)
         coEvery { bookingRepository.hasOverlappingBooking(any(), any(), any()) } returns
-                Result.success(false)
+            Result.success(false)
         val result = useCase(validQuery)
         assertTrue(result.isSuccess)
         val results = result.getOrThrow()
@@ -71,39 +72,42 @@ class SearchAvailablePropertiesUseCaseTest{
         assertEquals(9, results[0].nights)
         assertTrue(results[0].isAvalible)
     }
+
     @Test
-    fun `property with active bookings is excluded from the results`()=runTest {
+    fun `property with active bookings is excluded from the results`() = runTest {
         val props = listOf(makeProperty("p1"), makeProperty("p2"))
         coEvery { propertyRepository.searchProperties(any(), any(), any(), any(), any()) } returns
-                Result.success(props)
+            Result.success(props)
         // p1 disponibile, p2 occupata
         coEvery { bookingRepository.hasOverlappingBooking("p1", any(), any()) } returns
-                Result.success(false)
+            Result.success(false)
         coEvery { bookingRepository.hasOverlappingBooking("p2", any(), any()) } returns
-                Result.success(true)
+            Result.success(true)
         val result = useCase(validQuery)
         assertTrue(result.isSuccess)
         val results = result.getOrThrow()
         assertEquals(1, results.size)
         assertEquals("p1", results[0].property.id)
     }
+
     @Test
     fun `all properties occupied return empty list`() = runTest {
         val props = listOf(makeProperty("p1"), makeProperty("p2"), makeProperty("p3"))
         coEvery { propertyRepository.searchProperties(any(), any(), any(), any(), any()) } returns
-                Result.success(props)
+            Result.success(props)
         coEvery { bookingRepository.hasOverlappingBooking(any(), any(), any()) } returns
-                Result.success(true)
+            Result.success(true)
 
         val result = useCase(validQuery)
 
         assertTrue(result.isSuccess)
         assertTrue(result.getOrThrow().isEmpty())
     }
+
     @Test
     fun `empty firestore returns empty list`() = runTest {
         coEvery { propertyRepository.searchProperties(any(), any(), any(), any(), any()) } returns
-                Result.success(emptyList())
+            Result.success(emptyList())
 
         val result = useCase(validQuery)
 
@@ -111,6 +115,7 @@ class SearchAvailablePropertiesUseCaseTest{
         assertTrue(result.getOrThrow().isEmpty())
         coVerify(exactly = 0) { bookingRepository.hasOverlappingBooking(any(), any(), any()) }
     }
+
     @Test
     fun `city empty returns failure`() = runTest {
         val result = useCase(validQuery.copy(city = ""))
@@ -119,6 +124,7 @@ class SearchAvailablePropertiesUseCaseTest{
         assertEquals("City is required", result.exceptionOrNull()?.message)
         coVerify(exactly = 0) { propertyRepository.searchProperties(any(), any(), any(), any(), any()) }
     }
+
     @Test
     fun `guestsCount zero returns failure`() = runTest {
         val result = useCase(validQuery.copy(guestsCount = 0))
@@ -126,6 +132,7 @@ class SearchAvailablePropertiesUseCaseTest{
         assertTrue(result.isFailure)
         assertEquals("Guest count must be at least 1", result.exceptionOrNull()?.message)
     }
+
     @Test
     fun `startDate equal to endDate returns failure`() = runTest {
         val result = useCase(validQuery.copy(startDate = "2026-07-10", endDate = "2026-07-10"))
@@ -140,6 +147,7 @@ class SearchAvailablePropertiesUseCaseTest{
 
         assertTrue(result.isFailure)
     }
+
     @Test
     fun `maxPricePerDay excludes properties`() = runTest {
         val props = listOf(
@@ -147,14 +155,13 @@ class SearchAvailablePropertiesUseCaseTest{
             makeProperty("expensive", pricePerDay = 200.0)
         )
         coEvery { propertyRepository.searchProperties(any(), any(), any(), any(), any()) } returns
-                Result.success(props)
+            Result.success(props)
         coEvery { bookingRepository.hasOverlappingBooking(any(), any(), any()) } returns
-                Result.success(false)
+            Result.success(false)
         val result = useCase(validQuery.copy(maxPricePerDay = 100.0))
         assertTrue(result.isSuccess)
         val results = result.getOrThrow()
         assertEquals(1, results.size)
         assertEquals("cheap", results[0].property.id)
     }
-
 }

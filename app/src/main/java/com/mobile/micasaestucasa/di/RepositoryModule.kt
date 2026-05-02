@@ -10,12 +10,14 @@ import com.mobile.micasaestucasa.data.repository.booking.FirebaseBookingRepo
 import com.mobile.micasaestucasa.data.repository.chat.FirebaseChatRepo
 import com.mobile.micasaestucasa.data.repository.notification.FirebaseNotificationRepo
 import com.mobile.micasaestucasa.data.repository.property.FirebasePropertyRepo
+import com.mobile.micasaestucasa.data.repository.review.FirebaseReviewRepo
 import com.mobile.micasaestucasa.data.repository.user.FirebaseUserRepo
 import com.mobile.micasaestucasa.domain.repository.auth.AuthRepo
 import com.mobile.micasaestucasa.domain.repository.booking.BookingRepo
 import com.mobile.micasaestucasa.domain.repository.chat.ChatRepo
 import com.mobile.micasaestucasa.domain.repository.notification.NotificationRepo
 import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
+import com.mobile.micasaestucasa.domain.repository.review.ReviewRepo
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import com.mobile.micasaestucasa.domain.usecase.search.SearchAvaliblePropertiesUseCase
 import dagger.Module
@@ -39,8 +41,9 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideUserRepository(
-        firebaseAuth: FirebaseAuth
-    ): UserRepo = FirebaseUserRepo(firebaseAuth)
+        firebaseAuth: FirebaseAuth,
+        firestore: FirebaseFirestore
+    ): UserRepo = FirebaseUserRepo(firebaseAuth, firestore)
 
     @Provides
     @Singleton
@@ -89,4 +92,9 @@ object RepositoryModule {
         bookingRepo: BookingRepo
     ): SearchAvaliblePropertiesUseCase =
         SearchAvaliblePropertiesUseCase(propertyRepo, bookingRepo)
+
+    fun provideReviewRepository(
+        firestore: FirebaseFirestore
+    ): ReviewRepo = FirebaseReviewRepo(firestore)
+
 }

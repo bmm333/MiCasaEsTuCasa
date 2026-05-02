@@ -1,6 +1,6 @@
 package com.mobile.micasaestucasa.data.mapper.user
 
-import com.mobile.micasaestucasa.data.dto.user.UserDTO
+import UserDTO
 import com.mobile.micasaestucasa.domain.model.user.UserRole
 import org.junit.Assert.assertEquals
 import org.junit.Test

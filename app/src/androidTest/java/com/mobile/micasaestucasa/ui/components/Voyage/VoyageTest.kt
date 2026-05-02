@@ -1,10 +1,11 @@
-package com.mobile.micasaestucasa.ui.componets.Voyage
+package com.mobile.micasaestucasa.ui.components.Voyage
 
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.navigation.compose.rememberNavController
 import com.mobile.micasaestucasa.ui.components.voyage.FeaturedTripCard
 import com.mobile.micasaestucasa.ui.components.voyage.JourneysScreen
 import com.mobile.micasaestucasa.ui.components.voyage.NextStepPlaceholder
@@ -53,7 +54,8 @@ class VoyageTest {
     fun journeysScreen_fullLoad_andScrollTest() {
         composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
-                JourneysScreen()
+                val navController = rememberNavController()
+                JourneysScreen(navController = navController)
             }
         }
         // Verifica caricamento sezioni

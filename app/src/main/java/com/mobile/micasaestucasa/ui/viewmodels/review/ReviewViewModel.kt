@@ -46,6 +46,7 @@ class ReviewViewModel @Inject constructor(
                     }
                     _uiState.value = ReviewUiState.ReviewSubmitted
                 }
+
                 .onFailure {
                     _uiState.value = ReviewUiState.Error(
                         it.message ?: "Error sending the review."

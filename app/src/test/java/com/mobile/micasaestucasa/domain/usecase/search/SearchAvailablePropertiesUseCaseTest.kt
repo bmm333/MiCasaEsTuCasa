@@ -116,7 +116,7 @@ class SearchAvailablePropertiesUseCaseTest{
         val result = useCase(validQuery.copy(city = ""))
 
         assertTrue(result.isFailure)
-        assertEquals("Città obbligatoria", result.exceptionOrNull()?.message)
+        assertEquals("City is required", result.exceptionOrNull()?.message)
         coVerify(exactly = 0) { propertyRepository.searchProperties(any(), any(), any(), any(), any()) }
     }
     @Test
@@ -124,14 +124,14 @@ class SearchAvailablePropertiesUseCaseTest{
         val result = useCase(validQuery.copy(guestsCount = 0))
 
         assertTrue(result.isFailure)
-        assertEquals("Numero ospiti non valido", result.exceptionOrNull()?.message)
+        assertEquals("Guest count must be at least 1", result.exceptionOrNull()?.message)
     }
     @Test
     fun `startDate equal to endDate returns failure`() = runTest {
         val result = useCase(validQuery.copy(startDate = "2026-07-10", endDate = "2026-07-10"))
 
         assertTrue(result.isFailure)
-        assertEquals("Date non valide", result.exceptionOrNull()?.message)
+        assertEquals("Start date must be before end date", result.exceptionOrNull()?.message)
     }
 
     @Test

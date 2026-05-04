@@ -13,6 +13,6 @@ data class WishlistUiState(
     val isLoading: Boolean = false,
     val properties: List<Property> = emptyList(),
     val collections: List<Collection> = emptyList(),
-    val selectedTab: Int = 0, // 0: All, 1: Collections, 2: Shared
+    val selectedTab: Int = 0,
     val error: String? = null
 )

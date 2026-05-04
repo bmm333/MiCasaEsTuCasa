@@ -73,7 +73,7 @@ fun AppNavigation(
             )
         }
 
-        composable<Route.Wishlist> {
+        composable <Route.Wishlist>{
             WishlistScreen(
                 navController = navController
             )

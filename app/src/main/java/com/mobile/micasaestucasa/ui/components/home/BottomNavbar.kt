@@ -27,7 +27,8 @@ import com.mobile.micasaestucasa.ui.theme.Typography
 
 sealed class BottomNavItem(val route: Any, val icon: ImageVector, val label: String) {
     object Explore : BottomNavItem(Route.Home, Icons.Default.Search, "Explore")
-    object Saved : BottomNavItem("saved", Icons.Default.Favorite, "Saved") // Placeholder for now
+
+    object Saved : BottomNavItem(Route.Wishlist, Icons.Default.Favorite, "Saved") // Placeholder for now
     object Trips : BottomNavItem("trips", Icons.Default.TravelExplore, "Trips") // Placeholder for now
     object Profile : BottomNavItem(Route.Profile, Icons.Default.Person, "Profile")
 }
@@ -52,17 +53,24 @@ fun BottomNavigationBar(
         modifier = modifier.testTag("bottom_nav_bar")
     ) {
         items.forEach { item ->
-            val isSelected = currentDestination?.hierarchy?.any {
-                it.hasRoute(item.route::class)
-            } == true
+            // 2. Controllo speciale per "trips" che è ancora una stringa
+            val isSelected = if (item.route is Route) {
+                currentDestination?.hierarchy?.any {
+                    it.hasRoute(item.route::class)
+                } == true
+            } else {
+                currentDestination?.route == item.route // Fallback per le stringhe
+            }
 
             NavigationBarItem(
                 icon = { Icon(item.icon, contentDescription = item.label) },
                 label = { Text(item.label, style = Typography.labelSmall) },
                 selected = isSelected,
                 onClick = {
+                    // 3. Controlliamo se la rotta è un oggetto Route
                     if (item.route is Route) {
                         navController.navigate(item.route) {
+                            // Salva lo stato e gestisci il back stack[cite: 1]
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true
                             }

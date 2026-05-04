@@ -21,10 +21,11 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.ui.components.home.BottomNavigationBar
 import com.mobile.micasaestucasa.ui.components.home.PropertyCard
 import com.mobile.micasaestucasa.ui.components.home.Topnavigation
@@ -33,61 +34,33 @@ import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
 import com.mobile.micasaestucasa.ui.viewmodels.wishlist.Collection
 import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistUiState
+import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistViewModel
 
 @Composable
 fun WishlistScreen(
     navController: NavController,
-    // viewModel: WishlistViewModel = hiltViewModel() // Integrerai qui il ViewModel
+    viewModel: WishlistViewModel = hiltViewModel()
 ) {
-    // Simulazione stato per la demo, da sostituire con: val uiState by viewModel.uiState.collectAsState()
-    val uiState = WishlistUiState(
-        collections = listOf(
-            Collection("1", "Summer 2025", 5, "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2"),
-            Collection("2", "Dream Homes", 4, "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d")
-        ),
-        properties = listOf(
-            Property(
-                id = "1",
-                ownerId = "o1",
-                title = "Luxury Villa Oasis",
-                description = "A beautiful luxury villa in Ibiza.",
-                latitude = 38.9067,
-                longitude = 1.4206,
-                city = "Ibiza",
-                pricePerDay = 850.0,
-                capacity = 6,
-                keywords = listOf("luxury", "pool", "beach"),
-                imageUrls = listOf("https://images.unsplash.com/photo-1600596542815-ffad4c1539a9"),
-                availableFrom = "2025-01-01",
-                availableTo = "2025-12-31",
-                rating = 4.92
-            ),
-            Property(
-                id = "2",
-                ownerId = "o2",
-                title = "Cozy Pine Cabin",
-                description = "A cozy cabin in the woods of Aspen.",
-                latitude = 39.1911,
-                longitude = -106.8175,
-                city = "Aspen",
-                pricePerDay = 420.0,
-                capacity = 4,
-                keywords = listOf("cabin", "snow", "cozy"),
-                imageUrls = listOf("https://images.unsplash.com/photo-1510798831971-661eb04b3739"),
-                availableFrom = "2025-01-01",
-                availableTo = "2025-12-31",
-                rating = 4.85
-            )
+    // Ora il riferimento verrà risolto correttamente grazie all'import
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    if (uiState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = Primario)
+        }
+    } else {
+        WishlistContent(
+            uiState = uiState,
+            navController = navController,
+            onTabSelected = { index -> viewModel.selectTab(index) } // 2. PASSAGGIO LAMBDA
         )
-    )
-
-    WishlistContent(uiState, navController)
+    }
 }
-
 @Composable
 fun WishlistContent(
     uiState: WishlistUiState,
-    navController: NavController
+    navController: NavController,
+    onTabSelected: (Int) -> Unit // 3. AGGIUNTO PARAMETRO MANCANTE
 ) {
     Scaffold(
         topBar = { Topnavigation(onProfileClick = { /* Nav to profile */ }) },
@@ -97,10 +70,9 @@ fun WishlistContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFFAFAFA)), // Sfondo Surface base dal DS
+                .background(Color(0xFFFAFAFA)),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
-            // 1. HEADER & "THE SUN BUTTON" (Yellow CTA)
             item {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Row(
@@ -121,7 +93,6 @@ fun WishlistContent(
                                 letterSpacing = 1.sp
                             )
                         }
-                        // Primary CTA "The Sun Button" [Source 2]
                         Button(
                             onClick = { /* Action */ },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFFE54)),
@@ -136,7 +107,6 @@ fun WishlistContent(
                 }
             }
 
-            // 2. EDITORIAL TABS (No border lines, only spacing) [Source 2]
             item {
                 Row(
                     modifier = Modifier
@@ -151,7 +121,8 @@ fun WishlistContent(
                             style = Typography.titleMedium,
                             color = if (uiState.selectedTab == index) Primario else Color.Gray,
                             textDecoration = if (uiState.selectedTab == index) TextDecoration.Underline else null,
-                            modifier = Modifier.clickable { /* Select Tab */ }
+                            // 4. COLLEGAMENTO LOGICA TAB
+                            modifier = Modifier.clickable { onTabSelected(index) }
                         )
                     }
                 }

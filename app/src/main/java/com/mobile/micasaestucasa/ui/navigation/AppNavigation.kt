@@ -9,6 +9,7 @@ import com.mobile.micasaestucasa.ui.screens.auth.LoginScreen
 import com.mobile.micasaestucasa.ui.screens.auth.RegisterScreen
 import com.mobile.micasaestucasa.ui.screens.home.HomeScreen
 import com.mobile.micasaestucasa.ui.screens.profile.ProfileScreen
+import com.mobile.micasaestucasa.ui.screens.wishlist.WishlistScreen
 import com.mobile.micasaestucasa.ui.viewmodels.MainViewModel
 
 @Composable
@@ -69,6 +70,12 @@ fun AppNavigation(
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable <Route.Wishlist>{
+            WishlistScreen(
+                navController = navController
             )
         }
     }

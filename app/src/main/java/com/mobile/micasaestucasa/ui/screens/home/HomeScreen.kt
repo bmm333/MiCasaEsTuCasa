@@ -52,13 +52,6 @@ fun HomeScreen(
     var selectedRoute by remember { mutableStateOf("home_screen") }
     Scaffold(
         containerColor = ScreenBackground,
-        topBar = {
-            MiCasaTopBar(
-                userName = currentUser?.name ?: "",
-                onAvatarClick = onNavigateToProfile,
-                onNotificationsClick = {}
-            )
-        },
         bottomBar = {
             MiCasaBottomNav(
                 items = DefaultBottomNavItems.items,

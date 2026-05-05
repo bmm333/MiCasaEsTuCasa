@@ -8,7 +8,6 @@ class GetWishlistDataUseCase @Inject constructor() {
     // Restituisce un Result contenente un Pair per permettere la distrutturazione (props, colls)
     suspend operator fun invoke(): Result<Pair<List<Property>, List<Collection>>> {
         return try {
-            // Qui andrà la logica del repository
             Result.success(Pair(emptyList(), emptyList()))
         } catch (e: Exception) {
             Result.failure(e)

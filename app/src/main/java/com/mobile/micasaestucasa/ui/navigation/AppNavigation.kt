@@ -52,10 +52,20 @@ fun AppNavigation(
 
         composable<Route.Home> {
             HomeScreen(
-                navController = navController,
+                onNavigateToLogin = {
+                    navController.navigate(Route.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onNavigateToSearch = { /* TODO */ },
                 onNavigateToProperty = { propertyId ->
                     // navController.navigate(Route.PropertyDetail(propertyId))
-                }
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Route.Profile)
+                },
+                onNavigateToTrips = { /* TODO */ },
+                onNavigateToSaved = { /* TODO */ }
             )
         }
 

@@ -40,7 +40,8 @@ import androidx.navigation.compose.rememberNavController
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.util.Resource
-import com.mobile.micasaestucasa.ui.components.home.BottomNavigationBar
+import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
 import com.mobile.micasaestucasa.ui.components.profile.HostBanner
 import com.mobile.micasaestucasa.ui.components.profile.PersonalInfoCard
 import com.mobile.micasaestucasa.ui.components.profile.ProfileHeader
@@ -89,7 +90,11 @@ fun ProfileContent(
     Scaffold(
         containerColor = Color(0xFFF7F7F7),
         bottomBar = {
-            BottomNavigationBar(navController = navController)
+            MiCasaBottomNav(
+                items = DefaultBottomNavItems.items,
+                selectedRoute = "profile_screen",
+                onItemSelected = { /* TODO: hook up navigation */ }
+            )
         }
     ) { paddingValues ->
         when (userState) {

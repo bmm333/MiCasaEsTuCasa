@@ -14,12 +14,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.mobile.micasaestucasa.ui.components.home.BottomNavigationBar
+import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
 
 @Composable
 fun JourneysScreen(navController: NavController) {
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController = navController) }
+        bottomBar = {
+            MiCasaBottomNav(
+                items = DefaultBottomNavItems.items,
+                selectedRoute = "trips_screen",
+                onItemSelected = { /* TODO: hook up navigation */ }
+            )
+        }
     ) { padding ->
         LazyColumn(
             modifier = Modifier

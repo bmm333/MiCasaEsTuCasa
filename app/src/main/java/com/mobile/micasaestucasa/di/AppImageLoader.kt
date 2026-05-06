@@ -1,0 +1,48 @@
+package com.mobile.micasaestucasa.di
+
+import android.content.Context
+
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+//import coil3.disk.DiskCache
+import coil3.memory.MemoryCache
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.CachePolicy
+import coil3.request.crossfade
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
+
+
+object AppImageLoader{
+    fun initialize(context:Context){
+        SingletonImageLoader.setSafe{
+            buildImageLoader(context)
+        }
+    }
+
+    private fun buildImageLoader(context: Context): ImageLoader{
+        return ImageLoader.Builder(context)
+            .components {
+                add(
+                    OkHttpNetworkFetcherFactory(
+                        callFactory = buildOkHttpClient()
+                    )
+                )
+            }
+            .memoryCache {
+                MemoryCache.Builder()
+                    .maxSizePercent(context,percent=0.25)
+                    .build()
+            }
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .crossfade(durationMillis = 300)
+            .build()
+    }
+
+    private fun buildOkHttpClient(): OkHttpClient =
+        OkHttpClient.Builder()
+            .connectTimeout(15,TimeUnit.SECONDS)
+            .readTimeout(30,TimeUnit.SECONDS)
+            .writeTimeout(15,TimeUnit.SECONDS)
+            .build()
+}

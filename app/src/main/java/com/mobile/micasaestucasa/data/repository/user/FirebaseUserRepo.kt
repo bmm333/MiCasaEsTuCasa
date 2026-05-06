@@ -88,4 +88,17 @@ class FirebaseUserRepo @Inject constructor(
             Result.failure(e)
         }
     }
+    override suspend fun getUserById(userId:String): Result<User?>{
+        return try{
+               val snapshot=usersCollection.document(userId).get().await()
+               if(!snapshot.exists())
+                    Result.success(null);
+               else
+                    val user=snapshot.toObject(User::class.java)
+                    Result.success(user)
+        }catch(e:Exception)
+        {
+            Result.failure(e)
+        }
+    }
 }

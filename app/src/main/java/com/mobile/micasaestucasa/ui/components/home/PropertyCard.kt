@@ -33,7 +33,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.mobile.micasaestucasa.ui.components.atomics.RatingBadge
 import com.mobile.micasaestucasa.ui.components.atomics.StatusBadge
 import com.mobile.micasaestucasa.ui.theme.Primario

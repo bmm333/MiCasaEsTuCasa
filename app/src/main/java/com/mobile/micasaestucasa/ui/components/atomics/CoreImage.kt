@@ -1,7 +1,6 @@
 package com.mobile.micasaestucasa.ui.components.atomics
 
-import ImageStyle
-import android.R.attr.contentDescription
+import com.mobile.micasaestucasa.ui.theme.ImageStyle
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import coil3.compose.AsyncImage
 
 
@@ -31,7 +29,7 @@ import coil3.compose.AsyncImage
  * @param contentScale   Modalità di scala dell'immagine. Default: [ContentScale.Crop].
  */
 @Composable
-fun Image (
+fun CoreImage (
     url : String?,
     style: ImageStyle,
     contentDescription: String,

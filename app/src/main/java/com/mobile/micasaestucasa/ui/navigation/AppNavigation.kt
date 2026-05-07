@@ -11,7 +11,6 @@ import com.mobile.micasaestucasa.ui.screens.home.HomeScreen
 import com.mobile.micasaestucasa.ui.screens.profile.ProfileScreen
 import com.mobile.micasaestucasa.ui.screens.wishlist.WishlistScreen
 import com.mobile.micasaestucasa.ui.viewmodels.MainViewModel
-
 @Composable
 fun AppNavigation(
     viewModel: MainViewModel = hiltViewModel()
@@ -52,20 +51,17 @@ fun AppNavigation(
 
         composable<Route.Home> {
             HomeScreen(
-                onNavigateToLogin = {
-                    navController.navigate(Route.Login) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                onNavigateToSearch = { /* TODO */ },
-                onNavigateToProperty = { propertyId ->
-                    // navController.navigate(Route.PropertyDetail(propertyId))
-                },
+                onNavigateToLogin = { /* ... */ },
+                onNavigateToSearch = { /* ... */ },
+                onNavigateToProperty = { /* ... */ },
                 onNavigateToProfile = {
                     navController.navigate(Route.Profile)
                 },
                 onNavigateToTrips = { /* TODO */ },
-                onNavigateToSaved = { /* TODO */ }
+                onNavigateToSaved = {
+                    // Navigazione verso la wishlist corretta
+                    navController.navigate(Route.Wishlist)
+                }
             )
         }
 

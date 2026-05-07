@@ -25,10 +25,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
-import com.mobile.micasaestucasa.ui.components.home.BottomNavigationBar
+import coil3.compose.AsyncImage
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.home.PropertyCard
-import com.mobile.micasaestucasa.ui.components.home.Topnavigation
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
@@ -60,11 +60,23 @@ fun WishlistScreen(
 fun WishlistContent(
     uiState: WishlistUiState,
     navController: NavController,
-    onTabSelected: (Int) -> Unit // 3. AGGIUNTO PARAMETRO MANCANTE
+    onTabSelected: (Int) -> Unit
 ) {
     Scaffold(
-        topBar = { Topnavigation(onProfileClick = { /* Nav to profile */ }) },
-        bottomBar = { BottomNavigationBar(navController = navController) }
+        bottomBar = {
+            MiCasaBottomNav(
+                items = DefaultBottomNavItems.items,
+                selectedRoute = "saved_screen", // Imposta Saved come selezionato
+                onItemSelected = { route ->
+                    when (route) {
+                        "profile_screen" -> navController.navigate("profile_screen")
+                        "trips_screen" -> navController.navigate("trips_screen")
+                        "saved_screen" -> navController.navigate("saved_screen")
+                        "home_screen" -> navController.navigate("home_screen")
+                    }
+                }
+            )
+        }
     ) { padding ->
         LazyColumn(
             modifier = Modifier

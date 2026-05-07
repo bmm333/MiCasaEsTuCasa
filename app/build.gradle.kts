@@ -112,6 +112,7 @@ dependencies {
             // Forziamo anche le versioni di test per evitare conflitti con la BOM di Compose
             force(libs.androidx.junit)
             force(libs.androidx.espresso.core)
+            force("org.jetbrains.kotlin:kotlin-stdlib:2.2.0")
         }
     }
 }

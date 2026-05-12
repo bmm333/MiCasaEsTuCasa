@@ -15,5 +15,11 @@ data class User(
     val bio: String = "",
     val profileImageUrl: String? = null,
     val address: String = "",
-    val phone: String = ""
+    val phone: String = "",
+    val status:UserStatus=UserStatus.ACTIVE
 )
+enum class UserStatus{
+    ACTIVE,
+    SUSPENDED,
+    BANNED
+}

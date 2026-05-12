@@ -5,6 +5,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.messaging.FirebaseMessaging
+import com.mobile.micasaestucasa.data.repository.admin.FirebaseAdminRepo
 import com.mobile.micasaestucasa.data.repository.auth.FirebaseAuthRepo
 import com.mobile.micasaestucasa.data.repository.booking.FirebaseBookingRepo
 import com.mobile.micasaestucasa.data.repository.chat.FirebaseChatRepo
@@ -12,6 +13,7 @@ import com.mobile.micasaestucasa.data.repository.notification.FirebaseNotificati
 import com.mobile.micasaestucasa.data.repository.property.FirebasePropertyRepo
 import com.mobile.micasaestucasa.data.repository.review.FirebaseReviewRepo
 import com.mobile.micasaestucasa.data.repository.user.FirebaseUserRepo
+import com.mobile.micasaestucasa.domain.repository.admin.AdminRepo
 import com.mobile.micasaestucasa.domain.repository.auth.AuthRepo
 import com.mobile.micasaestucasa.domain.repository.booking.BookingRepo
 import com.mobile.micasaestucasa.domain.repository.chat.ChatRepo
@@ -98,4 +100,8 @@ object RepositoryModule {
         bookingRepo: BookingRepo
     ): SearchAvaliblePropertiesUseCase =
         SearchAvaliblePropertiesUseCase(propertyRepo, bookingRepo)
+    @Provides
+    @Singleton
+    fun provideAdminRepo(firestore:FirebaseFirestore
+    ): AdminRepo= FirebaseAdminRepo(firestore)
 }

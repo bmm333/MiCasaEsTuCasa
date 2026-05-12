@@ -85,7 +85,9 @@ fun AppNavigation(
 
         composable<Route.Wishlist> {
             WishlistScreen(
-                navController = navController
+                onNavigateToProfile = {
+                    navController.navigate(Route.Profile)
+                }
             )
         }
     }

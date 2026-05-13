@@ -10,7 +10,7 @@ plugins {
     alias(libs.plugins.google.services)
     id("jacoco")
     id("org.jlleitschuh.gradle.ktlint")
-    kotlin("plugin.serialization") version "2.0.21"
+    kotlin("plugin.serialization") version "2.1.20"
 }
 
 android {
@@ -63,7 +63,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.coil.compose)
     implementation("io.coil-kt.coil3:coil-compose:3.4.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
     testImplementation(libs.junit)
@@ -112,7 +111,10 @@ dependencies {
             // Forziamo anche le versioni di test per evitare conflitti con la BOM di Compose
             force(libs.androidx.junit)
             force(libs.androidx.espresso.core)
-            force("org.jetbrains.kotlin:kotlin-stdlib:2.2.0")
+            // Pin kotlin-stdlib to the declared Kotlin version to prevent transitive upgrades
+            force("org.jetbrains.kotlin:kotlin-stdlib:2.1.20")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.1.20")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.20")
         }
     }
 }

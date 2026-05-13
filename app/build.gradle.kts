@@ -70,6 +70,8 @@ dependencies {
     testImplementation(libs.mockk.android)
     testImplementation(libs.mockk.agent.jvm)
     testImplementation(libs.kotlinx.coroutines.test)
+    // Needed by ImageStyleTest: Dp is a pure-JVM value class from ui-unit
+    testImplementation("androidx.compose.ui:ui-unit:1.7.8")
 
     // UI Testing
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -73,6 +73,7 @@ fun WishlistScreen(
         )
     }
 }
+
 @Composable
 fun WishlistContent(
     uiState: WishlistUiState,

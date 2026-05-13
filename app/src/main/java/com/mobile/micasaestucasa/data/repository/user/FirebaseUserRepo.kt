@@ -89,17 +89,16 @@ class FirebaseUserRepo @Inject constructor(
             Result.failure(e)
         }
     }
-    override suspend fun getUserById(userId:String): Result<User?> {
-        return try{
-               val snapshot=usersCollection.document(userId).get().await()
-               if (!snapshot.exists()) {
-                    return Result.success(null)
-                }
-               val dto = snapshot.toObject(UserDTO::class.java)
+    override suspend fun getUserById(userId: String): Result<User?> {
+        return try {
+            val snapshot = usersCollection.document(userId).get().await()
+            if (!snapshot.exists()) {
+                return Result.success(null)
+            }
+            val dto = snapshot.toObject(UserDTO::class.java)
                 ?: return Result.failure(IllegalStateException("UserDto is null"))
-               Result.success(dto.toDomain())
-        }catch(e:Exception)
-        {
+            Result.success(dto.toDomain())
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }

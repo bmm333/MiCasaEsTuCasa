@@ -54,6 +54,7 @@ android {
 dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.compose.material.icons.extended)
+    implementation(libs.androidx.compose.runtime)
     val nav_version = "2.9.7"
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

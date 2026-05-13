@@ -1,6 +1,7 @@
 package com.mobile.micasaestucasa.ui.screens.home
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,7 +29,6 @@ import com.mobile.micasaestucasa.ui.components.home.PropertyCard
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaSearchBar
-import com.mobile.micasaestucasa.ui.components.nav.MiCasaTopBar
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
 import com.mobile.micasaestucasa.ui.theme.ErrorColor
 import com.mobile.micasaestucasa.ui.theme.HeadingText
@@ -124,11 +124,18 @@ fun HomeScreen(
                             .padding(48.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Nessuna proprietà disponibile al momento",
-                            color = CaptionLabels,
-                            fontSize = 15.sp
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "Nessuna proprietà disponibile al momento",
+                                color = CaptionLabels,
+                                fontSize = 15.sp
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            com.mobile.micasaestucasa.ui.components.atomics.MiCasaPrimaryButton(
+                                text = "Load sample properties",
+                                onClick = { homeViewModel.seedSampleProperties() }
+                            )
+                        }
                     }
                 }
             }

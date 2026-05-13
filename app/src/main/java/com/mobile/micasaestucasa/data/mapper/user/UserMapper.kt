@@ -45,7 +45,7 @@ fun User.toDto(): UserDTO = UserDTO(
     renterReviewsCount = renterReviewsCount,
     fcmToken = fcmToken,
     createdAt = createdAt,
-    status= status.name,
+    status = status.name,
     // PROFILE SYSTEM
     bio = bio,
     profileImageUrl = profileImageUrl,

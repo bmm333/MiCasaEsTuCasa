@@ -100,8 +100,10 @@ object RepositoryModule {
         bookingRepo: BookingRepo
     ): SearchAvaliblePropertiesUseCase =
         SearchAvaliblePropertiesUseCase(propertyRepo, bookingRepo)
+
     @Provides
     @Singleton
-    fun provideAdminRepo(firestore:FirebaseFirestore
-    ): AdminRepo= FirebaseAdminRepo(firestore)
+    fun provideAdminRepo(
+        firestore: FirebaseFirestore
+    ): AdminRepo = FirebaseAdminRepo(firestore)
 }

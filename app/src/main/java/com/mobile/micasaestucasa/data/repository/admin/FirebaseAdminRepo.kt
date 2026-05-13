@@ -11,7 +11,6 @@ import com.mobile.micasaestucasa.domain.repository.admin.AdminRepo
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-
 /**
  * keywords/{keywordId}
  * users/{userId}
@@ -20,18 +19,17 @@ import javax.inject.Inject
  * */
 class FirebaseAdminRepo @Inject constructor(
     private val firestore: FirebaseFirestore
-): AdminRepo {
+) : AdminRepo {
     override suspend fun addKeyword(
         label: String,
         adminId: String
     ): Result<String> {
-        return try{
-            val docRef=firestore.collection("keywords").document()
-            val keyword=Keyword(id=docRef.id,label=label)
+        return try {
+            val docRef = firestore.collection("keywords").document()
+            val keyword = Keyword(id = docRef.id, label = label)
             docRef.set(keyword).await()
             Result.success(docRef.id)
-        }catch (e:Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
@@ -43,22 +41,22 @@ class FirebaseAdminRepo @Inject constructor(
         return try {
             firestore.collection("keywords").document(keywordId).delete().await()
             Result.success(Unit)
-        }catch (e:Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     override suspend fun getAllKeywords(): Result<List<Keyword>> {
         return try {
-            val snapshot=firestore.collection("keywords")
+            val snapshot = firestore.collection("keywords")
                 .orderBy("label")
                 .get().await()
-            Result.success(snapshot.documents.mapNotNull {
-                it.toObject(Keyword::class.java)
-            })
-        }catch (e: Exception)
-        {
+            Result.success(
+                snapshot.documents.mapNotNull {
+                    it.toObject(Keyword::class.java)
+                }
+            )
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
@@ -67,12 +65,11 @@ class FirebaseAdminRepo @Inject constructor(
         targetUserId: String,
         adminId: String
     ): Result<Unit> {
-        return try{
+        return try {
             firestore.collection("users").document(targetUserId)
-                .update("status","SUSPENDED").await()
+                .update("status", "SUSPENDED").await()
             Result.success(Unit)
-        }catch (e: Exception)
-        {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
@@ -103,21 +100,21 @@ class FirebaseAdminRepo @Inject constructor(
         }
     }
 
-        override suspend fun getAllReports(): Result<List<UserReport>> {
-            return try {
-                val snapshot = firestore.collection("reports")
-                    .whereEqualTo("status", ReportStatus.PENDING.name)
-                    .orderBy("createdAt", Query.Direction.DESCENDING)
-                    .get().await()
-                Result.success(
-                    snapshot.documents.mapNotNull {
-                        it.toObject(UserReport::class.java)
-                    }
-                )
-            } catch (e: Exception) {
-                Result.failure(e)
-            }
+    override suspend fun getAllReports(): Result<List<UserReport>> {
+        return try {
+            val snapshot = firestore.collection("reports")
+                .whereEqualTo("status", ReportStatus.PENDING.name)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .get().await()
+            Result.success(
+                snapshot.documents.mapNotNull {
+                    it.toObject(UserReport::class.java)
+                }
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
         }
+    }
 
     override suspend fun resolveReport(
         reportId: String,
@@ -141,17 +138,16 @@ class FirebaseAdminRepo @Inject constructor(
             }
             Result.success(
                 BookingStats(
-                    total     = bookings.size,
+                    total = bookings.size,
                     completed = bookings.count { it == BookingStatus.COMPLETED.name },
-                    active    = bookings.count { it == BookingStatus.ACCEPTED.name },
-                    pending   = bookings.count { it == BookingStatus.REQUESTED.name },
+                    active = bookings.count { it == BookingStatus.ACCEPTED.name },
+                    pending = bookings.count { it == BookingStatus.REQUESTED.name },
                     cancelled = bookings.count { it == BookingStatus.CANCELLED.name },
-                    rejected  = bookings.count { it == BookingStatus.REJECTED.name }
+                    rejected = bookings.count { it == BookingStatus.REJECTED.name }
                 )
             )
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
 }

@@ -96,7 +96,7 @@ fun RegisterScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            //logo
+            // logo
             Box(
                 modifier = Modifier
                     .size(80.dp)
@@ -129,7 +129,7 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            //Email field
+            // Email field
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },

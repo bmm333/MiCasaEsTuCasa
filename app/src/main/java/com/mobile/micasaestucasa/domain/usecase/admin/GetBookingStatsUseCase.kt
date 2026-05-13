@@ -10,13 +10,14 @@ class GetBookingStatsUseCase @Inject constructor(
     private val adminRepo: AdminRepo,
     private val userRepo: UserRepo
 ) {
-    suspend operator fun invoke(adminId:String):Result<BookingStats>
-    {
-        if(adminId.isBlank())
+    suspend operator fun invoke(adminId: String): Result<BookingStats> {
+        if (adminId.isBlank()) {
             return Result.failure(IllegalArgumentException("AdminID not valid"))
-        val admin=userRepo.getCurrentUser()
-        if (admin==null||!admin.roles.contains(UserRole.ADMIN))
+        }
+        val admin = userRepo.getCurrentUser()
+        if (admin == null || !admin.roles.contains(UserRole.ADMIN)) {
             return Result.failure(SecurityException("Access denied"))
+        }
         return adminRepo.getBookingStats()
     }
 }

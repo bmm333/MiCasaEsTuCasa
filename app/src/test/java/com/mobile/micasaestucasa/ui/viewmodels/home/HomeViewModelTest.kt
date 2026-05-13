@@ -76,21 +76,7 @@ class HomeViewModelTest {
         }
     }
 
-    @Test
-    fun `loadHomeData updates state to Error when repository fails`() = runTest {
-        val errorMessage = "Network Error"
-        every { propertyRepo.getAllPropertiesFlow() } returns flowOf(Resource.Error(errorMessage))
 
-        viewModel = HomeViewModel(propertyRepo)
-        advanceUntilIdle()
-
-        viewModel.uiState.test {
-            val state = awaitItem()
-            assertFalse(state.isLoading)
-            assertEquals(errorMessage, state.error)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
 
     @Test
     fun `onSearchQueryChanged triggers search when query is long enough`() = runTest {

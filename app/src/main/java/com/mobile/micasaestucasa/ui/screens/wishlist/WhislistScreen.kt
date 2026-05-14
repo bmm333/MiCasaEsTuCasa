@@ -25,7 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.mobile.micasaestucasa.ui.components.home.PropertyCard
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav

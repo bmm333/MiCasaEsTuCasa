@@ -3,6 +3,7 @@ import UserDTO
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserBadge
 import com.mobile.micasaestucasa.domain.model.user.UserRole
+import com.mobile.micasaestucasa.domain.model.user.UserStatus
 
 fun UserDTO.toDomain(): User = User(
     id = id ?: "",
@@ -25,7 +26,10 @@ fun UserDTO.toDomain(): User = User(
     bio = bio ?: "",
     profileImageUrl = profileImageUrl,
     address = address ?: "",
-    phone = phone ?: ""
+    phone = phone ?: "",
+    status = status?.let {
+        try { UserStatus.valueOf(it) } catch (e: Exception) { UserStatus.ACTIVE }
+    } ?: UserStatus.ACTIVE
 )
 
 fun User.toDto(): UserDTO = UserDTO(
@@ -41,7 +45,7 @@ fun User.toDto(): UserDTO = UserDTO(
     renterReviewsCount = renterReviewsCount,
     fcmToken = fcmToken,
     createdAt = createdAt,
-
+    status = status.name,
     // PROFILE SYSTEM
     bio = bio,
     profileImageUrl = profileImageUrl,

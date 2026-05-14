@@ -1,4 +1,4 @@
-package com.mobile.micasaestucasa.ui.screens.wishlist
+package com.mobile.micasaestucasa.ui.screens.whishlist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

@@ -36,7 +36,7 @@ import com.mobile.micasaestucasa.ui.viewmodels.property.PropertyViewModel
 fun PropertyDetailScree(
     propertyId: String,
     onNavigateBack: () -> Unit,
-    onNavigateToBooking: (String) -> Unit,
+    onNavigateToBooking: (propertyId: String, title: String, pricePerDay: Double, hostId: String) -> Unit,
     onNavigateToChat: (String) -> Unit,
     viewModel: PropertyViewModel = hiltViewModel()
 ) {
@@ -76,7 +76,14 @@ fun PropertyDetailScree(
                 is PropertyUiState.DetailSuccess -> {
                     PropertyBottomBar(
                         property = state.property,
-                        onBook = { onNavigateToBooking(propertyId) },
+                        onBook = {
+                            onNavigateToBooking(
+                                propertyId,
+                                state.property.title,
+                                state.property.pricePerDay,
+                                state.property.ownerId
+                            )
+                        },
                         onChat = { onNavigateToChat(state.property.ownerId) }
                     )
                 }

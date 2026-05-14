@@ -6,8 +6,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.google.firebase.auth.FirebaseAuth
 import com.mobile.micasaestucasa.ui.screens.auth.LoginScreen
 import com.mobile.micasaestucasa.ui.screens.auth.RegisterScreen
+import com.mobile.micasaestucasa.ui.screens.booking.BookingListScreen
+import com.mobile.micasaestucasa.ui.screens.booking.BookingRequestScreen
 import com.mobile.micasaestucasa.ui.screens.home.HomeScreen
 import com.mobile.micasaestucasa.ui.screens.profile.ProfileScreen
 import com.mobile.micasaestucasa.ui.screens.property.PropertyDetailScree
@@ -19,6 +22,7 @@ fun AppNavigation(
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     NavHost(
         navController = navController,
@@ -66,7 +70,9 @@ fun AppNavigation(
                 onNavigateToProfile = {
                     navController.navigate(Route.Profile)
                 },
-                onNavigateToTrips = { /* TODO */ },
+                onNavigateToTrips = {
+                    navController.navigate(Route.BookingList)
+                },
                 onNavigateToSaved = { /* TODO */ }
             )
         }
@@ -98,9 +104,41 @@ fun AppNavigation(
             PropertyDetailScree(
                 propertyId = route.propertyId,
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToBooking = { /* TODO */ },
+                onNavigateToBooking = { propId, title, price, hostId ->
+                    navController.navigate(
+                        Route.BookingRequest(
+                            propertyId = propId,
+                            propertyTitle = title,
+                            pricePerDay = price,
+                            hostId = hostId
+                        )
+                    )
+                },
                 onNavigateToChat = { /* TODO */ }
+            )
+        }
+
+        composable<Route.BookingRequest> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.BookingRequest>()
+            BookingRequestScreen(
+                propertyId = route.propertyId,
+                propertyTitle = route.propertyTitle,
+                pricePerDay = route.pricePerDay,
+                hostId = route.hostId,
+                currentUserId = currentUserId,
+                onNavigateBack = { navController.popBackStack() },
+                onBookingSuccess = {
+                    navController.popBackStack(Route.Home, inclusive = false)
+                }
+            )
+        }
+
+        composable<Route.BookingList> {
+            BookingListScreen(
+                currentUserId = currentUserId,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }
 }
+

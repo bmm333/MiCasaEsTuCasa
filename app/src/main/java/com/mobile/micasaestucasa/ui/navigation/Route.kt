@@ -17,7 +17,18 @@ sealed interface Route {
 
     @Serializable
     data object Wishlist : Route
-
+    
     @Serializable
     data class PropertyDetail(val propertyId: String) : Route
+
+    @Serializable
+    data class BookingRequest(
+        val propertyId: String,
+        val propertyTitle: String,
+        val pricePerDay: Double,
+        val hostId: String
+    ) : Route
+
+    @Serializable
+    data object BookingList : Route
 }

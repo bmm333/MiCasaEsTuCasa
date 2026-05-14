@@ -6,6 +6,8 @@ import com.mobile.micasaestucasa.domain.model.booking.Booking
 import com.mobile.micasaestucasa.domain.usecase.booking.AcceptBookingUseCase
 import com.mobile.micasaestucasa.domain.usecase.booking.CancelBookingUseCase
 import com.mobile.micasaestucasa.domain.usecase.booking.CreateBookingUseCase
+import com.mobile.micasaestucasa.domain.usecase.booking.GetBookingsForHostUseCase
+import com.mobile.micasaestucasa.domain.usecase.booking.GetBookingsForRenterUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +21,9 @@ import javax.inject.Inject
 class BookingViewModel @Inject constructor(
     private val createBookingUseCase: CreateBookingUseCase,
     private val acceptBookingUseCase: AcceptBookingUseCase,
-    private val cancelBookingUseCase: CancelBookingUseCase
+    private val cancelBookingUseCase: CancelBookingUseCase,
+    private val getBookingsForRenter: GetBookingsForRenterUseCase,
+    private val getBookingsForHost: GetBookingsForHostUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<BookingUiState>(BookingUiState.Idle)
     val uiState: StateFlow<BookingUiState> = _uiState.asStateFlow()
@@ -98,4 +102,21 @@ class BookingViewModel @Inject constructor(
     }
     fun resetState() { _uiState.value = BookingUiState.Idle }
     fun resetPaymentState() { _paymentStatus.value = PaymentUiStatus.Idle }
+    fun loadRenterBookings(renterId: String) {
+        viewModelScope.launch {
+            _uiState.value = BookingUiState.Loading
+            getBookingsForRenter(renterId)
+                .onSuccess { _uiState.value = BookingUiState.BookingsLoaded(it) }
+                .onFailure { _uiState.value = BookingUiState.Error(it.message ?: "Error") }
+        }
+    }
+
+    fun loadHostBookings(hostId: String) {
+        viewModelScope.launch {
+            _uiState.value = BookingUiState.Loading
+            getBookingsForHost(hostId)
+                .onSuccess { _uiState.value = BookingUiState.BookingsLoaded(it) }
+                .onFailure { _uiState.value = BookingUiState.Error(it.message ?: "Error") }
+        }
+    }
 }

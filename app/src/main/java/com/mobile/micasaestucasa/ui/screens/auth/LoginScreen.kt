@@ -238,7 +238,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            //login button
+            // login button
             Button(
                 onClick = { viewModel.login(email, password) },
                 enabled = email.isNotBlank() && password.isNotBlank() && !isLoading,

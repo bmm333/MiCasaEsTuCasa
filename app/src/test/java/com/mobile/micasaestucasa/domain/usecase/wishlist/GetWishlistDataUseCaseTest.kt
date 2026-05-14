@@ -1,17 +1,15 @@
 package com.mobile.micasaestucasa.domain.usecase.wishlist
 
-import com.mobile.micasaestucasa.domain.model.property.Property
-import com.mobile.micasaestucasa.ui.viewmodels.wishlist.Collection
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GetWishlistDataUseCaseTest {
 
-    private val useCase= GetWishlistDataUseCase()
+    private val useCase = GetWishlistDataUseCase()
 
     @Test
-    fun `invoke should return empty lists successfully`()= runTest{
+    fun `invoke should return empty lists successfully`() = runTest {
         val result = useCase()
 
         assertTrue(result.isSuccess)
@@ -20,5 +18,4 @@ class GetWishlistDataUseCaseTest {
         assertTrue(properties.isEmpty())
         assertTrue(collections.isEmpty())
     }
-
 }

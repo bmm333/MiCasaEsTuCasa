@@ -30,18 +30,22 @@ class WishlistViewModel @Inject constructor(
 
             getWishlistDataUseCase()
                 .onSuccess { (props, colls) ->
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        properties = props,
-                        collections = colls,
-                        error = null
-                    )}
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            properties = props,
+                            collections = colls,
+                            error = null
+                        )
+                    }
                 }
                 .onFailure { exception ->
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        error = exception.message ?: "Errore caricamento"
-                    )}
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Errore caricamento"
+                        )
+                    }
                 }
         }
     }

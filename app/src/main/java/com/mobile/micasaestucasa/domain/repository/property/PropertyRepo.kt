@@ -2,6 +2,7 @@ package com.mobile.micasaestucasa.domain.repository.property
 
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.domain.util.Resource
+import com.mobile.micasaestucasa.ui.viewmodels.home.Category
 import kotlinx.coroutines.flow.Flow
 
 interface PropertyRepo {
@@ -20,5 +21,5 @@ interface PropertyRepo {
 
     // Supporto Real-time per la Home
     fun getAllPropertiesFlow(): Flow<Resource<List<Property>>>
-    suspend fun getCategories(): Result<List<com.mobile.micasaestucasa.ui.viewmodels.home.Category>>
+    suspend fun getCategories(): Result<List<Category>>
 }

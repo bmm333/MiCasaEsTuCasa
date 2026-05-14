@@ -6,12 +6,13 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.selects.whileSelect
-import kotlinx.coroutines.test.*
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WishlistViewModelTest {
@@ -25,20 +26,20 @@ class WishlistViewModelTest {
     }
 
     @After
-    fun tearDown(){
+    fun tearDown() {
         Dispatchers.resetMain()
     }
 
     fun `loadWishlist updates uiState to success when use case returns data`() = runTest {
-        coEvery{GetWishlistDataUseCase()} returns Result.success(Pair(emptyList(), emptyList()))
+        coEvery { GetWishlistDataUseCase() } returns Result.success(Pair(emptyList(), emptyList()))
 
-        val viewModel= WishlistViewModel(GetWishlistDataUseCase)
+        val viewModel = WishlistViewModel(GetWishlistDataUseCase)
 
-        viewModel.uiState.test{
+        viewModel.uiState.test {
             val state = awaitItem()
-            assertEquals(false,state.isLoading)
-            assertEquals(0,state.properties.size)
-            assertEquals(null,state.error)
+            assertEquals(false, state.isLoading)
+            assertEquals(0, state.properties.size)
+            assertEquals(null, state.error)
         }
     }
 }

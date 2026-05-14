@@ -5,11 +5,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.mobile.micasaestucasa.ui.screens.auth.LoginScreen
 import com.mobile.micasaestucasa.ui.screens.auth.RegisterScreen
 import com.mobile.micasaestucasa.ui.screens.home.HomeScreen
 import com.mobile.micasaestucasa.ui.screens.profile.ProfileScreen
-import com.mobile.micasaestucasa.ui.screens.whishlist.WishlistScreen
+import com.mobile.micasaestucasa.ui.screens.property.PropertyDetailScree
+import com.mobile.micasaestucasa.ui.screens.wishlist.WishlistScreen
 import com.mobile.micasaestucasa.ui.viewmodels.MainViewModel
 @Composable
 fun AppNavigation(
@@ -51,9 +53,15 @@ fun AppNavigation(
 
         composable<Route.Home> {
             HomeScreen(
-                onNavigateToLogin = { /* ... */ },
-                onNavigateToSearch = { /* ... */ },
-                onNavigateToProperty = { /* ... */ },
+                onNavigateToLogin = {
+                    navController.navigate(Route.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onNavigateToSearch = { /* TODO */ },
+                onNavigateToProperty = { propertyId ->
+                    navController.navigate(Route.PropertyDetail(propertyId))
+                },
                 onNavigateToProfile = {
                     navController.navigate(Route.Profile)
                 },
@@ -81,7 +89,19 @@ fun AppNavigation(
 
         composable<Route.Wishlist> {
             WishlistScreen(
-                navController = navController
+                onNavigateToProfile = {
+                    navController.navigate(Route.Profile)
+                }
+            )
+        }
+
+        composable<Route.PropertyDetail> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.PropertyDetail>()
+            PropertyDetailScree(
+                propertyId = route.propertyId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToBooking = { /* TODO */ },
+                onNavigateToChat = { /* TODO */ }
             )
         }
     }

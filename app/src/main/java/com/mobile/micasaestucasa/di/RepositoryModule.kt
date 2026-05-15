@@ -21,6 +21,7 @@ import com.mobile.micasaestucasa.domain.repository.notification.NotificationRepo
 import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
 import com.mobile.micasaestucasa.domain.repository.review.ReviewRepo
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
 import com.mobile.micasaestucasa.domain.usecase.search.SearchAvaliblePropertiesUseCase
 import dagger.Module
 import dagger.Provides

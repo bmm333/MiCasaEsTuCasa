@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Settings
@@ -59,6 +61,7 @@ fun ProfileScreen(
     authViewModel: AuthViewModel = hiltViewModel(),
     onNavigateToSettings: (String) -> Unit = {},
     onLogoutNavigate: () -> Unit = {},
+    onNavigateToHostBookings: () -> Unit = {},
     onNavigateBack: () -> Boolean
 ) {
     // Osservazione corretta dello stato utente e autenticazione
@@ -76,7 +79,8 @@ fun ProfileScreen(
         userState = userState,
         navController = navController,
         onLogout = { authViewModel.logout() },
-        onNavigateToSettings = onNavigateToSettings
+        onNavigateToSettings = onNavigateToSettings,
+        onNavigateToHostBookings = onNavigateToHostBookings
     )
 }
 
@@ -85,7 +89,8 @@ fun ProfileContent(
     userState: Resource<User?>,
     navController: NavController,
     onLogout: () -> Unit,
-    onNavigateToSettings: (String) -> Unit
+    onNavigateToSettings: (String) -> Unit,
+    onNavigateToHostBookings: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = Color(0xFFF7F7F7),
@@ -93,7 +98,14 @@ fun ProfileContent(
             MiCasaBottomNav(
                 items = DefaultBottomNavItems.items,
                 selectedRoute = "profile_screen",
-                onItemSelected = { /* TODO: hook up navigation */ }
+                onItemSelected = { route ->
+                    when (route) {
+                        "home_screen"     -> navController.popBackStack()
+                        "trips_screen"    -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Trips)
+                        "messages_screen" -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.ConversationList)
+                        "profile_screen"  -> { /* already here */ }
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -150,6 +162,24 @@ fun ProfileContent(
 
                     item {
                         WishlistCard(count = 5)
+                    }
+
+                    // Host section: link to received bookings
+                    if (user?.roles?.contains(UserRole.OWNER) == true) {
+                        item {
+                            ProfileSectionCard(
+                                title = "Hosting",
+                                icon = Icons.Default.Home
+                            ) {
+                                Column {
+                                    SettingsRow(
+                                        icon = Icons.Default.CalendarMonth,
+                                        label = "Prenotazioni ricevute",
+                                        onClick = { onNavigateToHostBookings() }
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     item {

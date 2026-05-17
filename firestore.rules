@@ -15,9 +15,7 @@ service cloud.firestore{
             allow write: if false;
         }
         match /bookings/{bookingId}{
-            allow read: if request.auth!=null&&
-            (request.auth.uid==resource.data.renterId||
-            request.auth.uid==resource.data.hostId);
+            allow read: if request.auth!=null;
             allow create: if request.auth !=null;
             allow update: if request.auth !=null &&
             ( request.auth.uid==resource.data.hostId||
@@ -32,12 +30,16 @@ service cloud.firestore{
         }
         match /conversations/{conversationId}
         {
+
             allow read: if request.auth!=null&&
-            (request.auth.uid==resource.data.hostId||
+            (resource == null ||
+            request.auth.uid==resource.data.hostId||
             request.auth.uid==resource.data.renterId);
+
             allow create:if request.auth!=null&&
             (request.auth.uid==request.resource.data.hostId||
-            request.auth.uid==request.request.resource.data.renterId);
+            request.auth.uid==request.resource.data.renterId);
+
             allow update: if request.auth!=null&&
             (request.auth.uid==resource.data.hostId||
             request.auth.uid==resource.data.renterId);
@@ -66,7 +68,7 @@ service cloud.firestore{
         }
         match /keywords/{keywordId}{
             allow read: if request.auth!=null;
-            allow write: if request.auth!=null && get(/databases/$(database)/documents/users/$(request.auth.uid).data.roles.hasAny(['ADMIN']));
+            allow write: if request.auth!=null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles.hasAny(['ADMIN']);
         }
         match /reports/{reportId} {
             allow create:if request.auth!=null;

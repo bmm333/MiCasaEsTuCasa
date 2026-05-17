@@ -44,6 +44,7 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToTrips: () -> Unit,
     onNavigateToSaved: () -> Unit,
+    onNavigateToMessages: () -> Unit = {},
     homeViewModel: HomeViewModel = hiltViewModel(),
     userViewModel: UserViewModel = hiltViewModel()
 ) {
@@ -59,10 +60,10 @@ fun HomeScreen(
                 onItemSelected = { route ->
                     selectedRoute = route
                     when (route) {
-                        "profile_screen" -> onNavigateToProfile()
-                        "trips_screen" -> onNavigateToTrips()
-                        "saved_screen" -> onNavigateToSaved()
-                        "home_screen" -> { /* già qui */ }
+                        "profile_screen"  -> onNavigateToProfile()
+                        "trips_screen"    -> onNavigateToTrips()
+                        "messages_screen" -> onNavigateToMessages()
+                        "home_screen"     -> { /* già qui */ }
                     }
                 }
             )

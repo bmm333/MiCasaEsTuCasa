@@ -150,4 +150,20 @@ class FirebaseAdminRepo @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun getPendingReports(): Result<List<UserReport>> {
+        return try {
+            val snapshot = firestore.collection("reports")
+                .whereEqualTo("status", ReportStatus.PENDING.name)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .get().await()
+            Result.success(
+                snapshot.documents.mapNotNull {
+                    it.toObject(UserReport::class.java)
+                }
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

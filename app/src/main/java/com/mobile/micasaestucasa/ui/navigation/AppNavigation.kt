@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.google.firebase.auth.FirebaseAuth
+import com.mobile.micasaestucasa.ui.screens.admin.AdminScreen
 import com.mobile.micasaestucasa.ui.screens.auth.LoginScreen
 import com.mobile.micasaestucasa.ui.screens.auth.RegisterScreen
 import com.mobile.micasaestucasa.ui.screens.booking.BookingListMode
@@ -110,6 +111,9 @@ fun AppNavigation(
                 },
                 onNavigateToHostBookings = {
                     navController.navigate(Route.HostBookings)
+                },
+                onNavigateToAdmin = {
+                    navController.navigate(Route.Admin)
                 }
             )
         }
@@ -205,6 +209,13 @@ fun AppNavigation(
                 hostId = route.hostId,
                 renterId = route.renterId,
                 propertyId = route.propertyId,
+                currentUserId = currentUserId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<Route.Admin> {
+            AdminScreen(
                 currentUserId = currentUserId,
                 onNavigateBack = { navController.popBackStack() }
             )

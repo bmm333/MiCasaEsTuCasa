@@ -45,4 +45,7 @@ sealed interface Route {
         val renterId: String,
         val propertyId: String
     ) : Route
+
+    @Serializable
+    data object Admin : Route
 }

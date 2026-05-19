@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -62,25 +63,26 @@ fun ProfileScreen(
     onNavigateToSettings: (String) -> Unit = {},
     onLogoutNavigate: () -> Unit = {},
     onNavigateToHostBookings: () -> Unit = {},
+    onNavigateToAdmin: () -> Unit = {},
     onNavigateBack: () -> Boolean
 ) {
-    // Osservazione corretta dello stato utente e autenticazione
     val userState by userViewModel.userState.collectAsStateWithLifecycle()
-    val isAuthSuccessful by authViewModel.isAuthSuccessful.collectAsStateWithLifecycle()
 
-    // Effetto per il logout: naviga via se la sessione non è più valida
-    LaunchedEffect(isAuthSuccessful) {
-        if (!isAuthSuccessful) {
-            onLogoutNavigate()
-        }
+    // Refresh user data when the screen is shown
+    LaunchedEffect(Unit) {
+        userViewModel.loadUser()
     }
 
     ProfileContent(
         userState = userState,
         navController = navController,
-        onLogout = { authViewModel.logout() },
+        onLogout = { 
+            authViewModel.logout()
+            onLogoutNavigate()
+        },
         onNavigateToSettings = onNavigateToSettings,
-        onNavigateToHostBookings = onNavigateToHostBookings
+        onNavigateToHostBookings = onNavigateToHostBookings,
+        onNavigateToAdmin = onNavigateToAdmin
     )
 }
 
@@ -90,7 +92,8 @@ fun ProfileContent(
     navController: NavController,
     onLogout: () -> Unit,
     onNavigateToSettings: (String) -> Unit,
-    onNavigateToHostBookings: () -> Unit = {}
+    onNavigateToHostBookings: () -> Unit = {},
+    onNavigateToAdmin: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = Color(0xFFF7F7F7),
@@ -100,7 +103,10 @@ fun ProfileContent(
                 selectedRoute = "profile_screen",
                 onItemSelected = { route ->
                     when (route) {
-                        "home_screen"     -> navController.popBackStack()
+                        "home_screen"     -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Home) {
+                            popUpTo(0)
+                        }
+                        "saved_screen"    -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Wishlist)
                         "trips_screen"    -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Trips)
                         "messages_screen" -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.ConversationList)
                         "profile_screen"  -> { /* already here */ }
@@ -152,7 +158,7 @@ fun ProfileContent(
                         )
                     }
 
-                    if (user?.roles?.contains(UserRole.OWNER) == false) {
+                    if (user?.roles?.contains(UserRole.OWNER) == false && user?.roles?.contains(UserRole.ADMIN) == false) {
                         item {
                             PaddingWrapper {
                                 HostBanner()
@@ -162,6 +168,24 @@ fun ProfileContent(
 
                     item {
                         WishlistCard(count = 5)
+                    }
+
+                    // Admin section
+                    if (user?.roles?.contains(UserRole.ADMIN) == true) {
+                        item {
+                            ProfileSectionCard(
+                                title = "Administration",
+                                icon = Icons.Default.AdminPanelSettings
+                            ) {
+                                Column {
+                                    SettingsRow(
+                                        icon = Icons.Default.Settings,
+                                        label = "Admin Panel",
+                                        onClick = { onNavigateToAdmin() }
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     // Host section: link to received bookings

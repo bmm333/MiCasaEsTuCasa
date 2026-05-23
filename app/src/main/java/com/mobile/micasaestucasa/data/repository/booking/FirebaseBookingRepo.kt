@@ -259,4 +259,22 @@ class FirebaseBookingRepo @Inject constructor(
             Result.failure(e)
         }
     }
+    override suspend fun getBookingsForProperty(propertyId: String): Result<List<Booking>> {
+        return try {
+            val snapshot = bookingsCollection
+                .whereEqualTo("propertyId", propertyId)
+                .whereIn(
+                    "status",
+                    listOf(BookingStatus.REQUESTED.name, BookingStatus.ACCEPTED.name)
+                )
+                .get().await()
+            Result.success(
+                snapshot.documents.mapNotNull {
+                    it.toObject(BookingDto::class.java)?.toDomain()
+                }
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

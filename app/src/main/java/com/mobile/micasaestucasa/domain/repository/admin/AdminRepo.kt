@@ -43,4 +43,7 @@ interface AdminRepo {
     ): Result<Unit>
     suspend fun getBookingStats(): Result<BookingStats>
     suspend fun getPendingReports(): Result<List<UserReport>>
+
+    /** Creates a new user report document */
+    suspend fun addUserReport(report: UserReport): Result<Unit>
 }

@@ -5,31 +5,18 @@ import com.mobile.micasaestucasa.domain.repository.admin.AdminRepo
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import javax.inject.Inject
 
-class SuspendUserUseCase @Inject constructor(
+class ReactivateUserUseCase @Inject constructor(
     private val adminRepo: AdminRepo,
     private val userRepo: UserRepo
 ) {
     suspend operator fun invoke(targetUserId: String, adminId: String): Result<Unit> {
         if (targetUserId.isBlank() || adminId.isBlank()) {
-            return Result.failure(IllegalArgumentException("Id non validi"))
+            return Result.failure(IllegalArgumentException("IDs are required"))
         }
-        if (targetUserId == adminId) {
-            return Result.failure(IllegalArgumentException("Cannot suspend self"))
-        }
-
         val admin = userRepo.getCurrentUser()
         if (admin == null || !admin.roles.contains(UserRole.ADMIN)) {
             return Result.failure(SecurityException("Access denied"))
         }
-
-        // Check if target user exists — if they do, verify they're not an admin
-        val targetResult = userRepo.getUserById(targetUserId)
-        val target = targetResult.getOrNull()
-        if (target != null && target.roles.contains(UserRole.ADMIN)) {
-            return Result.failure(IllegalArgumentException("Cannot suspend another admin"))
-        }
-
-        return adminRepo.suspendUser(targetUserId, adminId)
+        return adminRepo.reactivateUser(targetUserId, adminId)
     }
 }
-

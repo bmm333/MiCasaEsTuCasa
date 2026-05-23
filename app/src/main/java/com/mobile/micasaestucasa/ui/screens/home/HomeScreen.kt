@@ -63,7 +63,13 @@ fun HomeScreen(
 ) {
     val homeState by homeViewModel.uiState.collectAsState()
     val currentUser by userViewModel.user.collectAsState()
+    val savedIds by homeViewModel.savedPropertyIds.collectAsState()
     var selectedRoute by remember { mutableStateOf("home_screen") }
+    val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+    androidx.compose.runtime.LaunchedEffect(currentUserId) {
+        if (currentUserId.isNotBlank()) homeViewModel.loadSavedIds(currentUserId)
+    }
     
     Scaffold(
         containerColor = ScreenBackground,
@@ -168,6 +174,8 @@ fun HomeScreen(
                     price = property.pricePerDay,
                     imageUrl = property.imageUrls.firstOrNull() ?: "",
                     isAvailable = true,
+                    isFavorite = savedIds.contains(property.id),
+                    onFavoriteClick = { homeViewModel.toggleSaved(currentUserId, property.id) },
                     onClick = { onNavigateToProperty(property.id) }
                 )
             }

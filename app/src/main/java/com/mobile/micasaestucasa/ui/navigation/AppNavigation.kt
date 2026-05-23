@@ -91,7 +91,9 @@ fun AppNavigation(
                 onNavigateToTrips = {
                     navController.navigate(Route.Trips)
                 },
-                onNavigateToSaved = { /* TODO */ },
+                onNavigateToSaved = {
+                    navController.navigate(Route.Wishlist)
+                },
                 onNavigateToMessages = {
                     navController.navigate(Route.ConversationList)
                 }
@@ -120,8 +122,9 @@ fun AppNavigation(
 
         composable<Route.Wishlist> {
             WishlistScreen(
-                onNavigateToProfile = {
-                    navController.navigate(Route.Profile)
+                navController = navController,
+                onNavigateToProperty = { propertyId ->
+                    navController.navigate(Route.PropertyDetail(propertyId))
                 }
             )
         }
@@ -173,7 +176,8 @@ fun AppNavigation(
             BookingListScreen(
                 currentUserId = currentUserId,
                 mode = BookingListMode.RENTER,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                navController = navController
             )
         }
 
@@ -181,7 +185,8 @@ fun AppNavigation(
             BookingListScreen(
                 currentUserId = currentUserId,
                 mode = BookingListMode.HOST,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                navController = navController
             )
         }
 
@@ -198,7 +203,8 @@ fun AppNavigation(
                         )
                     )
                 },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                navController = navController
             )
         }
 
@@ -217,7 +223,10 @@ fun AppNavigation(
         composable<Route.Admin> {
             AdminScreen(
                 currentUserId = currentUserId,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToProperty = { propertyId ->
+                    navController.navigate(Route.PropertyDetail(propertyId))
+                }
             )
         }
     }

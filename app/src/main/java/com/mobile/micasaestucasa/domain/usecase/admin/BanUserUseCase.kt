@@ -14,21 +14,20 @@ class BanUserUseCase @Inject constructor(
             return Result.failure(IllegalArgumentException("Id non validi"))
         }
         if (targetUserId == adminId) {
-            return Result.failure(IllegalArgumentException("cannot suspend self"))
+            return Result.failure(IllegalArgumentException("Cannot ban self"))
         }
         val admin = userRepo.getCurrentUser()
         if (admin == null || !admin.roles.contains(UserRole.ADMIN)) {
             return Result.failure(SecurityException("Access denied"))
         }
-        val targetResult = userRepo.getUserById(targetUserId)
-        if (targetResult.isSuccess) {
-            val target = targetResult.getOrThrow() ?: return Result.failure(IllegalArgumentException("Utente non trovato"))
-            if (target.roles.contains(UserRole.ADMIN)) {
-                return Result.failure(
-                    IllegalArgumentException("Non puoi sospendere un altro admin")
-                )
-            }
+
+        // Check if target user exists if they do, verify they're not an admin
+        val target = userRepo.getUserById(targetUserId).getOrNull()
+        if (target != null && target.roles.contains(UserRole.ADMIN)) {
+            return Result.failure(IllegalArgumentException("Cannot ban another admin"))
         }
+
         return adminRepo.banUser(targetUserId, adminId)
     }
 }
+

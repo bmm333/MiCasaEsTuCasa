@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.model.chat.Message
 import com.mobile.micasaestucasa.domain.repository.chat.ChatRepo
+import com.mobile.micasaestucasa.domain.usecase.admin.AddUserReportUseCase
 import com.mobile.micasaestucasa.domain.usecase.chat.GetOrCreateConversationUseCase
 import com.mobile.micasaestucasa.domain.usecase.chat.SendMessageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +18,8 @@ import javax.inject.Inject
 class ChatViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
     private val getOrCreateConversationUseCase: GetOrCreateConversationUseCase,
-    private val chatRepo: ChatRepo
+    private val chatRepo: ChatRepo,
+    private val addUserReportUseCase: AddUserReportUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ChatUiState>(ChatUiState.Idle)
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
@@ -121,4 +123,22 @@ class ChatViewModel @Inject constructor(
     }
 
     fun resetState() { _uiState.value = ChatUiState.Idle }
+
+    fun reportUser(
+        reporterId: String,
+        reportedUserId: String,
+        reason: String,
+        description: String = "",
+        propertyId: String? = null
+    ) {
+        viewModelScope.launch {
+            addUserReportUseCase(
+                reporterId = reporterId,
+                reportedUserId = reportedUserId,
+                reason = reason,
+                description = description,
+                propertyId = propertyId
+            )
+        }
+    }
 }

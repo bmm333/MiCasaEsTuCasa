@@ -3,6 +3,7 @@ package com.mobile.micasaestucasa.ui.viewmodels.property
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.model.property.Property
+import com.mobile.micasaestucasa.domain.usecase.admin.AddUserReportUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.CreatePropertyUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetOwnerPropertiesUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
@@ -19,7 +20,8 @@ class PropertyViewModel @Inject constructor(
     private val searchPropertiesUseCase: SearchPropertiesUseCase,
     private val getOwnerPropertiesUseCase: GetOwnerPropertiesUseCase,
     private val createPropertyUseCase: CreatePropertyUseCase,
-    private val getPropertyByIdUseCase: GetPropertyByIdUseCase
+    private val getPropertyByIdUseCase: GetPropertyByIdUseCase,
+    private val addUserReportUseCase: AddUserReportUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PropertyUiState>(PropertyUiState.Idle)
     val uiState: StateFlow<PropertyUiState> = _uiState.asStateFlow()
@@ -115,6 +117,24 @@ class PropertyViewModel @Inject constructor(
                 .onFailure {
                     _uiState.value = PropertyUiState.Error(it.message ?: "Property not found")
                 }
+        }
+    }
+
+    fun reportHost(
+        reporterId: String,
+        reportedUserId: String,
+        reason: String,
+        description: String = "",
+        propertyId: String? = null
+    ) {
+        viewModelScope.launch {
+            addUserReportUseCase(
+                reporterId = reporterId,
+                reportedUserId = reportedUserId,
+                reason = reason,
+                description = description,
+                propertyId = propertyId
+            )
         }
     }
 }

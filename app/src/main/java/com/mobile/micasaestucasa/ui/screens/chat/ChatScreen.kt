@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.mobile.micasaestucasa.domain.model.chat.Message
+import com.mobile.micasaestucasa.ui.components.report.ReportDialog
 import com.mobile.micasaestucasa.ui.theme.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -49,6 +50,8 @@ fun ChatScreen(
     val scope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showReportDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
 
     val activeConversationId = vmConversationId.ifBlank { conversationId }
@@ -84,8 +87,31 @@ fun ChatScreen(
         }
     }
 
+    // Report dialog
+    if (showReportDialog) {
+        val reportedUser = if (currentUserId == hostId) renterId else hostId
+        ReportDialog(
+            reportedUserId = reportedUser,
+            onDismiss = { showReportDialog = false },
+            onSubmit = { reason, description ->
+                viewModel.reportUser(
+                    reporterId = currentUserId,
+                    reportedUserId = reportedUser,
+                    reason = reason,
+                    description = description,
+                    propertyId = propertyId.takeIf { it.isNotBlank() }
+                )
+                showReportDialog = false
+                scope.launch {
+                    snackbarHostState.showSnackbar("Report submitted — admins will review.")
+                }
+            }
+        )
+    }
+
     Scaffold(
         containerColor = ScreenBackground,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -119,6 +145,11 @@ fun ChatScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Rounded.ArrowBackIosNew, null, tint = HeadingText)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showReportDialog = true }) {
+                        Icon(Icons.Rounded.Flag, "Report user", tint = CaptionLabels)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = CardSurface)

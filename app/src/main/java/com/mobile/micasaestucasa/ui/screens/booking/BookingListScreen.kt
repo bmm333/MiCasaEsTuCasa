@@ -22,6 +22,11 @@ import com.mobile.micasaestucasa.ui.theme.*
 import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingUiState
 import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingViewModel
 
+import androidx.navigation.NavController
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
+import com.mobile.micasaestucasa.ui.navigation.Route
+
 /**
  * Booking list mode — determines which bookings to load.
  * The mode is set by the navigation route.
@@ -34,6 +39,7 @@ fun BookingListScreen(
     currentUserId: String,
     mode: BookingListMode,
     onNavigateBack: () -> Unit,
+    navController: NavController,
     viewModel: BookingViewModel = hiltViewModel()
 ) {
     LaunchedEffect(Unit) {
@@ -63,6 +69,35 @@ fun BookingListScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = CardSurface)
+            )
+        },
+        bottomBar = {
+            MiCasaBottomNav(
+                items = DefaultBottomNavItems.items,
+                selectedRoute = if (mode == BookingListMode.RENTER) "trips_screen" else "profile_screen",
+                onItemSelected = { route ->
+                    when (route) {
+                        "home_screen"     -> navController.navigate(Route.Home) {
+                            popUpTo(0)
+                        }
+                        "saved_screen"    -> navController.navigate(Route.Wishlist)
+                        "trips_screen"    -> {
+                            if (mode != BookingListMode.RENTER) {
+                                navController.navigate(Route.Trips)
+                            }
+                        }
+                        "messages_screen" -> navController.navigate(Route.ConversationList)
+                        "profile_screen"  -> {
+                            if (mode == BookingListMode.RENTER) {
+                                navController.navigate(Route.Profile)
+                            } else {
+                                navController.navigate(Route.Profile) {
+                                    popUpTo(Route.Profile) { inclusive = true }
+                                }
+                            }
+                        }
+                    }
+                }
             )
         },
         containerColor = ScreenBackground

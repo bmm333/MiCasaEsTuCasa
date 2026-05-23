@@ -25,12 +25,18 @@ import com.mobile.micasaestucasa.ui.viewmodels.chat.ChatViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+import androidx.navigation.NavController
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
+import com.mobile.micasaestucasa.ui.navigation.Route
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversationListScreen(
     currentUserId: String,
     onNavigateToChat: (String) -> Unit,
     onNavigateBack: () -> Unit,
+    navController: NavController,
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -57,6 +63,23 @@ fun ConversationListScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = CardSurface)
+            )
+        },
+        bottomBar = {
+            MiCasaBottomNav(
+                items = DefaultBottomNavItems.items,
+                selectedRoute = "messages_screen",
+                onItemSelected = { route ->
+                    when (route) {
+                        "home_screen"     -> navController.navigate(Route.Home) {
+                            popUpTo(0)
+                        }
+                        "saved_screen"    -> navController.navigate(Route.Wishlist)
+                        "trips_screen"    -> navController.navigate(Route.Trips)
+                        "messages_screen" -> { /* already here */ }
+                        "profile_screen"  -> navController.navigate(Route.Profile)
+                    }
+                }
             )
         }
     ) { padding ->

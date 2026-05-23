@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
+import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
 import com.mobile.micasaestucasa.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -29,11 +30,15 @@ data class Category(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val propertyRepo: PropertyRepo
+    private val propertyRepo: PropertyRepo,
+    private val wishlistRepo: WhishlistRepo
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    private val _savedPropertyIds = MutableStateFlow<Set<String>>(emptySet())
+    val savedPropertyIds: StateFlow<Set<String>> = _savedPropertyIds.asStateFlow()
 
     private var authRetried = false
 
@@ -258,6 +263,25 @@ class HomeViewModel @Inject constructor(
             samples.forEach { property ->
                 propertyRepo.createProperty(property)
             }
+        }
+    }
+
+    fun toggleSaved(userId: String, propertyId: String) {
+        viewModelScope.launch {
+            wishlistRepo.toggleSavedProperty(userId, propertyId)
+                .onSuccess { isSaved ->
+                    _savedPropertyIds.update { current ->
+                        if (isSaved) current + propertyId else current - propertyId
+                    }
+                }
+        }
+    }
+
+    fun loadSavedIds(userId: String) {
+        if (userId.isBlank()) return
+        viewModelScope.launch(Dispatchers.IO) {
+            wishlistRepo.getSavedPropertyIds(userId)
+                .onSuccess { ids -> _savedPropertyIds.value = ids }
         }
     }
 }

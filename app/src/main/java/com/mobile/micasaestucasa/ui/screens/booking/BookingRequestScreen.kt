@@ -87,10 +87,29 @@ fun BookingRequestScreen(
 ) {
     val uiState      by viewModel.uiState.collectAsState()
     val paymentState by viewModel.paymentState.collectAsState()
+    val unavailableDates by viewModel.unavailableDatesMillis.collectAsState()
+    // Load booked dates for this property so the calendar disables them
+    LaunchedEffect(propertyId) {
+        viewModel.loadUnavailableDates(propertyId)
+    }
+    //Custom SelectableDates: disables past and already-booked days
+    val selectableDates = remember(unavailableDates) {
+        object : androidx.compose.material3.SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                // Block past dates
+                val today = java.time.LocalDate.now()
+                    .atStartOfDay(java.time.ZoneOffset.UTC)
+                    .toInstant().toEpochMilli()
+                if (utcTimeMillis < today) return false
+                //Block booked dates
+                return utcTimeMillis !in unavailableDates
+            }
+        }
+    }
 
     // DatePicker state
-    val startDatePickerState = rememberDatePickerState()
-    val endDatePickerState   = rememberDatePickerState()
+    val startDatePickerState = rememberDatePickerState(selectableDates = selectableDates)
+    val endDatePickerState   = rememberDatePickerState(selectableDates = selectableDates)
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker   by remember { mutableStateOf(false) }
     var guestsCount     by remember { mutableIntStateOf(1) }

@@ -26,7 +26,7 @@ class SuspendUserUseCase @Inject constructor(
         val targetResult = userRepo.getUserById(targetUserId)
         val target = targetResult.getOrNull()
         if (target != null && target.roles.contains(UserRole.ADMIN)) {
-            return Result.failure(IllegalArgumentException("Cannot suspend another admin"))
+            return Result.failure(IllegalArgumentException("Non puoi sospendere un altro admin"))
         }
 
         return adminRepo.suspendUser(targetUserId, adminId)

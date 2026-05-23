@@ -14,7 +14,7 @@ class BanUserUseCase @Inject constructor(
             return Result.failure(IllegalArgumentException("Id non validi"))
         }
         if (targetUserId == adminId) {
-            return Result.failure(IllegalArgumentException("Cannot ban self"))
+            return Result.failure(IllegalArgumentException("cannot suspend self"))
         }
         val admin = userRepo.getCurrentUser()
         if (admin == null || !admin.roles.contains(UserRole.ADMIN)) {
@@ -24,7 +24,7 @@ class BanUserUseCase @Inject constructor(
         // Check if target user exists if they do, verify they're not an admin
         val target = userRepo.getUserById(targetUserId).getOrNull()
         if (target != null && target.roles.contains(UserRole.ADMIN)) {
-            return Result.failure(IllegalArgumentException("Cannot ban another admin"))
+            return Result.failure(IllegalArgumentException("Non puoi sospendere un altro admin"))
         }
 
         return adminRepo.banUser(targetUserId, adminId)

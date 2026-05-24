@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.domain.usecase.property.CreatePropertyUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetOwnerPropertiesUseCase
+import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.SearchPropertiesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,8 @@ import javax.inject.Inject
 class PropertyViewModel @Inject constructor(
     private val searchPropertiesUseCase: SearchPropertiesUseCase,
     private val getOwnerPropertiesUseCase: GetOwnerPropertiesUseCase,
-    private val createPropertyUseCase: CreatePropertyUseCase
+    private val createPropertyUseCase: CreatePropertyUseCase,
+    private val getPropertyByIdUseCase: GetPropertyByIdUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PropertyUiState>(PropertyUiState.Idle)
     val uiState: StateFlow<PropertyUiState> = _uiState.asStateFlow()
@@ -95,6 +97,26 @@ class PropertyViewModel @Inject constructor(
                 }
         }
     }
+    /**
+     * Loads a single property by its ID
+     * Used for the property detail screen
+     * @param propertyId Firestore document ID of the property
+     */
+    fun loadPropertyDetail(propertyId: String) {
+        viewModelScope.launch {
+            _uiState.value = PropertyUiState.Loading
+            getPropertyByIdUseCase(propertyId)
+                .onSuccess { property ->
+                    _uiState.value = PropertyUiState.DetailSuccess(property)
+                }
+                .onFailure { error ->
+                    _uiState.value = PropertyUiState.Error(
+                        error.message ?: "Errore caricamento proprietà"
+                    )
+                }
+        }
+    }
+
     fun resetState() {
         _uiState.value = PropertyUiState.Idle
     }

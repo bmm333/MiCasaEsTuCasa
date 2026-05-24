@@ -16,4 +16,7 @@ sealed interface Route {
     data object Profile : Route
     @Serializable
     data object Wishlist : Route
+
+    @Serializable
+    data class PropertyDetail(val propertyId: String) : Route
 }

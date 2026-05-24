@@ -26,9 +26,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.mobile.micasaestucasa.ui.components.home.BottomNavigationBar
 import com.mobile.micasaestucasa.ui.components.home.PropertyCard
-import com.mobile.micasaestucasa.ui.components.home.Topnavigation
+import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaTopBar
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
@@ -63,8 +64,15 @@ fun WishlistContent(
     onTabSelected: (Int) -> Unit // 3. AGGIUNTO PARAMETRO MANCANTE
 ) {
     Scaffold(
-        topBar = { Topnavigation(onProfileClick = { /* Nav to profile */ }) },
-        bottomBar = { BottomNavigationBar(navController = navController) }
+        topBar = { MiCasaTopBar(onAvatarClick = { /* Nav to profile */ }) },
+        bottomBar = {
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: "saved_screen"
+            MiCasaBottomNav(
+                items = DefaultBottomNavItems.items,
+                selectedRoute = currentRoute,
+                onItemSelected = { route -> navController.navigate(route) }
+            )
+        }
     ) { padding ->
         LazyColumn(
             modifier = Modifier

@@ -1,6 +1,6 @@
 package com.mobile.micasaestucasa.data.repository.user
 
-import UserDTO
+import com.mobile.micasaestucasa.data.dto.user.UserDTO
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser

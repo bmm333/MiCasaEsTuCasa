@@ -30,5 +30,22 @@ sealed interface Route {
     ) : Route
 
     @Serializable
-    data object BookingList : Route
+    data object Trips : Route
+
+    @Serializable
+    data object HostBookings : Route
+
+    @Serializable
+    data object ConversationList : Route
+
+    @Serializable
+    data class Chat(
+        val conversationId: String,
+        val hostId: String,
+        val renterId: String,
+        val propertyId: String
+    ) : Route
+
+    @Serializable
+    data object Admin : Route
 }

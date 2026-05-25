@@ -11,9 +11,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+
 @HiltViewModel
 class WishlistViewModel @Inject constructor(
-    private val getWishlistDataUseCase: GetWishlistDataUseCase
+    private val getWishlistDataUseCase: GetWishlistDataUseCase,
+    private val wishlistRepo: WhishlistRepo,
+    private val userRepo: UserRepo
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WishlistUiState())
@@ -21,6 +26,18 @@ class WishlistViewModel @Inject constructor(
 
     init {
         loadWishlist()
+    }
+
+    fun toggleSaved(propertyId: String) {
+        viewModelScope.launch {
+            val user = userRepo.getCurrentUser()
+            if (user != null) {
+                wishlistRepo.toggleSavedProperty(user.id, propertyId)
+                    .onSuccess {
+                        loadWishlist()
+                    }
+            }
+        }
     }
 
     fun loadWishlist() {

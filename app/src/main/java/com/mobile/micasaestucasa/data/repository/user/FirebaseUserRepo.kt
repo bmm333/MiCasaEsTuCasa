@@ -9,7 +9,7 @@ import com.mobile.micasaestucasa.domain.model.user.UserBadge
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
-import kotlin.jvm.java
+import com.mobile.micasaestucasa.data.dto.user.UserDTO
 
 class FirebaseUserRepo @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
@@ -89,9 +89,9 @@ class FirebaseUserRepo @Inject constructor(
             Result.failure(e)
         }
     }
-    override suspend fun getUserById(userId: String): Result<User?> {
+    override suspend fun getUserById(uid: String): Result<User?> {
         return try {
-            val snapshot = usersCollection.document(userId).get().await()
+            val snapshot = usersCollection.document(uid).get().await()
             if (!snapshot.exists()) {
                 return Result.success(null)
             }

@@ -67,7 +67,7 @@ class FirebaseAdminRepo @Inject constructor(
     ): Result<Unit> {
         return try {
             firestore.collection("users").document(targetUserId)
-                .update("status", "SUSPENDED").await()
+                .set(mapOf("status" to "SUSPENDED"), com.google.firebase.firestore.SetOptions.merge()).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -80,7 +80,7 @@ class FirebaseAdminRepo @Inject constructor(
     ): Result<Unit> {
         return try {
             firestore.collection("users").document(targetUserId)
-                .update("status", "BANNED").await()
+                .set(mapOf("status" to "BANNED"), com.google.firebase.firestore.SetOptions.merge()).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -93,7 +93,7 @@ class FirebaseAdminRepo @Inject constructor(
     ): Result<Unit> {
         return try {
             firestore.collection("users").document(targetUserId)
-                .update("status", "ACTIVE").await()
+                .set(mapOf("status" to "ACTIVE"), com.google.firebase.firestore.SetOptions.merge()).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -104,14 +104,14 @@ class FirebaseAdminRepo @Inject constructor(
         return try {
             val snapshot = firestore.collection("reports")
                 .whereEqualTo("status", ReportStatus.PENDING.name)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get().await()
-            Result.success(
-                snapshot.documents.mapNotNull {
-                    it.toObject(UserReport::class.java)
-                }
-            )
+            val reports = snapshot.documents.mapNotNull {
+                it.toObject(UserReport::class.java)
+            }.sortedByDescending { it.createdAt }
+            android.util.Log.d("FirebaseAdminRepo", "getAllReports: found ${reports.size} reports")
+            Result.success(reports)
         } catch (e: Exception) {
+            android.util.Log.e("FirebaseAdminRepo", "getAllReports FAILED", e)
             Result.failure(e)
         }
     }
@@ -146,6 +146,33 @@ class FirebaseAdminRepo @Inject constructor(
                     rejected = bookings.count { it == BookingStatus.REJECTED.name }
                 )
             )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getPendingReports(): Result<List<UserReport>> {
+        return try {
+            val snapshot = firestore.collection("reports")
+                .whereEqualTo("status", ReportStatus.PENDING.name)
+                .get().await()
+            val reports = snapshot.documents.mapNotNull {
+                it.toObject(UserReport::class.java)
+            }.sortedByDescending { it.createdAt }
+            android.util.Log.d("FirebaseAdminRepo", "getPendingReports: found ${reports.size} reports")
+            Result.success(reports)
+        } catch (e: Exception) {
+            android.util.Log.e("FirebaseAdminRepo", "getPendingReports FAILED", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun addUserReport(report: UserReport): Result<Unit> {
+        return try {
+            val docRef = firestore.collection("reports").document()
+            val reportWithId = report.copy(id = docRef.id)
+            docRef.set(reportWithId).await()
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

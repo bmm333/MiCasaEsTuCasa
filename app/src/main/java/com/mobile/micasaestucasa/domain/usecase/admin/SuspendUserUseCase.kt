@@ -22,18 +22,14 @@ class SuspendUserUseCase @Inject constructor(
             return Result.failure(SecurityException("Access denied"))
         }
 
+        // Check if target user exists — if they do, verify they're not an admin
         val targetResult = userRepo.getUserById(targetUserId)
-        if (targetResult.isSuccess) {
-            val target = targetResult.getOrThrow() ?: return Result.failure(
-                IllegalArgumentException("Utente non trovato")
-            )
-            // target is non-null here, so target.roles is non-null
-            if (target.roles.contains(UserRole.ADMIN)) {
-                return Result.failure(
-                    IllegalArgumentException("Non puoi sospendere un altro admin")
-                )
-            }
+        val target = targetResult.getOrNull()
+        if (target != null && target.roles.contains(UserRole.ADMIN)) {
+            return Result.failure(IllegalArgumentException("Non puoi sospendere un altro admin"))
         }
+
         return adminRepo.suspendUser(targetUserId, adminId)
     }
 }
+

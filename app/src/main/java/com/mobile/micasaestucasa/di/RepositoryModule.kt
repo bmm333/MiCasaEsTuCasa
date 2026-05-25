@@ -13,6 +13,7 @@ import com.mobile.micasaestucasa.data.repository.notification.FirebaseNotificati
 import com.mobile.micasaestucasa.data.repository.property.FirebasePropertyRepo
 import com.mobile.micasaestucasa.data.repository.review.FirebaseReviewRepo
 import com.mobile.micasaestucasa.data.repository.user.FirebaseUserRepo
+import com.mobile.micasaestucasa.data.repository.wishlist.FirebaseWishlistRepo
 import com.mobile.micasaestucasa.domain.repository.admin.AdminRepo
 import com.mobile.micasaestucasa.domain.repository.auth.AuthRepo
 import com.mobile.micasaestucasa.domain.repository.booking.BookingRepo
@@ -107,4 +108,10 @@ object RepositoryModule {
     fun provideAdminRepo(
         firestore: FirebaseFirestore
     ): AdminRepo = FirebaseAdminRepo(firestore)
+
+    @Provides
+    @Singleton
+    fun provideWishlistRepo(
+        firestore: FirebaseFirestore
+    ): WhishlistRepo = FirebaseWishlistRepo(firestore)
 }

@@ -1,5 +1,5 @@
 package com.mobile.micasaestucasa.data.mapper.user
-import UserDTO
+import com.mobile.micasaestucasa.data.dto.user.UserDTO
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserBadge
 import com.mobile.micasaestucasa.domain.model.user.UserRole
@@ -14,8 +14,8 @@ fun UserDTO.toDomain(): User = User(
 
     // REVIEW SYSTEM
     badge = badge?.let {
-        try { UserBadge.valueOf(it) } catch (_: Exception) { UserBadge.NEW_HOST }
-    } ?: UserBadge.NEW_HOST,
+        try { UserBadge.valueOf(it) } catch (_: Exception) { UserBadge.NEW_RENTER }
+    } ?: UserBadge.NEW_RENTER,
     avgRating = avgRating ?: 0.0,
     reviewsCount = reviewsCount ?: 0,
     reliabilityScore = reliabilityScore ?: 0.0,

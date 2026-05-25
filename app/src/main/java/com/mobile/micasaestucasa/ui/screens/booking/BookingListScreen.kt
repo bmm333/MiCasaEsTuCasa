@@ -1,6 +1,5 @@
 package com.mobile.micasaestucasa.ui.screens.booking
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,30 +22,46 @@ import com.mobile.micasaestucasa.ui.theme.*
 import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingUiState
 import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingViewModel
 
+import androidx.navigation.NavController
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
+import com.mobile.micasaestucasa.ui.navigation.Route
+
+/**
+ * Booking list mode — determines which bookings to load.
+ * The mode is set by the navigation route.
+ * */
+enum class BookingListMode { RENTER, HOST }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingListScreen(
     currentUserId: String,
-    isHost: Boolean = false,
+    mode: BookingListMode,
     onNavigateBack: () -> Unit,
+    navController: NavController,
     viewModel: BookingViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Come affittuario", "Come proprietario")
-
-    LaunchedEffect(selectedTab) {
-        if (selectedTab == 0) viewModel.loadRenterBookings(currentUserId)
-        else viewModel.loadHostBookings(currentUserId)
+    LaunchedEffect(Unit) {
+        when (mode) {
+            BookingListMode.RENTER -> viewModel.loadRenterBookings(currentUserId)
+            BookingListMode.HOST   -> viewModel.loadHostBookings(currentUserId)
+        }
     }
 
     Scaffold(
-        containerColor = ScreenBackground,
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Le mie prenotazioni",
-                        fontWeight = FontWeight.Bold, fontSize = 18.sp, color = HeadingText)
+                    Text(
+                        text = when (mode) {
+                            BookingListMode.RENTER -> "I miei viaggi"
+                            BookingListMode.HOST   -> "Le mie prenotazioni ricevute"
+                        },
+                        fontWeight = FontWeight.Bold,
+                        fontSize   = 18.sp,
+                        color      = HeadingText
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -56,70 +70,74 @@ fun BookingListScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = CardSurface)
             )
-        }
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            // tab renter / host
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor   = CardSurface,
-                contentColor     = Primario,
-                indicator        = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        color = Primario
-                    )
-                }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick  = { selectedTab = index },
-                        text     = {
-                            Text(
-                                title,
-                                fontSize   = 13.sp,
-                                fontWeight = if (selectedTab == index)
-                                    FontWeight.SemiBold else FontWeight.Normal,
-                                color = if (selectedTab == index) Primario else CaptionLabels
-                            )
+        },
+        bottomBar = {
+            MiCasaBottomNav(
+                items = DefaultBottomNavItems.items,
+                selectedRoute = if (mode == BookingListMode.RENTER) "trips_screen" else "profile_screen",
+                onItemSelected = { route ->
+                    when (route) {
+                        "home_screen"     -> navController.navigate(Route.Home) {
+                            popUpTo(0)
                         }
-                    )
-                }
-            }
-
-            when (val state = uiState) {
-                is BookingUiState.Loading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Primario)
-                    }
-                }
-                is BookingUiState.BookingsLoaded -> {
-                    if (state.bookings.isEmpty()) {
-                        EmptyBookingsView()
-                    } else {
-                        LazyColumn(
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(state.bookings) { booking ->
-                                BookingCard(
-                                    booking    = booking,
-                                    isHost     = selectedTab == 1,
-                                    onAccept   = { viewModel.acceptBooking(booking.id, currentUserId) },
-                                    onCancel   = { viewModel.cancelBooking(booking.id, currentUserId) }
-                                )
+                        "saved_screen"    -> navController.navigate(Route.Wishlist)
+                        "trips_screen"    -> {
+                            if (mode != BookingListMode.RENTER) {
+                                navController.navigate(Route.Trips)
+                            }
+                        }
+                        "messages_screen" -> navController.navigate(Route.ConversationList)
+                        "profile_screen"  -> {
+                            if (mode == BookingListMode.RENTER) {
+                                navController.navigate(Route.Profile)
+                            } else {
+                                navController.navigate(Route.Profile) {
+                                    popUpTo(Route.Profile) { inclusive = true }
+                                }
                             }
                         }
                     }
                 }
-                is BookingUiState.Error -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(state.message, color = ErrorColor)
+            )
+        },
+        containerColor = ScreenBackground
+    ) { padding ->
+        val uiState by viewModel.uiState.collectAsState()
+        when (val state = uiState) {
+            is BookingUiState.Loading -> {
+                Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
+                    CircularProgressIndicator(color = Primario)
+                }
+            }
+            is BookingUiState.BookingsLoaded -> {
+                if (state.bookings.isEmpty()) {
+                    EmptyBookingsView(
+                        modifier = Modifier.padding(padding),
+                        mode     = mode
+                    )
+                } else {
+                    LazyColumn(
+                        modifier       = Modifier.fillMaxSize().padding(padding),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(state.bookings) { booking ->
+                            BookingCard(
+                                booking  = booking,
+                                isHost   = mode == BookingListMode.HOST,
+                                onAccept = { viewModel.acceptBooking(booking.id, currentUserId) },
+                                onCancel = { viewModel.cancelBooking(booking.id, currentUserId) }
+                            )
+                        }
                     }
                 }
-                else -> {}
             }
+            is BookingUiState.Error -> {
+                Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) {
+                    Text(state.message, color = ErrorColor)
+                }
+            }
+            else -> {}
         }
     }
 }
@@ -205,7 +223,7 @@ private fun BookingCard(
             }
         }
 
-        // renter action: cacnel if req
+        // renter action: cancel if req
         if (!isHost && booking.status == BookingStatus.REQUESTED) {
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedButton(
@@ -225,10 +243,10 @@ private fun BookingCard(
 private fun BookingStatusBadge(status: BookingStatus) {
     val (label, bg, textColor) = when (status) {
         BookingStatus.REQUESTED  -> Triple("On Hold",   Caution.copy(alpha = 0.15f),  Caution)
-        BookingStatus.ACCEPTED   -> Triple("Accpeted",   Success,                       Secondary)
-        BookingStatus.REJECTED   -> Triple("Rejected",   ErrorColor.copy(alpha = 0.1f), ErrorColor)
-        BookingStatus.CANCELLED  -> Triple("Cancelled",  SkeletonLoader,                CaptionLabels)
-        BookingStatus.COMPLETED  -> Triple("Completed",  Success,                       Badges)
+        BookingStatus.ACCEPTED   -> Triple("Accepted",  Success,                       Secondary)
+        BookingStatus.REJECTED   -> Triple("Rejected",  ErrorColor.copy(alpha = 0.1f), ErrorColor)
+        BookingStatus.CANCELLED  -> Triple("Cancelled", SkeletonLoader,                CaptionLabels)
+        BookingStatus.COMPLETED  -> Triple("Completed", Success,                       Badges)
     }
     Surface(
         shape = RoundedCornerShape(50.dp),
@@ -254,16 +272,23 @@ private fun InfoItem(icon: androidx.compose.ui.graphics.vector.ImageVector, text
 }
 
 @Composable
-private fun EmptyBookingsView() {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+private fun EmptyBookingsView(modifier: Modifier = Modifier, mode: BookingListMode) {
+    Box(modifier.fillMaxSize(), Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
-                Icons.Rounded.CalendarMonth,
-                null, tint = BorderDivider,
+                Icons.Rounded.CalendarMonth, null,
+                tint     = BorderDivider,
                 modifier = Modifier.size(64.dp)
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("No Bookings", color = CaptionLabels, fontSize = 16.sp)
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = when (mode) {
+                    BookingListMode.RENTER -> "Nessun viaggio ancora"
+                    BookingListMode.HOST   -> "Nessuna prenotazione ricevuta"
+                },
+                color    = CaptionLabels,
+                fontSize = 16.sp
+            )
         }
     }
 }

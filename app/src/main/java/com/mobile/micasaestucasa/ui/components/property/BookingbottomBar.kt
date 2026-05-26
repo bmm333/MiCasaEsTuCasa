@@ -71,26 +71,15 @@ fun BookingBottomBar(
             Button(
                 onClick = { /* Prenota */ },
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                contentPadding = PaddingValues()
+                colors = ButtonDefaults.buttonColors(containerColor = Primario),
+                contentPadding = PaddingValues(horizontal = 32.dp, vertical = 14.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(Primario, MaterialTheme.colorScheme.primaryContainer)
-                            )
-                        )
-                        .padding(horizontal = 32.dp, vertical = 14.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Book Now",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                }
+                Text(
+                    text = "Book Now",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
             }
         }
     }

@@ -63,7 +63,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.ui.components.property.AmenityItem
 import com.mobile.micasaestucasa.ui.components.property.BookingBottomBar
@@ -189,7 +189,7 @@ fun PropertyDetailContent(
                 )
             }
 
-            // ── 2. Title + Location + Type ─────────────────────────────
+            // ── 2. Title + Location + Rating ─────────────────────────
             item {
                 Column(
                     modifier = Modifier
@@ -203,19 +203,47 @@ fun PropertyDetailContent(
                         fontWeight = FontWeight.ExtraBold
                     )
                     Spacer(modifier = Modifier.height(6.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = Primario,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = property.city,
-                            style = Typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = Primario,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = property.city,
+                                style = Typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = Accenti,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (property.rating > 0) "%.1f".format(property.rating) else "New",
+                                style = Typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            if (property.reviewsCount > 0) {
+                                Text(
+                                    text = " (${property.reviewsCount})",
+                                    style = Typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -226,7 +254,7 @@ fun PropertyDetailContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     FeatureChip(
                         icon = Icons.Default.KingBed,
@@ -237,11 +265,6 @@ fun PropertyDetailContent(
                         icon = Icons.Default.Group,
                         label = "Guests",
                         value = "${property.capacity} Max"
-                    )
-                    FeatureChip(
-                        icon = Icons.Default.Star,
-                        label = "Rating",
-                        value = if (property.rating > 0) "%.1f".format(property.rating) else "New"
                     )
                 }
                 Spacer(modifier = Modifier.height(24.dp))

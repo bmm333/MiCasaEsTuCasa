@@ -6,17 +6,24 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.selects.whileSelect
-import kotlinx.coroutines.test.*
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
+import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class WishlistViewModelTest {
 
-    private val GetWishlistDataUseCase = mockk<GetWishlistDataUseCase>()
+    private val getWishlistDataUseCase = mockk<GetWishlistDataUseCase>()
+    private val wishlistRepo = mockk<WhishlistRepo>(relaxed = true)
+    private val userRepo = mockk<UserRepo>(relaxed = true)
     private val testDispatcher = UnconfinedTestDispatcher()
 
     @Before
@@ -25,20 +32,21 @@ class WishlistViewModelTest {
     }
 
     @After
-    fun tearDown(){
+    fun tearDown() {
         Dispatchers.resetMain()
     }
 
+    @Test
     fun `loadWishlist updates uiState to success when use case returns data`() = runTest {
-        coEvery{GetWishlistDataUseCase()} returns Result.success(Pair(emptyList(), emptyList()))
+        coEvery { getWishlistDataUseCase() } returns Result.success(Pair(emptyList(), emptyList()))
 
-        val viewModel= WishlistViewModel(GetWishlistDataUseCase)
+        val viewModel = WishlistViewModel(getWishlistDataUseCase, wishlistRepo, userRepo)
 
-        viewModel.uiState.test{
+        viewModel.uiState.test {
             val state = awaitItem()
-            assertEquals(false,state.isLoading)
-            assertEquals(0,state.properties.size)
-            assertEquals(null,state.error)
+            assertEquals(false, state.isLoading)
+            assertEquals(0, state.properties.size)
+            assertEquals(null, state.error)
         }
     }
 }

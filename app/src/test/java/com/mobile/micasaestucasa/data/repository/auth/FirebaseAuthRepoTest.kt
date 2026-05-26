@@ -3,6 +3,7 @@ package com.mobile.micasaestucasa.data.repository.auth
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -42,14 +43,22 @@ class FirebaseAuthRepoTest {
     }
 
     @Test
-    fun `register riuscita ritorna success`() = runTest {
+    fun `register riuscita ritorna success con uid`() = runTest {
+        val mockUser = mockk<FirebaseUser> {
+            every { uid } returns "test-uid"
+        }
+        val mockAuthResult = mockk<AuthResult> {
+            every { user } returns mockUser
+        }
+        
         every {
             firebaseAuth.createUserWithEmailAndPassword("test@email.com", "Password123!")
-        } returns Tasks.forResult(mockk<AuthResult>(relaxed = true))
+        } returns Tasks.forResult(mockAuthResult)
 
         val result = repo.register("test@email.com", "Password123!")
 
         assertTrue(result.isSuccess)
+        assertEquals("test-uid", result.getOrNull())
     }
 
     @Test

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -50,6 +51,8 @@ fun PropertyCard(
     imageUrl: String,
     modifier: Modifier = Modifier,
     isAvailable: Boolean = false,
+    isFavorite: Boolean = false,
+    onFavoriteClick: () -> Unit = {},
     onClick: () -> Unit = {}
 ) {
     Card(
@@ -83,16 +86,16 @@ fun PropertyCard(
                 }
 
                 IconButton(
-                    onClick = { /* Azione preferiti */ },
+                    onClick = onFavoriteClick,
                     modifier = Modifier
                         .padding(16.dp)
                         .align(Alignment.TopEnd)
                         .background(Color.White.copy(alpha = 0.2f), CircleShape)
                 ) {
                     Icon(
-                        Icons.Default.FavoriteBorder,
+                        if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Add to favorites",
-                        tint = Color.White
+                        tint = if (isFavorite) Color.Red else Color.White
                     )
                 }
             }

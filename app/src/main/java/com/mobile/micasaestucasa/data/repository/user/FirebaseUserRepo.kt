@@ -9,6 +9,7 @@ import com.mobile.micasaestucasa.domain.model.user.UserBadge
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import com.mobile.micasaestucasa.data.dto.user.UserDTO
 
 class FirebaseUserRepo @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
@@ -84,6 +85,19 @@ class FirebaseUserRepo @Inject constructor(
             ).await()
 
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    override suspend fun getUserById(uid: String): Result<User?> {
+        return try {
+            val snapshot = usersCollection.document(uid).get().await()
+            if (!snapshot.exists()) {
+                return Result.success(null)
+            }
+            val dto = snapshot.toObject(UserDTO::class.java)
+                ?: return Result.failure(IllegalStateException("UserDto is null"))
+            Result.success(dto.toDomain())
         } catch (e: Exception) {
             Result.failure(e)
         }

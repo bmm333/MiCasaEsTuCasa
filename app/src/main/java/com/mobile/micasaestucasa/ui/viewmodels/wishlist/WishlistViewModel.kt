@@ -11,9 +11,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+
 @HiltViewModel
 class WishlistViewModel @Inject constructor(
-    private val getWishlistDataUseCase: GetWishlistDataUseCase
+    private val getWishlistDataUseCase: GetWishlistDataUseCase,
+    private val wishlistRepo: WhishlistRepo,
+    private val userRepo: UserRepo
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WishlistUiState())
@@ -23,6 +28,18 @@ class WishlistViewModel @Inject constructor(
         loadWishlist()
     }
 
+    fun toggleSaved(propertyId: String) {
+        viewModelScope.launch {
+            val user = userRepo.getCurrentUser()
+            if (user != null) {
+                wishlistRepo.toggleSavedProperty(user.id, propertyId)
+                    .onSuccess {
+                        loadWishlist()
+                    }
+            }
+        }
+    }
+
     fun loadWishlist() {
         // viewModelScope è fondamentale per chiamare funzioni suspend
         viewModelScope.launch {
@@ -30,18 +47,22 @@ class WishlistViewModel @Inject constructor(
 
             getWishlistDataUseCase()
                 .onSuccess { (props, colls) ->
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        properties = props,
-                        collections = colls,
-                        error = null
-                    )}
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            properties = props,
+                            collections = colls,
+                            error = null
+                        )
+                    }
                 }
                 .onFailure { exception ->
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        error = exception.message ?: "Errore caricamento"
-                    )}
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Errore caricamento"
+                        )
+                    }
                 }
         }
     }

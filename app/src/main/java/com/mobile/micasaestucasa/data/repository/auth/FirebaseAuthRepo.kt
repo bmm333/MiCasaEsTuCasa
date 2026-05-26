@@ -8,7 +8,6 @@ import javax.inject.Inject
 class FirebaseAuthRepo @Inject constructor(private val firebaseAuth: FirebaseAuth) : AuthRepo {
     override suspend fun login(email: String, password: String): Result<Unit> {
         return try {
-            // chiamo firebase
             firebaseAuth.signInWithEmailAndPassword(email, password).await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -16,10 +15,11 @@ class FirebaseAuthRepo @Inject constructor(private val firebaseAuth: FirebaseAut
         }
     }
 
-    override suspend fun register(email: String, password: String): Result<Unit> {
+    override suspend fun register(email: String, password: String): Result<String> {
         return try {
-            firebaseAuth.createUserWithEmailAndPassword(email, password).await()
-            Result.success(Unit)
+            val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+            val uid = result.user?.uid ?: throw Exception("User creation failed: UID is null")
+            Result.success(uid)
         } catch (e: Exception) {
             Result.failure(e)
         }

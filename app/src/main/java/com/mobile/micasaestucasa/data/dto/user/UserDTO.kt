@@ -1,3 +1,5 @@
+package com.mobile.micasaestucasa.data.dto.user
+
 data class UserDTO(
     val id: String? = null,
     val name: String? = null,
@@ -13,5 +15,6 @@ data class UserDTO(
     val bio: String? = null,
     val profileImageUrl: String? = null,
     val address: String? = null,
-    val phone: String? = null
+    val phone: String? = null,
+    val status: String? = null
 )

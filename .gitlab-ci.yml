@@ -1,19 +1,22 @@
-#docker img con config per android sdk e java
+# docker img con config per android sdk e java
 image: mingc/android-build-box:latest
 
-
-#var disabilita daemon
+# var disabilita daemon e ottimizzazioni build
 variables:
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-  KOTLIN_INCREMENTAL: "false"
-#caching opts
+  GRADLE_OPTS: >-
+    -Dorg.gradle.daemon=false
+    -Dorg.gradle.caching=false
+    -Dkotlin.incremental=false
+
+# caching opts
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - .gradle/caches/
     - .gradle/wrapper/
+    - .gradle/caches/modules-2/
+  policy: pull-push
 
-#per ora ho definito 4 fasi (non penso che dovremmo definirne altre) della pipeline
+# fasi della pipeline
 stages:
   - code_quality
   - test
@@ -23,24 +26,36 @@ before_script:
   - echo $GOOGLE_SERVICES_JSON | base64 -d > app/google-services.json
   - chmod +x ./gradlew
 
-#Primo analisi statica del code usiamo android lint
+  # cleanup aggressive per evitare problemi di cache corrotta o spazio disco
+  - rm -rf app/build
+  - rm -rf build
+  - rm -rf ~/.gradle/caches/transforms-*
+  - rm -rf ~/.gradle/caches/journal-1
+  - rm -rf ~/.gradle/caches/*/fileHashes
+  - rm -rf ~/.gradle/caches/*/executionHistory
+
+  # debug storage
+  - echo "===== DISK SPACE ====="
+  - df -h
+
+# Analisi statica del codice con Android Lint
 linting:
   stage: code_quality
   script:
-    - ./gradlew lintDebug
+    - ./gradlew lintDebug --no-daemon
   artifacts:
     name: "lint-reports"
     paths:
       - app/build/reports/lint-results-debug.html
     expire_in: 1 week
 
-# Test e code coverage jacoco con verifica soglia 80%
+# Test e code coverage jacoco
 unit_test_and_coverage:
   stage: test
   script:
-    - ./gradlew testDebugUnitTest
-    - ./gradlew jacocoTestReport
-    - ./gradlew jacocoTestCoverageVerification
+    - ./gradlew testDebugUnitTest --no-daemon
+    - ./gradlew jacocoTestReport --no-daemon
+    - ./gradlew jacocoTestCoverageVerification --no-daemon
   artifacts:
     name: "test-and-coverage-reports"
     reports:
@@ -48,13 +63,14 @@ unit_test_and_coverage:
     paths:
       - app/build/reports/
     expire_in: 1 week
-#apk
+
+# Generazione APK di debug
 build_debug_apk:
   stage: build
   script:
-    - ./gradlew assembleDebug
+    - ./gradlew assembleDebug --no-daemon
   artifacts:
     name: "app-debug-apk"
     paths:
       - app/build/outputs/apk/debug/app-debug.apk
-    expire_in: 30 days #apk disp per 1 mese
+    expire_in: 30 days # apk disponibile per 1 mese

@@ -5,7 +5,7 @@ data class User(
     val name: String,
     val email: String,
     val roles: List<UserRole>,
-    val badge: UserBadge = UserBadge.NEW_HOST,
+    val badge: UserBadge = UserBadge.NEW_RENTER,
     val avgRating: Double = 0.0,
     val reviewsCount: Int = 0,
     val reliabilityScore: Double = 0.0,
@@ -15,5 +15,11 @@ data class User(
     val bio: String = "",
     val profileImageUrl: String? = null,
     val address: String = "",
-    val phone: String = ""
+    val phone: String = "",
+    val status: UserStatus = UserStatus.ACTIVE
 )
+enum class UserStatus {
+    ACTIVE,
+    SUSPENDED,
+    BANNED
+}

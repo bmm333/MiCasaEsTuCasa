@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material.icons.rounded.ChatBubbleOutline
 import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Luggage
-import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.PersonOutline
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,9 +42,9 @@ import com.mobile.micasaestucasa.ui.theme.Primario
  * Data class representing a single item.
  */
 data class BottomNavItem(
+    val route: String,
     val label: String,
-    val icon: ImageVector,
-    val route: String
+    val icon: ImageVector
 )
 
 /**
@@ -52,11 +52,11 @@ data class BottomNavItem(
  */
 object DefaultBottomNavItems {
     val items = listOf(
-        BottomNavItem("Home", Icons.Rounded.Home, "home_screen"),
-        BottomNavItem("Explore", Icons.Rounded.Explore, "search_screen"),
-        BottomNavItem("Trips", Icons.Rounded.Luggage, "trips_screen"),
-        BottomNavItem("Saved", Icons.Rounded.FavoriteBorder, "saved_screen"),
-        BottomNavItem("Profile", Icons.Rounded.Person, "profile_screen")
+        BottomNavItem("home_screen",     "Esplora",  Icons.Rounded.Search),
+        BottomNavItem("saved_screen",    "Salvati",  Icons.Rounded.FavoriteBorder),
+        BottomNavItem("trips_screen",    "Viaggi",   Icons.Rounded.Luggage),
+        BottomNavItem("messages_screen", "Messaggi", Icons.Rounded.ChatBubbleOutline),
+        BottomNavItem("profile_screen",  "Profilo",  Icons.Rounded.PersonOutline)
     )
 }
 

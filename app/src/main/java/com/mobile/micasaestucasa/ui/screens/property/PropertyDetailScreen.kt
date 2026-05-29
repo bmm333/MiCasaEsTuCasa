@@ -2,6 +2,7 @@ package com.mobile.micasaestucasa.ui.screens.property
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -104,6 +105,8 @@ private fun iconForKeyword(keyword: String): ImageVector {
 fun PropertyDetailScreen(
     propertyId: String,
     onNavigateBack: () -> Unit,
+    onNavigateToBooking: (String) -> Unit = {},
+    onNavigateToChat: (String) -> Unit = {},
     viewModel: PropertyViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -127,7 +130,9 @@ fun PropertyDetailScreen(
         is PropertyUiState.DetailSuccess -> {
             PropertyDetailContent(
                 property = state.property,
-                onNavigateBack = onNavigateBack
+                onNavigateBack = onNavigateBack,
+                onBookClick = { onNavigateToBooking(propertyId) },
+                onChatClick = { onNavigateToChat(state.property.ownerId) }
             )
         }
 
@@ -149,7 +154,9 @@ fun PropertyDetailScreen(
                         text = "← Torna indietro",
                         color = Primario,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(8.dp)
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .clickable { onNavigateBack() }
                     )
                 }
             }
@@ -165,14 +172,18 @@ fun PropertyDetailScreen(
 @Composable
 fun PropertyDetailContent(
     property: Property,
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onBookClick: () -> Unit = {},
+    onChatClick: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = ScreenBackground,
         bottomBar = {
             BookingBottomBar(
                 price = property.pricePerDay.toInt().toString(),
-                dates = "${property.availableFrom} — ${property.availableTo}"
+                dates = "${property.availableFrom} — ${property.availableTo}",
+                onBookClick = onBookClick,
+                onChatClick = onChatClick
             )
         }
     ) { paddingValues ->
@@ -490,17 +501,8 @@ private fun AboutSection(description: String) {
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .padding(vertical = 4.dp)
-                    .then(
-                        Modifier.run {
-                            this
-                        }
-                    )
-                    .let { mod ->
-                        mod
-                    },
-                // clickable handled via Modifier below
+                    .clickable { expanded = !expanded }
             )
-            // We use a Box for the click area
         }
     }
 }
@@ -543,7 +545,9 @@ private fun AmenitiesSection(keywords: List<String>) {
                 style = Typography.bodyMedium,
                 color = Primario,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 4.dp)
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .clickable { showAll = !showAll }
             )
         }
     }

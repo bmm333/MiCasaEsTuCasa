@@ -32,7 +32,9 @@ import com.mobile.micasaestucasa.ui.theme.Typography
 @Preview(showBackground = true, name = "Test")
 fun BookingBottomBar(
     price: String = "450",
-    dates: String = "Jun 12 - 18"
+    dates: String = "Jun 12 - 18",
+    onBookClick: () -> Unit = {},
+    onChatClick: () -> Unit = {}
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -69,7 +71,7 @@ fun BookingBottomBar(
             }
 
             Button(
-                onClick = { /* Prenota */ },
+                onClick = onBookClick,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primario),
                 contentPadding = PaddingValues(horizontal = 32.dp, vertical = 14.dp)

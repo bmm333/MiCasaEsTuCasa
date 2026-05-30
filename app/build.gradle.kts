@@ -43,6 +43,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    @Suppress("DEPRECATION")
     kotlinOptions {
         jvmTarget = "17"
     }
@@ -54,7 +55,7 @@ android {
 dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.compose.material.icons.extended)
-    implementation(libs.androidx.compose.runtime)
+    // compose-runtime is provided transitively by the Compose BOM
     val nav_version = "2.9.7"
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

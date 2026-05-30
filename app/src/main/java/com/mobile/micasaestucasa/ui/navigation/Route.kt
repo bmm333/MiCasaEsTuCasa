@@ -47,5 +47,8 @@ sealed interface Route {
     ) : Route
 
     @Serializable
+    data class EditProfile(val isNewUser: Boolean = false) : Route
+
+    @Serializable
     data object Admin : Route
 }

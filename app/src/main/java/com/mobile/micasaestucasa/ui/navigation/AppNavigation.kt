@@ -21,8 +21,9 @@ import com.mobile.micasaestucasa.ui.screens.booking.BookingRequestScreen
 import com.mobile.micasaestucasa.ui.screens.chat.ChatScreen
 import com.mobile.micasaestucasa.ui.screens.chat.ConversationListScreen
 import com.mobile.micasaestucasa.ui.screens.home.HomeScreen
+import com.mobile.micasaestucasa.ui.screens.profile.EditProfileScreen
 import com.mobile.micasaestucasa.ui.screens.profile.ProfileScreen
-import com.mobile.micasaestucasa.ui.screens.property.PropertyDetailScree
+import com.mobile.micasaestucasa.ui.screens.property.PropertyDetailScreen
 import com.mobile.micasaestucasa.ui.screens.whishlist.WishlistScreen
 import com.mobile.micasaestucasa.ui.viewmodels.MainViewModel
 
@@ -67,7 +68,7 @@ fun AppNavigation(
                     }
                 },
                 onNavigateToHome = {
-                    navController.navigate(Route.Home) {
+                    navController.navigate(Route.EditProfile(isNewUser = true)) {
                         popUpTo(Route.Login) { inclusive = true }
                     }
                 }
@@ -116,6 +117,9 @@ fun AppNavigation(
                 },
                 onNavigateToAdmin = {
                     navController.navigate(Route.Admin)
+                },
+                onNavigateToEditProfile = {
+                    navController.navigate(Route.EditProfile(isNewUser = false))
                 }
             )
         }
@@ -131,7 +135,7 @@ fun AppNavigation(
 
         composable<Route.PropertyDetail> { backStackEntry ->
             val route = backStackEntry.toRoute<Route.PropertyDetail>()
-            PropertyDetailScree(
+            PropertyDetailScreen(
                 propertyId = route.propertyId,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToBooking = { propId, title, price, hostId ->
@@ -139,7 +143,7 @@ fun AppNavigation(
                         Route.BookingRequest(
                             propertyId = propId,
                             propertyTitle = title,
-                            pricePerDay = price,
+                            pricePerDay = price.toDoubleOrNull() ?: 0.0,
                             hostId = hostId
                         )
                     )
@@ -216,6 +220,23 @@ fun AppNavigation(
                 renterId = route.renterId,
                 propertyId = route.propertyId,
                 currentUserId = currentUserId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<Route.EditProfile> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.EditProfile>()
+            EditProfileScreen(
+                isNewUser = route.isNewUser,
+                onProfileSaved = {
+                    if (route.isNewUser) {
+                        navController.navigate(Route.Home) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    } else {
+                        navController.popBackStack()
+                    }
+                },
                 onNavigateBack = { navController.popBackStack() }
             )
         }

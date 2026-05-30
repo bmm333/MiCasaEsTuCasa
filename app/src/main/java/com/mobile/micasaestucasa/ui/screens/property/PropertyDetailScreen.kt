@@ -105,7 +105,7 @@ private fun iconForKeyword(keyword: String): ImageVector {
 fun PropertyDetailScreen(
     propertyId: String,
     onNavigateBack: () -> Unit,
-    onNavigateToBooking: (String) -> Unit = {},
+    onNavigateToBooking: (String, String, String, String) -> Unit = { _, _, _, _ -> },
     onNavigateToChat: (String) -> Unit = {},
     viewModel: PropertyViewModel = hiltViewModel()
 ) {
@@ -131,7 +131,14 @@ fun PropertyDetailScreen(
             PropertyDetailContent(
                 property = state.property,
                 onNavigateBack = onNavigateBack,
-                onBookClick = { onNavigateToBooking(propertyId) },
+                onBookClick = {
+                    onNavigateToBooking(
+                        propertyId,
+                        state.property.title,
+                        state.property.pricePerDay.toString(),
+                        state.property.ownerId
+                    )
+                },
                 onChatClick = { onNavigateToChat(state.property.ownerId) }
             )
         }

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PrivacyTip
@@ -64,6 +65,7 @@ fun ProfileScreen(
     onLogoutNavigate: () -> Unit = {},
     onNavigateToHostBookings: () -> Unit = {},
     onNavigateToAdmin: () -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {},
     onNavigateBack: () -> Boolean
 ) {
     val userState by userViewModel.userState.collectAsStateWithLifecycle()
@@ -82,7 +84,8 @@ fun ProfileScreen(
         },
         onNavigateToSettings = onNavigateToSettings,
         onNavigateToHostBookings = onNavigateToHostBookings,
-        onNavigateToAdmin = onNavigateToAdmin
+        onNavigateToAdmin = onNavigateToAdmin,
+        onNavigateToEditProfile = onNavigateToEditProfile
     )
 }
 
@@ -93,7 +96,8 @@ fun ProfileContent(
     onLogout: () -> Unit,
     onNavigateToSettings: (String) -> Unit,
     onNavigateToHostBookings: () -> Unit = {},
-    onNavigateToAdmin: () -> Unit = {}
+    onNavigateToAdmin: () -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = Color(0xFFF7F7F7),
@@ -145,7 +149,8 @@ fun ProfileContent(
                             name = user?.name ?: "Guest",
                             memberSince = "2024",
                             bio = user?.bio ?: "Amo viaggiare e scoprire posti nuovi!",
-                            imageUrl = user?.profileImageUrl
+                            imageUrl = user?.profileImageUrl,
+                            onEditClick = { onNavigateToEditProfile() }
                         )
                     }
 
@@ -154,7 +159,8 @@ fun ProfileContent(
                             fullName = user?.name ?: "",
                             email = user?.email ?: "",
                             phone = user?.phone?.takeIf { it.isNotEmpty() } ?: "+39 333 1234567",
-                            address = user?.address?.takeIf { it.isNotEmpty() } ?: "Via Roma 123, Milano"
+                            address = user?.address?.takeIf { it.isNotEmpty() } ?: "Via Roma 123, Milano",
+                            onEditClick = { onNavigateToEditProfile() }
                         )
                     }
 
@@ -212,6 +218,11 @@ fun ProfileContent(
                             icon = Icons.Default.Settings
                         ) {
                             Column {
+                                SettingsRow(
+                                    icon = Icons.Default.Edit,
+                                    label = "Modifica profilo",
+                                    onClick = { onNavigateToEditProfile() }
+                                )
                                 SettingsRow(
                                     icon = Icons.Default.Notifications,
                                     label = "Notifications",
@@ -275,7 +286,8 @@ fun ProfileScreenPreview() {
             ),
             navController = dummyNavController,
             onLogout = {},
-            onNavigateToSettings = {}
+            onNavigateToSettings = {},
+            onNavigateToEditProfile = {}
         )
     }
 }

@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bathtub
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.KingBed
@@ -110,9 +111,11 @@ fun PropertyDetailScreen(
     viewModel: PropertyViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isSaved by viewModel.isSaved.collectAsState()
 
     LaunchedEffect(propertyId) {
         viewModel.loadPropertyDetail(propertyId)
+        viewModel.checkIfSaved(propertyId)
     }
 
     when (val state = uiState) {
@@ -130,6 +133,8 @@ fun PropertyDetailScreen(
         is PropertyUiState.DetailSuccess -> {
             PropertyDetailContent(
                 property = state.property,
+                isSaved = isSaved,
+                onFavoriteClick = { viewModel.toggleSaved(propertyId) },
                 onNavigateBack = onNavigateBack,
                 onBookClick = {
                     onNavigateToBooking(
@@ -179,6 +184,8 @@ fun PropertyDetailScreen(
 @Composable
 fun PropertyDetailContent(
     property: Property,
+    isSaved: Boolean = false,
+    onFavoriteClick: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
     onBookClick: () -> Unit = {},
     onChatClick: () -> Unit = {}
@@ -203,6 +210,11 @@ fun PropertyDetailContent(
             item {
                 ImageCarousel(
                     imageUrls = property.imageUrls,
+                    isSaved = isSaved,
+                    onFavoriteClick = onFavoriteClick,
+                    propertyTitle = property.title,
+                    propertyCity = property.city,
+                    propertyPrice = property.pricePerDay,
                     onBackClick = onNavigateBack
                 )
             }
@@ -345,6 +357,11 @@ fun PropertyDetailContent(
 @Composable
 private fun ImageCarousel(
     imageUrls: List<String>,
+    isSaved: Boolean,
+    onFavoriteClick: () -> Unit,
+    propertyTitle: String,
+    propertyCity: String,
+    propertyPrice: Double,
     onBackClick: () -> Unit
 ) {
     val images = imageUrls.ifEmpty {
@@ -403,8 +420,18 @@ private fun ImageCarousel(
             }
 
             Row {
+                val context = androidx.compose.ui.platform.LocalContext.current
                 IconButton(
-                    onClick = { /* Share */ },
+                    onClick = {
+                        val shareText = "Dai un'occhiata a questa splendida proprietà su Mi Casa Es Tu Casa: $propertyTitle a $propertyCity per soli $${propertyPrice.toInt()}/notte!"
+                        val sendIntent = android.content.Intent().apply {
+                            action = android.content.Intent.ACTION_SEND
+                            putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                            type = "text/plain"
+                        }
+                        val shareIntent = android.content.Intent.createChooser(sendIntent, "Condividi questa proprietà")
+                        context.startActivity(shareIntent)
+                    },
                     modifier = Modifier
                         .background(Color.White.copy(alpha = 0.25f), CircleShape)
                         .size(40.dp)
@@ -417,15 +444,15 @@ private fun ImageCarousel(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
-                    onClick = { /* Favorite */ },
+                    onClick = onFavoriteClick,
                     modifier = Modifier
                         .background(Color.White.copy(alpha = 0.25f), CircleShape)
                         .size(40.dp)
                 ) {
                     Icon(
-                        Icons.Default.FavoriteBorder,
-                        contentDescription = "Aggiungi ai preferiti",
-                        tint = Color.White
+                        if (isSaved) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = if (isSaved) "Rimuovi dai preferiti" else "Aggiungi ai preferiti",
+                        tint = if (isSaved) Color.Red else Color.White
                     )
                 }
             }

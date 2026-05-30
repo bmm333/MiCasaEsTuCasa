@@ -7,6 +7,10 @@ import com.mobile.micasaestucasa.domain.usecase.property.GetOwnerPropertiesUseCa
 import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.SearchPropertiesUseCase
 import com.mobile.micasaestucasa.util.MainDispatcherRule
+import com.mobile.micasaestucasa.domain.usecase.admin.AddUserReportUseCase
+import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+import com.mobile.micasaestucasa.domain.model.user.User
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -30,6 +34,9 @@ class PropertyViewModelTest {
     private val getOwnerPropertiesUseCase: GetOwnerPropertiesUseCase = mockk()
     private val createPropertyUseCase: CreatePropertyUseCase = mockk()
     private val getPropertyByIdUseCase: GetPropertyByIdUseCase = mockk()
+    private val addUserReportUseCase: AddUserReportUseCase = mockk(relaxed = true)
+    private val wishlistRepo: WhishlistRepo = mockk(relaxed = true)
+    private val userRepo: UserRepo = mockk(relaxed = true)
 
     private val sampleProperty = Property(
         id = "prop-1",
@@ -57,7 +64,10 @@ class PropertyViewModelTest {
             searchPropertiesUseCase = searchPropertiesUseCase,
             getOwnerPropertiesUseCase = getOwnerPropertiesUseCase,
             createPropertyUseCase = createPropertyUseCase,
-            getPropertyByIdUseCase = getPropertyByIdUseCase
+            getPropertyByIdUseCase = getPropertyByIdUseCase,
+            addUserReportUseCase = addUserReportUseCase,
+            wishlistRepo = wishlistRepo,
+            userRepo = userRepo
         )
     }
 
@@ -291,5 +301,37 @@ class PropertyViewModelTest {
 
         // Non deve aver richiamato loadOwnerProperties
         coVerify(exactly = 0) { getOwnerPropertiesUseCase(any()) }
+    }
+
+    // ── wishlist / saved properties ──────────────────────────────────────
+
+    @Test
+    fun `checkIfSaved updates isSaved state flow successfully`() = runTest {
+        val dummyUser = User(id = "user-1", name = "Mario", email = "m@m.com", roles = emptyList())
+        coEvery { userRepo.getCurrentUser() } returns dummyUser
+        coEvery { wishlistRepo.isPropertySaved("user-1", "prop-1") } returns Result.success(true)
+
+        viewModel.checkIfSaved("prop-1")
+        advanceUntilIdle()
+
+        viewModel.isSaved.test {
+            assertEquals(true, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `toggleSaved updates isSaved state flow successfully`() = runTest {
+        val dummyUser = User(id = "user-1", name = "Mario", email = "m@m.com", roles = emptyList())
+        coEvery { userRepo.getCurrentUser() } returns dummyUser
+        coEvery { wishlistRepo.toggleSavedProperty("user-1", "prop-1") } returns Result.success(true)
+
+        viewModel.toggleSaved("prop-1")
+        advanceUntilIdle()
+
+        viewModel.isSaved.test {
+            assertEquals(true, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }

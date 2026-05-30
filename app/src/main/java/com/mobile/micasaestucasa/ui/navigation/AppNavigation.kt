@@ -120,6 +120,14 @@ fun AppNavigation(
                 },
                 onNavigateToEditProfile = {
                     navController.navigate(Route.EditProfile(isNewUser = false))
+                },
+                onNavigateToSettings = { settingType ->
+                    val msg = when (settingType) {
+                        "notifications" -> "Impostazioni notifiche in arrivo"
+                        "privacy" -> "Impostazioni privacy in arrivo"
+                        else -> "Funzionalità in arrivo"
+                    }
+                    android.widget.Toast.makeText(navController.context, msg, android.widget.Toast.LENGTH_SHORT).show()
                 }
             )
         }

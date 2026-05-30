@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import coil3.compose.AsyncImage
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -130,6 +131,48 @@ fun AppAvatar(
                 .fillMaxSize()
                 .clip(AppShapes.Avatar)
         )
+    }
+}
+
+@Composable
+fun AppAvatar(
+    imageUrl: String?,
+    modifier: Modifier = Modifier,
+    size: Dp = IconSize.Avatar,
+    showBorder: Boolean = false,
+    placeholderRes: Int = android.R.drawable.ic_menu_gallery
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .then(
+                if (showBorder) {
+                    Modifier.border(2.dp, MaterialTheme.colorScheme.primaryContainer, AppShapes.Avatar)
+                } else {
+                    Modifier
+                }
+            )
+            .padding(if (showBorder) 2.dp else 0.dp)
+    ) {
+        if (!imageUrl.isNullOrEmpty()) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "Avatar",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(AppShapes.Avatar)
+            )
+        } else {
+            Image(
+                painter = painterResource(id = placeholderRes),
+                contentDescription = "Avatar",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(AppShapes.Avatar)
+            )
+        }
     }
 }
 

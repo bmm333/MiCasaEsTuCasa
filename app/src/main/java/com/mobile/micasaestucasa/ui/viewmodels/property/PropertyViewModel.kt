@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 
 @HiltViewModel
 class PropertyViewModel @Inject constructor(
@@ -21,10 +23,15 @@ class PropertyViewModel @Inject constructor(
     private val getOwnerPropertiesUseCase: GetOwnerPropertiesUseCase,
     private val createPropertyUseCase: CreatePropertyUseCase,
     private val getPropertyByIdUseCase: GetPropertyByIdUseCase,
-    private val addUserReportUseCase: AddUserReportUseCase
+    private val addUserReportUseCase: AddUserReportUseCase,
+    private val wishlistRepo: WhishlistRepo,
+    private val userRepo: UserRepo
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PropertyUiState>(PropertyUiState.Idle)
     val uiState: StateFlow<PropertyUiState> = _uiState.asStateFlow()
+
+    private val _isSaved = MutableStateFlow(false)
+    val isSaved: StateFlow<Boolean> = _isSaved.asStateFlow()
 
     // cache last search - lower the firestore rate if city and params dont change
     private var lastSearchParams: SearchParams? = null
@@ -121,6 +128,39 @@ class PropertyViewModel @Inject constructor(
 
     fun resetState() {
         _uiState.value = PropertyUiState.Idle
+        _isSaved.value = false
+    }
+
+    fun checkIfSaved(propertyId: String) {
+        viewModelScope.launch {
+            try {
+                val user = userRepo.getCurrentUser()
+                if (user != null) {
+                    wishlistRepo.isPropertySaved(user.id, propertyId)
+                        .onSuccess { saved ->
+                            _isSaved.value = saved
+                        }
+                }
+            } catch (e: Exception) {
+                // Silently handle error or log
+            }
+        }
+    }
+
+    fun toggleSaved(propertyId: String) {
+        viewModelScope.launch {
+            try {
+                val user = userRepo.getCurrentUser()
+                if (user != null) {
+                    wishlistRepo.toggleSavedProperty(user.id, propertyId)
+                        .onSuccess { saved ->
+                            _isSaved.value = saved
+                        }
+                }
+            } catch (e: Exception) {
+                // Silently handle error or log
+            }
+        }
     }
     private data class SearchParams(
         val city: String,

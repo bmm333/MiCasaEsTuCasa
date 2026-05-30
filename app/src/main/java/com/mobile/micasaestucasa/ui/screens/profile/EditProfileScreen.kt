@@ -58,6 +58,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mobile.micasaestucasa.ui.components.atomics.AppAvatar
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import java.io.ByteArrayOutputStream
+import android.util.Base64
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.clickable
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.util.Resource
@@ -79,6 +89,7 @@ fun EditProfileScreen(
     onNavigateBack: () -> Unit
 ) {
     val userState by userViewModel.userState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
     val firebaseUser = remember { auth.currentUser }
@@ -88,10 +99,43 @@ fun EditProfileScreen(
     var phone by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
+    var profileImageUrl by remember { mutableStateOf("") }
 
     var isSaving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isInitialized by remember { mutableStateOf(false) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                
+                // Compress bitmap to be reasonably small
+                val maxDimension = 300
+                val scaledBitmap = if (bitmap.width > maxDimension || bitmap.height > maxDimension) {
+                    val srcWidth = bitmap.width
+                    val srcHeight = bitmap.height
+                    val ratio = srcWidth.toFloat() / srcHeight.toFloat()
+                    val dstWidth = if (ratio > 1) maxDimension else (maxDimension * ratio).toInt()
+                    val dstHeight = if (ratio > 1) (maxDimension / ratio).toInt() else maxDimension
+                    Bitmap.createScaledBitmap(bitmap, dstWidth, dstHeight, true)
+                } else {
+                    bitmap
+                }
+
+                val outputStream = ByteArrayOutputStream()
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
+                val bytes = outputStream.toByteArray()
+                val base64String = Base64.encodeToString(bytes, Base64.NO_WRAP)
+                profileImageUrl = "data:image/jpeg;base64,$base64String"
+            } catch (e: Exception) {
+                errorMessage = "Errore nel caricamento della foto"
+            }
+        }
+    }
 
     // Load user data when available and fill the fields
     LaunchedEffect(userState) {
@@ -103,6 +147,7 @@ fun EditProfileScreen(
                 phone = user.phone
                 address = user.address
                 bio = user.bio
+                profileImageUrl = user.profileImageUrl ?: ""
                 isInitialized = true
             }
         }
@@ -191,15 +236,30 @@ fun EditProfileScreen(
                             .size(90.dp)
                             .shadow(8.dp, CircleShape)
                             .clip(CircleShape)
-                            .background(Primario),
+                            .clickable { launcher.launch("image/*") },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Person,
-                            contentDescription = null,
-                            tint = CardSurface,
-                            modifier = Modifier.size(44.dp)
+                        AppAvatar(
+                            imageUrl = profileImageUrl,
+                            size = 90.dp,
+                            showBorder = true,
+                            placeholderRes = android.R.drawable.ic_menu_gallery
                         )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(26.dp)
+                                .align(Alignment.BottomCenter)
+                                .background(Color.Black.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "MODIFICA",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -232,6 +292,17 @@ fun EditProfileScreen(
                         label = "Email",
                         icon = Icons.Rounded.Email,
                         readOnly = true,
+                        imeAction = ImeAction.Next
+                    )
+ 
+                    Spacer(modifier = Modifier.height(14.dp))
+ 
+                    // — Profile Image URL field —
+                    ProfileTextField(
+                        value = profileImageUrl,
+                        onValueChange = { profileImageUrl = it },
+                        label = "URL Immagine di Profilo",
+                        icon = Icons.Rounded.Person,
                         imeAction = ImeAction.Next
                     )
 
@@ -339,7 +410,8 @@ fun EditProfileScreen(
                                 name = name.trim(),
                                 phone = phone.trim(),
                                 address = address.trim(),
-                                bio = bio.trim()
+                                bio = bio.trim(),
+                                profileImageUrl = profileImageUrl.trim().takeIf { it.isNotEmpty() }
                             ) ?: User(
                                 id = uid,
                                 name = name.trim(),
@@ -347,7 +419,8 @@ fun EditProfileScreen(
                                 roles = listOf(UserRole.GUEST),
                                 phone = phone.trim(),
                                 address = address.trim(),
-                                bio = bio.trim()
+                                bio = bio.trim(),
+                                profileImageUrl = profileImageUrl.trim().takeIf { it.isNotEmpty() }
                             )
                             userViewModel.updateProfile(updatedUser)
                         },

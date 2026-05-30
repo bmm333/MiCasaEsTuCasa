@@ -45,7 +45,7 @@ fun ProfileHeader(
         // Avatar Container using AppAvatar
         Box(contentAlignment = Alignment.BottomEnd) {
             AppAvatar(
-                imageRes = android.R.drawable.ic_menu_gallery, // Placeholder, real app would use Coil for URL
+                imageUrl = imageUrl,
                 size = 120.dp,
                 showBorder = true
             )

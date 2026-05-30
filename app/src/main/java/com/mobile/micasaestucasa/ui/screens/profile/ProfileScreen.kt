@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,12 +56,15 @@ import com.mobile.micasaestucasa.ui.components.profile.WishlistCard
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import com.mobile.micasaestucasa.ui.viewmodels.auth.AuthViewModel
 import com.mobile.micasaestucasa.ui.viewmodels.user.UserViewModel
+import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistViewModel
+import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistUiState
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
     userViewModel: UserViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
+    wishlistViewModel: WishlistViewModel = hiltViewModel(),
     onNavigateToSettings: (String) -> Unit = {},
     onLogoutNavigate: () -> Unit = {},
     onNavigateToHostBookings: () -> Unit = {},
@@ -69,14 +73,17 @@ fun ProfileScreen(
     onNavigateBack: () -> Boolean
 ) {
     val userState by userViewModel.userState.collectAsStateWithLifecycle()
+    val wishlistState by wishlistViewModel.uiState.collectAsStateWithLifecycle()
 
-    // Refresh user data when the screen is shown
+    // Refresh user & wishlist data when the screen is shown
     LaunchedEffect(Unit) {
         userViewModel.loadUser()
+        wishlistViewModel.loadWishlist()
     }
 
     ProfileContent(
         userState = userState,
+        wishlistState = wishlistState,
         navController = navController,
         onLogout = { 
             authViewModel.logout()
@@ -92,6 +99,7 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     userState: Resource<User?>,
+    wishlistState: WishlistUiState,
     navController: NavController,
     onLogout: () -> Unit,
     onNavigateToSettings: (String) -> Unit,
@@ -137,6 +145,16 @@ fun ProfileContent(
             }
             is Resource.Success -> {
                 val user = userState.data
+                val memberSince = remember(user?.createdAt) {
+                    user?.createdAt?.let {
+                        try {
+                            java.text.SimpleDateFormat("yyyy", java.util.Locale.getDefault()).format(java.util.Date(it))
+                        } catch (e: Exception) {
+                            "2024"
+                        }
+                    } ?: "2024"
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -147,8 +165,8 @@ fun ProfileContent(
                     item {
                         ProfileHeader(
                             name = user?.name ?: "Guest",
-                            memberSince = "2024",
-                            bio = user?.bio ?: "Amo viaggiare e scoprire posti nuovi!",
+                            memberSince = memberSince,
+                            bio = user?.bio?.takeIf { it.isNotBlank() } ?: "Nessuna biografia inserita",
                             imageUrl = user?.profileImageUrl,
                             onEditClick = { onNavigateToEditProfile() }
                         )
@@ -158,8 +176,8 @@ fun ProfileContent(
                         PersonalInfoCard(
                             fullName = user?.name ?: "",
                             email = user?.email ?: "",
-                            phone = user?.phone?.takeIf { it.isNotEmpty() } ?: "+39 333 1234567",
-                            address = user?.address?.takeIf { it.isNotEmpty() } ?: "Via Roma 123, Milano",
+                            phone = user?.phone?.takeIf { it.isNotBlank() } ?: "Nessun numero di telefono inserito",
+                            address = user?.address?.takeIf { it.isNotBlank() } ?: "Nessun indirizzo inserito",
                             onEditClick = { onNavigateToEditProfile() }
                         )
                     }
@@ -173,7 +191,13 @@ fun ProfileContent(
                     }
 
                     item {
-                        WishlistCard(count = 5)
+                        val wishlistCount = wishlistState.properties.size
+                        val imageUrls = wishlistState.properties.mapNotNull { it.imageUrls.firstOrNull() }
+                        WishlistCard(
+                            count = wishlistCount,
+                            imageUrls = imageUrls,
+                            onClick = { navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Wishlist) }
+                        )
                     }
 
                     // Admin section
@@ -284,6 +308,7 @@ fun ProfileScreenPreview() {
                     phone = "+39 333 1234567"
                 )
             ),
+            wishlistState = WishlistUiState(),
             navController = dummyNavController,
             onLogout = {},
             onNavigateToSettings = {},

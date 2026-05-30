@@ -19,6 +19,7 @@ material3 = "1.4.0"
 firebaseFirestoreKtx = "26.1.2"
 composeIconsExtended = "1.7.8"
 uiTestJunit4 = "1.10.6"
+coil = "3.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -48,7 +49,8 @@ androidx-concurrent-futures = { group = "androidx.concurrent", name = "concurren
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
 compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "composeIconsExtended" }
-androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

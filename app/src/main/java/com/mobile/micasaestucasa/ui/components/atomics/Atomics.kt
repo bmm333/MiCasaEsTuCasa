@@ -189,26 +189,19 @@ fun GradientButton(
     modifier: Modifier = Modifier,
     baseColor: Color = Primario
 ) {
-    val gradientBrush = Brush.horizontalGradient(
-        colors = listOf(
-            baseColor,
-            baseColor.copy(alpha = 0.7f)
-        )
-    )
-
     Button(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = HomeAtomics.buttonShape,
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent
+            containerColor = baseColor
         ),
         contentPadding = PaddingValues()
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(brush = gradientBrush)
+                .background(baseColor)
                 .padding(vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {

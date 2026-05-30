@@ -99,6 +99,26 @@ class PropertyViewModel @Inject constructor(
                 }
         }
     }
+    /**
+     * Loads a single property by its ID
+     * Used for the property detail screen
+     * @param propertyId Firestore document ID of the property
+     */
+    fun loadPropertyDetail(propertyId: String) {
+        viewModelScope.launch {
+            _uiState.value = PropertyUiState.Loading
+            getPropertyByIdUseCase(propertyId)
+                .onSuccess { property ->
+                    _uiState.value = PropertyUiState.DetailSuccess(property)
+                }
+                .onFailure { error ->
+                    _uiState.value = PropertyUiState.Error(
+                        error.message ?: "Errore caricamento proprietà"
+                    )
+                }
+        }
+    }
+
     fun resetState() {
         _uiState.value = PropertyUiState.Idle
     }

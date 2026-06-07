@@ -24,6 +24,7 @@ import com.mobile.micasaestucasa.ui.screens.home.HomeScreen
 import com.mobile.micasaestucasa.ui.screens.profile.EditProfileScreen
 import com.mobile.micasaestucasa.ui.screens.profile.ProfileScreen
 import com.mobile.micasaestucasa.ui.screens.property.PropertyDetailScreen
+import com.mobile.micasaestucasa.ui.screens.search.SearchScreen
 import com.mobile.micasaestucasa.ui.screens.whishlist.WishlistScreen
 import com.mobile.micasaestucasa.ui.viewmodels.MainViewModel
 
@@ -82,7 +83,7 @@ fun AppNavigation(
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onNavigateToSearch = { /* TODO */ },
+                onNavigateToSearch = { navController.navigate(Route.Search) },
                 onNavigateToProperty = { propertyId ->
                     navController.navigate(Route.PropertyDetail(propertyId))
                 },
@@ -246,6 +247,15 @@ fun AppNavigation(
                     }
                 },
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable<Route.Search> {
+            SearchScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToProperty = { propertyId ->
+                    navController.navigate(Route.PropertyDetail(propertyId))
+                }
             )
         }
 

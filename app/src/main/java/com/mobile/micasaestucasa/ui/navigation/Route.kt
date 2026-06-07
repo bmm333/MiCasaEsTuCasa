@@ -51,4 +51,7 @@ sealed interface Route {
 
     @Serializable
     data object Admin : Route
+
+    @Serializable
+    data object Search : Route
 }

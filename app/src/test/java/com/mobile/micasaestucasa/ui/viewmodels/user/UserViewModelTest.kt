@@ -82,4 +82,66 @@ class UserViewModelTest {
         // Verifichiamo l'intero oggetto per evitare ComparisonFailure se altri campi differiscono
         assertEquals(updatedUser, data)
     }
+
+    @Test
+    fun `updateProfile should emit Error when repository fails`() = runTest {
+        val updatedUser = testUser.copy(name = "Updated Name")
+        coEvery { userRepo.updateUserProfile(any()) } returns Result.failure(Exception("Errore di rete"))
+
+        viewModel.updateProfile(updatedUser)
+        advanceUntilIdle()
+
+        val state = viewModel.userState.value
+        assertTrue("Expected Resource.Error but was $state", state is Resource.Error)
+        assertEquals("Errore di rete", (state as Resource.Error).message)
+    }
+
+    @Test
+    fun `updateProfile should emit Error with default message when exception has no message`() = runTest {
+        val updatedUser = testUser.copy(name = "Updated Name")
+        coEvery { userRepo.updateUserProfile(any()) } returns Result.failure(Exception())
+
+        viewModel.updateProfile(updatedUser)
+        advanceUntilIdle()
+
+        val state = viewModel.userState.value
+        assertTrue("Expected Resource.Error but was $state", state is Resource.Error)
+        assertEquals("Errore aggiornamento profilo", (state as Resource.Error).message)
+    }
+
+    @Test
+    fun `loadUser should handle null user from repository`() = runTest {
+        coEvery { userRepo.getCurrentUser() } returns null
+
+        viewModel.loadUser()
+        advanceUntilIdle()
+
+        val state = viewModel.userState.value
+        // Null user is wrapped in Success(null)
+        assertTrue("Expected Resource.Success but was $state", state is Resource.Success)
+        val data = (state as Resource.Success).data
+        assertEquals(null, data)
+    }
+
+    @Test
+    fun `user flow is updated after successful loadUser`() = runTest {
+        coEvery { userRepo.getCurrentUser() } returns testUser
+
+        viewModel.loadUser()
+        advanceUntilIdle()
+
+        assertEquals(testUser, viewModel.user.value)
+    }
+
+    @Test
+    fun `user flow reflects updated user after updateProfile success`() = runTest {
+        val updatedUser = testUser.copy(bio = "Nuova bio aggiornata")
+        coEvery { userRepo.updateUserProfile(any()) } returns Result.success(Unit)
+
+        viewModel.updateProfile(updatedUser)
+        advanceUntilIdle()
+
+        assertEquals(updatedUser, viewModel.user.value)
+    }
 }
+

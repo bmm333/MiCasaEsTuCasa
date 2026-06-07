@@ -23,6 +23,7 @@ class SearchViewModel @Inject constructor(private val searchUseCase: SearchAvali
 
     // current filters
     private var currentQuery: SearchQuery? = null
+    private var currentCategories: List<String> = emptyList()
 
     /**
      * Executes a query with given parameters
@@ -57,12 +58,28 @@ class SearchViewModel @Inject constructor(private val searchUseCase: SearchAvali
         executeSearch(query.copy(maxPricePerDay = maxPrice))
     }
 
+    /**
+     * Applies category filters by merging them into the keywords list.
+     * Categories such as "piscina", "montagna", "wifi" map directly to keywords
+     * already supported by the search backend.
+     * @param categories list of category keywords to apply (empty = clear category filter)
+     */
+    fun applyCategories(categories: List<String>) {
+        val query = currentQuery ?: return
+        // Keep non-category keywords and add the new categories
+        val base = query.keywords.filterNot { it in (currentCategories) }
+        currentCategories = categories
+        executeSearch(query.copy(keywords = base + categories))
+    }
+
+
     // choose in map
     fun selectProperty(propertyId: String?) {
         _selectedPropertyId.value = propertyId
     }
     fun reset() {
         currentQuery = null
+        currentCategories = emptyList()
         _selectedPropertyId.value = null
         _uiState.value = SearchUiState.Idle
     }

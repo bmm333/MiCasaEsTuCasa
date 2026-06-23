@@ -68,6 +68,8 @@ fun ProfileScreen(
     onNavigateToSettings: (String) -> Unit = {},
     onLogoutNavigate: () -> Unit = {},
     onNavigateToHostBookings: () -> Unit = {},
+    onNavigateToMyProperties: () -> Unit = {},
+    onNavigateToHostIntro: () -> Unit = {},
     onNavigateToAdmin: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateBack: () -> Boolean
@@ -91,6 +93,8 @@ fun ProfileScreen(
         },
         onNavigateToSettings = onNavigateToSettings,
         onNavigateToHostBookings = onNavigateToHostBookings,
+        onNavigateToMyProperties = onNavigateToMyProperties,
+        onNavigateToHostIntro = onNavigateToHostIntro,
         onNavigateToAdmin = onNavigateToAdmin,
         onNavigateToEditProfile = onNavigateToEditProfile
     )
@@ -104,6 +108,8 @@ fun ProfileContent(
     onLogout: () -> Unit,
     onNavigateToSettings: (String) -> Unit,
     onNavigateToHostBookings: () -> Unit = {},
+    onNavigateToMyProperties: () -> Unit = {},
+    onNavigateToHostIntro: () -> Unit = {},
     onNavigateToAdmin: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {}
 ) {
@@ -164,17 +170,22 @@ fun ProfileContent(
                 ) {
                     item {
                         ProfileHeader(
-                            name = user?.name ?: "Guest",
+                            name = listOfNotNull(user?.name, user?.lastName?.takeIf { it.isNotBlank() })
+                                .joinToString(" ")
+                                .ifBlank { "Guest" },
                             memberSince = memberSince,
                             bio = user?.bio?.takeIf { it.isNotBlank() } ?: "Nessuna biografia inserita",
                             imageUrl = user?.profileImageUrl,
+                            badge = user?.badge,
                             onEditClick = { onNavigateToEditProfile() }
                         )
                     }
 
                     item {
                         PersonalInfoCard(
-                            fullName = user?.name ?: "",
+                            fullName = listOfNotNull(user?.name, user?.lastName?.takeIf { it.isNotBlank() })
+                                .joinToString(" ")
+                                .ifBlank { "" },
                             email = user?.email ?: "",
                             phone = user?.phone?.takeIf { it.isNotBlank() } ?: "Nessun numero di telefono inserito",
                             address = user?.address?.takeIf { it.isNotBlank() } ?: "Nessun indirizzo inserito",
@@ -185,7 +196,7 @@ fun ProfileContent(
                     if (user?.roles?.contains(UserRole.OWNER) == false && user?.roles?.contains(UserRole.ADMIN) == false) {
                         item {
                             PaddingWrapper {
-                                HostBanner()
+                                HostBanner(onGetStarted = onNavigateToHostIntro)
                             }
                         }
                     }
@@ -227,8 +238,13 @@ fun ProfileContent(
                             ) {
                                 Column {
                                     SettingsRow(
+                                        icon = Icons.Default.Home,
+                                        label = "Le mie proprietà",
+                                        onClick = { onNavigateToMyProperties() }
+                                    )
+                                    SettingsRow(
                                         icon = Icons.Default.CalendarMonth,
-                                        label = "Prenotazioni ricevute",
+                                        label = "Richieste di prenotazione",
                                         onClick = { onNavigateToHostBookings() }
                                     )
                                 }

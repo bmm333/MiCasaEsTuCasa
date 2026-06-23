@@ -2,10 +2,14 @@ package com.mobile.micasaestucasa.domain.usecase.booking
 
 import com.mobile.micasaestucasa.domain.model.booking.Booking
 import com.mobile.micasaestucasa.domain.repository.booking.BookingRepo
+import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 import javax.inject.Inject
 
 class CreateBookingUseCase @Inject constructor(
-    private val bookingRepo: BookingRepo
+    private val bookingRepo: BookingRepo,
+    private val propertyRepo: PropertyRepo
 ) {
     companion object {
         private const val MAX_RETRIES = 3
@@ -15,7 +19,6 @@ class CreateBookingUseCase @Inject constructor(
         booking: Booking,
         idempotencyKey: String
     ): Result<String> {
-        // validazione domain
         if (booking.propertyId.isBlank()) {
             return Result.failure(IllegalArgumentException("PropertyId Obbligatorio"))
         }
@@ -31,6 +34,29 @@ class CreateBookingUseCase @Inject constructor(
         if (booking.renterId == booking.hostId) {
             return Result.failure(IllegalArgumentException("non puoi prenotare la tua stessa proprieta"))
         }
+
+        val propertyResult = propertyRepo.getPropertyById(booking.propertyId)
+        if (propertyResult.isFailure) {
+            return Result.failure(
+                propertyResult.exceptionOrNull()
+                    ?: IllegalArgumentException("Proprieta non trovata")
+            )
+        }
+        val property = propertyResult.getOrThrow()
+        try {
+            val bookingStart = LocalDate.parse(booking.startDate)
+            val bookingEnd = LocalDate.parse(booking.endDate)
+            val availableFrom = LocalDate.parse(property.availableFrom)
+            val availableTo = LocalDate.parse(property.availableTo)
+            if (bookingStart.isBefore(availableFrom) || bookingEnd.isAfter(availableTo)) {
+                return Result.failure(
+                    IllegalArgumentException("Le date selezionate non rientrano nel periodo di disponibilita dell'ospite")
+                )
+            }
+        } catch (_: DateTimeParseException) {
+            return Result.failure(IllegalArgumentException("Formato date non valido"))
+        }
+
         val overlapResult = bookingRepo.hasOverlappingBooking(booking.propertyId, booking.startDate, booking.endDate)
         if (overlapResult.isFailure) {
             return Result.failure(overlapResult.exceptionOrNull()!!)
@@ -53,11 +79,9 @@ class CreateBookingUseCase @Inject constructor(
             lastResult = block()
             if (lastResult.isSuccess)return lastResult
             val error = lastResult.exceptionOrNull()
-            // no retry su errori di bussines logic
             if (error is IllegalStateException || error is IllegalArgumentException) {
                 return lastResult
             }
-            // exp backoff: 500ms->1000ms->2000ms
             val delayMs = baseDelayMs * (1L shl attempt)
             kotlinx.coroutines.delay(delayMs)
             attempt++

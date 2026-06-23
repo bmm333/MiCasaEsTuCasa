@@ -40,9 +40,22 @@ class SearchViewModel @Inject constructor(private val searchUseCase: SearchAvali
         startDate: String,
         endDate: String,
         guestsCount: Int,
-        keywords: List<String> = emptyList()
+        keywords: List<String> = emptyList(),
+        maxPricePerDay: Double? = null,
+        sortOrder: SearchSortOrder = SearchSortOrder.RELEVANCE
     ) {
-        val query = SearchQuery(city = city, startDate = startDate, endDate = endDate, guestsCount = guestsCount, keywords = keywords)
+        val normalizedCity = city.trim().replaceFirstChar {
+            if (it.isLowerCase()) it.titlecase(java.util.Locale.ITALY) else it.toString()
+        }
+        val query = SearchQuery(
+            city = normalizedCity,
+            startDate = startDate,
+            endDate = endDate,
+            guestsCount = guestsCount,
+            keywords = keywords,
+            maxPricePerDay = maxPricePerDay,
+            sortOrder = sortOrder
+        )
         executeSearch(query)
     }
 

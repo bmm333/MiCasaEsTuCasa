@@ -66,6 +66,9 @@ import com.mobile.micasaestucasa.ui.theme.SkeletonLoader
 import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingUiState
 import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingViewModel
 import com.mobile.micasaestucasa.ui.viewmodels.booking.PaymentUiStatus
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 /**
  * Booking request screen handles date selection, guests count, effective cost, and mocked payment.
@@ -80,6 +83,8 @@ fun BookingRequestScreen(
     propertyTitle: String,
     pricePerDay: Double,
     hostId: String,
+    availableFrom: String = "",
+    availableTo: String = "",
     currentUserId: String,
     onNavigateBack: () -> Unit,
     onBookingSuccess: () -> Unit,
@@ -88,20 +93,33 @@ fun BookingRequestScreen(
     val uiState      by viewModel.uiState.collectAsState()
     val paymentState by viewModel.paymentState.collectAsState()
     val unavailableDates by viewModel.unavailableDatesMillis.collectAsState()
-    // Load booked dates for this property so the calendar disables them
     LaunchedEffect(propertyId) {
         viewModel.loadUnavailableDates(propertyId)
     }
-    //Custom SelectableDates: disables past and already-booked days
-    val selectableDates = remember(unavailableDates) {
+
+    val availabilityWindow = remember(availableFrom, availableTo) {
+        try {
+            if (availableFrom.isNotBlank() && availableTo.isNotBlank()) {
+                LocalDate.parse(availableFrom) to LocalDate.parse(availableTo)
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    val selectableDates = remember(unavailableDates, availabilityWindow) {
         object : androidx.compose.material3.SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                // Block past dates
-                val today = java.time.LocalDate.now()
-                    .atStartOfDay(java.time.ZoneOffset.UTC)
-                    .toInstant().toEpochMilli()
-                if (utcTimeMillis < today) return false
-                //Block booked dates
+                val date = Instant.ofEpochMilli(utcTimeMillis)
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDate()
+                val today = LocalDate.now()
+                if (date.isBefore(today)) return false
+                availabilityWindow?.let { (from, to) ->
+                    if (date.isBefore(from) || date.isAfter(to)) return false
+                }
                 return utcTimeMillis !in unavailableDates
             }
         }
@@ -238,6 +256,14 @@ fun BookingRequestScreen(
             }
 
             SectionCard("Quando") {
+                if (availableFrom.isNotBlank() && availableTo.isNotBlank()) {
+                    Text(
+                        "Disponibile: $availableFrom — $availableTo",
+                        fontSize = 12.sp,
+                        color = CaptionLabels,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     DateButton(
                         label    = "Check-in",

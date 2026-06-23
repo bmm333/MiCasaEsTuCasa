@@ -569,11 +569,9 @@ fun SearchScreen(
                                 startDate = checkIn,
                                 endDate = checkOut,
                                 guestsCount = guestsCount,
-                                keywords = selectedCategories.toList()
+                                keywords = selectedCategories.toList(),
+                                maxPricePerDay = if (priceFilterEnabled) maxPrice.toDouble() else null
                             )
-                            if (priceFilterEnabled) {
-                                viewModel.applyMaxPrice(maxPrice.toDouble())
-                            }
                         }
                     },
                     enabled = city.isNotBlank() && checkIn.isNotBlank() && checkOut.isNotBlank(),

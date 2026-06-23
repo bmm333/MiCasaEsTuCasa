@@ -1,10 +1,16 @@
-package com.mobile.micasaestucasa.ui.screens.profile
+package com.mobile.micasaestucasa.ui.screens.auth
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,19 +26,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Error
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -50,27 +50,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mobile.micasaestucasa.ui.components.atomics.AppAvatar
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import java.io.ByteArrayOutputStream
-import android.util.Base64
-import android.net.Uri
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.clickable
+import com.google.firebase.auth.FirebaseAuth
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.util.Resource
+import com.mobile.micasaestucasa.ui.components.atomics.AppAvatar
 import com.mobile.micasaestucasa.ui.theme.BorderDivider
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
 import com.mobile.micasaestucasa.ui.theme.CardSurface
@@ -79,78 +70,49 @@ import com.mobile.micasaestucasa.ui.theme.HeadingText
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.ScreenBackground
 import com.mobile.micasaestucasa.ui.viewmodels.user.UserViewModel
+import java.io.ByteArrayOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditProfileScreen(
+fun SignupOnboardingScreen(
     userViewModel: UserViewModel = hiltViewModel(),
-    onProfileSaved: () -> Unit,
-    onNavigateBack: () -> Unit
+    onCompleted: () -> Unit
 ) {
     val userState by userViewModel.userState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val firebaseUser = remember { FirebaseAuth.getInstance().currentUser }
 
-    val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
-    val firebaseUser = remember { auth.currentUser }
-
-    var name by remember { mutableStateOf(firebaseUser?.email?.substringBefore("@")?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() } ?: "") }
+    var firstName by remember {
+        mutableStateOf(
+            firebaseUser?.email?.substringBefore("@")?.replaceFirstChar {
+                if (it.isLowerCase()) it.titlecase() else it.toString()
+            } ?: ""
+        )
+    }
     var lastName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf(firebaseUser?.email ?: "") }
-    var phone by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
-    var bio by remember { mutableStateOf("") }
-    var profileImageUrl by remember { mutableStateOf("") }
-
+    var profileImageUrl by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isInitialized by remember { mutableStateOf(false) }
 
-    val launcher = rememberLauncherForActivityResult(
+    val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             try {
-                val inputStream = context.contentResolver.openInputStream(uri)
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                
-                // Compress bitmap to be reasonably small
-                val maxDimension = 300
-                val scaledBitmap = if (bitmap.width > maxDimension || bitmap.height > maxDimension) {
-                    val srcWidth = bitmap.width
-                    val srcHeight = bitmap.height
-                    val ratio = srcWidth.toFloat() / srcHeight.toFloat()
-                    val dstWidth = if (ratio > 1) maxDimension else (maxDimension * ratio).toInt()
-                    val dstHeight = if (ratio > 1) (maxDimension / ratio).toInt() else maxDimension
-                    Bitmap.createScaledBitmap(bitmap, dstWidth, dstHeight, true)
-                } else {
-                    bitmap
-                }
-
-                val outputStream = ByteArrayOutputStream()
-                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
-                val bytes = outputStream.toByteArray()
-                val base64String = Base64.encodeToString(bytes, Base64.NO_WRAP)
-                profileImageUrl = "data:image/jpeg;base64,$base64String"
-            } catch (e: Exception) {
+                profileImageUrl = uriToBase64DataUri(context.contentResolver.openInputStream(it))
+            } catch (_: Exception) {
                 errorMessage = "Errore nel caricamento della foto"
             }
         }
     }
 
-    // Load user data when available and fill the fields
     LaunchedEffect(userState) {
-        if (userState is Resource.Success && !isInitialized) {
-            val user = (userState as Resource.Success<User?>).data
-            if (user != null) {
-                name = user.name
-                lastName = user.lastName
-                email = user.email
-                phone = user.phone
-                address = user.address
-                bio = user.bio
-                profileImageUrl = user.profileImageUrl ?: ""
-                isInitialized = true
-            }
+        if (isSaving && userState is Resource.Success) {
+            isSaving = false
+            onCompleted()
+        } else if (isSaving && userState is Resource.Error) {
+            isSaving = false
+            errorMessage = (userState as Resource.Error).message
         }
     }
 
@@ -160,24 +122,13 @@ fun EditProfileScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Modifica profilo",
+                        text = "Completa il tuo profilo",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         color = HeadingText
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Indietro",
-                            tint = HeadingText
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = CardSurface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardSurface)
             )
         }
     ) { paddingValues ->
@@ -202,15 +153,10 @@ fun EditProfileScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = (userState as Resource.Error).message,
-                            color = ErrorColor,
-                            fontSize = 14.sp
+                            color = ErrorColor
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = { userViewModel.loadUser() },
-                            colors = ButtonDefaults.buttonColors(containerColor = Primario),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
+                        Button(onClick = { userViewModel.loadUser() }) {
                             Text("Riprova")
                         }
                     }
@@ -229,31 +175,38 @@ fun EditProfileScreen(
                 ) {
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Avatar section
+                    Text(
+                        text = "Dicci chi sei per iniziare",
+                        fontSize = 14.sp,
+                        color = CaptionLabels
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
                     Box(
                         modifier = Modifier
-                            .size(90.dp)
+                            .size(100.dp)
                             .shadow(8.dp, CircleShape)
                             .clip(CircleShape)
-                            .clickable { launcher.launch("image/*") },
+                            .clickable { galleryLauncher.launch("image/*") },
                         contentAlignment = Alignment.Center
                     ) {
                         AppAvatar(
                             imageUrl = profileImageUrl,
-                            size = 90.dp,
+                            size = 100.dp,
                             showBorder = true,
                             placeholderRes = android.R.drawable.ic_menu_gallery
                         )
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(26.dp)
+                                .height(28.dp)
                                 .align(Alignment.BottomCenter)
                                 .background(Color.Black.copy(alpha = 0.5f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "MODIFICA",
+                                text = "SCEGLI FOTO",
                                 color = Color.White,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
@@ -261,89 +214,31 @@ fun EditProfileScreen(
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Tocca per scegliere dalla galleria",
+                        fontSize = 12.sp,
+                        color = CaptionLabels
+                    )
+
                     Spacer(modifier = Modifier.height(28.dp))
 
-                    ProfileTextField(
-                        value = name,
-                        onValueChange = { name = it },
+                    OnboardingTextField(
+                        value = firstName,
+                        onValueChange = { firstName = it },
                         label = "Nome",
-                        icon = Icons.Rounded.Person,
                         imeAction = ImeAction.Next
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    ProfileTextField(
+                    OnboardingTextField(
                         value = lastName,
                         onValueChange = { lastName = it },
                         label = "Cognome",
-                        icon = Icons.Rounded.Person,
-                        imeAction = ImeAction.Next
+                        imeAction = ImeAction.Done
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // — Email field (read-only) —
-                    ProfileTextField(
-                        value = email,
-                        onValueChange = {},
-                        label = "Email",
-                        icon = Icons.Rounded.Email,
-                        readOnly = true,
-                        imeAction = ImeAction.Next
-                    )
- 
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // — Phone field —
-                    ProfileTextField(
-                        value = phone,
-                        onValueChange = { phone = it },
-                        label = "Telefono",
-                        icon = Icons.Rounded.Phone,
-                        keyboardType = KeyboardType.Phone,
-                        imeAction = ImeAction.Next
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // — Address field —
-                    ProfileTextField(
-                        value = address,
-                        onValueChange = { address = it },
-                        label = "Indirizzo",
-                        icon = Icons.Rounded.LocationOn,
-                        imeAction = ImeAction.Next
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // — Bio field (multiline) —
-                    OutlinedTextField(
-                        value = bio,
-                        onValueChange = { bio = it },
-                        label = { Text("Bio") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Rounded.Info,
-                                contentDescription = null,
-                                tint = CaptionLabels
-                            )
-                        },
-                        minLines = 3,
-                        maxLines = 5,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Primario,
-                            unfocusedBorderColor = BorderDivider,
-                            focusedLabelColor = Primario,
-                            unfocusedContainerColor = CardSurface,
-                            focusedContainerColor = CardSurface
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    // Error message
                     AnimatedVisibility(
                         visible = errorMessage != null,
                         enter = fadeIn(),
@@ -366,26 +261,24 @@ fun EditProfileScreen(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = errorMessage ?: "",
-                                    color = ErrorColor,
-                                    fontSize = 13.sp
-                                )
+                                Text(text = errorMessage ?: "", color = ErrorColor, fontSize = 13.sp)
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(28.dp))
 
-                    // Save button
                     Button(
                         onClick = {
                             errorMessage = null
-                            if (name.isBlank()) {
+                            if (firstName.isBlank()) {
                                 errorMessage = "Il nome è obbligatorio"
                                 return@Button
                             }
-
+                            if (lastName.isBlank()) {
+                                errorMessage = "Il cognome è obbligatorio"
+                                return@Button
+                            }
                             val uid = firebaseUser?.uid
                             if (uid == null) {
                                 errorMessage = "Sessione scaduta: effettua nuovamente il login"
@@ -394,26 +287,22 @@ fun EditProfileScreen(
 
                             isSaving = true
                             val updatedUser = currentUser?.copy(
-                                name = name.trim(),
+                                name = firstName.trim(),
                                 lastName = lastName.trim(),
-                                phone = phone.trim(),
-                                address = address.trim(),
-                                bio = bio.trim(),
-                                profileImageUrl = profileImageUrl.trim().takeIf { it.isNotEmpty() }
+                                profileCompleted = true,
+                                profileImageUrl = profileImageUrl
                             ) ?: User(
                                 id = uid,
-                                name = name.trim(),
+                                name = firstName.trim(),
                                 lastName = lastName.trim(),
-                                email = email.trim(),
+                                email = firebaseUser.email ?: "",
                                 roles = listOf(UserRole.GUEST),
-                                phone = phone.trim(),
-                                address = address.trim(),
-                                bio = bio.trim(),
-                                profileImageUrl = profileImageUrl.trim().takeIf { it.isNotEmpty() }
+                                profileCompleted = true,
+                                profileImageUrl = profileImageUrl
                             )
                             userViewModel.updateProfile(updatedUser)
                         },
-                        enabled = !isSaving && name.isNotBlank(),
+                        enabled = !isSaving && firstName.isNotBlank() && lastName.isNotBlank(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
@@ -427,26 +316,11 @@ fun EditProfileScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text(
-                                text = "Salva modifiche",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
+                            Text("Continua", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
-                }
-
-                // Observe save result
-                LaunchedEffect(userState) {
-                    if (isSaving && userState is Resource.Success) {
-                        isSaving = false
-                        onProfileSaved()
-                    } else if (isSaving && userState is Resource.Error) {
-                        isSaving = false
-                        errorMessage = (userState as Resource.Error).message
-                    }
                 }
             }
         }
@@ -454,43 +328,46 @@ fun EditProfileScreen(
 }
 
 @Composable
-private fun ProfileTextField(
+private fun OnboardingTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    icon: ImageVector,
-    readOnly: Boolean = false,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    imeAction: ImeAction = ImeAction.Done
+    imeAction: ImeAction
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
         leadingIcon = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = CaptionLabels
-            )
+            Icon(Icons.Rounded.Person, contentDescription = null, tint = CaptionLabels)
         },
-        readOnly = readOnly,
         singleLine = true,
         shape = RoundedCornerShape(14.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Primario,
             unfocusedBorderColor = BorderDivider,
             focusedLabelColor = Primario,
-            unfocusedContainerColor = if (readOnly) Color(0xFFF0F0F0) else CardSurface,
-            focusedContainerColor = if (readOnly) Color(0xFFF0F0F0) else CardSurface,
-            disabledBorderColor = BorderDivider,
-            disabledLabelColor = CaptionLabels,
-            disabledTextColor = CaptionLabels
+            unfocusedContainerColor = CardSurface,
+            focusedContainerColor = CardSurface
         ),
-        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-            keyboardType = keyboardType,
-            imeAction = imeAction
-        ),
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = imeAction),
         modifier = Modifier.fillMaxWidth()
     )
+}
+
+private fun uriToBase64DataUri(inputStream: java.io.InputStream?): String {
+    val bitmap = BitmapFactory.decodeStream(inputStream)
+    val maxDimension = 300
+    val scaledBitmap = if (bitmap.width > maxDimension || bitmap.height > maxDimension) {
+        val ratio = bitmap.width.toFloat() / bitmap.height.toFloat()
+        val dstWidth = if (ratio > 1) maxDimension else (maxDimension * ratio).toInt()
+        val dstHeight = if (ratio > 1) (maxDimension / ratio).toInt() else maxDimension
+        Bitmap.createScaledBitmap(bitmap, dstWidth, dstHeight, true)
+    } else {
+        bitmap
+    }
+    val outputStream = ByteArrayOutputStream()
+    scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
+    val base64String = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+    return "data:image/jpeg;base64,$base64String"
 }

@@ -3,6 +3,8 @@ package com.mobile.micasaestucasa.data.dto.user
 data class UserDTO(
     val id: String? = null,
     val name: String? = null,
+    val lastName: String? = null,
+    val profileCompleted: Boolean? = null,
     val email: String? = null,
     val roles: List<String>? = null,
     val badge: String? = null,

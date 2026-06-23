@@ -105,8 +105,9 @@ private fun iconForKeyword(keyword: String): ImageVector {
 @Composable
 fun PropertyDetailScreen(
     propertyId: String,
+    currentUserId: String = "",
     onNavigateBack: () -> Unit,
-    onNavigateToBooking: (String, String, String, String) -> Unit = { _, _, _, _ -> },
+    onNavigateToBooking: (String, String, String, String, String, String) -> Unit = { _, _, _, _, _, _ -> },
     onNavigateToChat: (String) -> Unit = {},
     viewModel: PropertyViewModel = hiltViewModel()
 ) {
@@ -131,6 +132,7 @@ fun PropertyDetailScreen(
         }
 
         is PropertyUiState.DetailSuccess -> {
+            val isOwner = currentUserId.isNotBlank() && currentUserId == state.property.ownerId
             PropertyDetailContent(
                 property = state.property,
                 isSaved = isSaved,
@@ -141,10 +143,14 @@ fun PropertyDetailScreen(
                         propertyId,
                         state.property.title,
                         state.property.pricePerDay.toString(),
-                        state.property.ownerId
+                        state.property.ownerId,
+                        state.property.availableFrom,
+                        state.property.availableTo
                     )
                 },
-                onChatClick = { onNavigateToChat(state.property.ownerId) }
+                onChatClick = { onNavigateToChat(state.property.ownerId) },
+                showChatButton = !isOwner && currentUserId.isNotBlank(),
+                showBookButton = !isOwner
             )
         }
 
@@ -188,17 +194,22 @@ fun PropertyDetailContent(
     onFavoriteClick: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
     onBookClick: () -> Unit = {},
-    onChatClick: () -> Unit = {}
+    onChatClick: () -> Unit = {},
+    showChatButton: Boolean = true,
+    showBookButton: Boolean = true
 ) {
     Scaffold(
         containerColor = ScreenBackground,
         bottomBar = {
-            BookingBottomBar(
-                price = property.pricePerDay.toInt().toString(),
-                dates = "${property.availableFrom} — ${property.availableTo}",
-                onBookClick = onBookClick,
-                onChatClick = onChatClick
-            )
+            if (showBookButton || showChatButton) {
+                BookingBottomBar(
+                    price = property.pricePerDay.toInt().toString(),
+                    dates = "${property.availableFrom} — ${property.availableTo}",
+                    onBookClick = onBookClick,
+                    onChatClick = onChatClick,
+                    showChatButton = showChatButton
+                )
+            }
         }
     ) { paddingValues ->
         LazyColumn(

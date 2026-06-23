@@ -34,7 +34,7 @@ import com.mobile.micasaestucasa.ui.navigation.Route
 @Composable
 fun ConversationListScreen(
     currentUserId: String,
-    onNavigateToChat: (String) -> Unit,
+    onNavigateToChat: (Conversation) -> Unit,
     onNavigateBack: () -> Unit,
     navController: NavController,
     viewModel: ChatViewModel = hiltViewModel()
@@ -109,7 +109,7 @@ fun ConversationListScreen(
                             ConversationItem(
                                 conversation = conversation,
                                 currentUserId = currentUserId,
-                                onClick = { onNavigateToChat(conversation.id) }
+                                onClick = { onNavigateToChat(conversation) }
                             )
                         }
                     }

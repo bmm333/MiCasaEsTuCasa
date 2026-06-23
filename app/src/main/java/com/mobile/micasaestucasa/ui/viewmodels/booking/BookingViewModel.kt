@@ -9,6 +9,9 @@ import com.mobile.micasaestucasa.domain.usecase.booking.CancelBookingUseCase
 import com.mobile.micasaestucasa.domain.usecase.booking.CreateBookingUseCase
 import com.mobile.micasaestucasa.domain.usecase.booking.GetBookingsForHostUseCase
 import com.mobile.micasaestucasa.domain.usecase.booking.GetBookingsForRenterUseCase
+import com.mobile.micasaestucasa.domain.usecase.booking.RejectBookingUseCase
+import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
+import com.mobile.micasaestucasa.domain.usecase.user.GetUserByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,10 +27,13 @@ import javax.inject.Inject
 class BookingViewModel @Inject constructor(
     private val createBookingUseCase: CreateBookingUseCase,
     private val acceptBookingUseCase: AcceptBookingUseCase,
+    private val rejectBookingUseCase: RejectBookingUseCase,
     private val cancelBookingUseCase: CancelBookingUseCase,
     private val getBookingsForRenter: GetBookingsForRenterUseCase,
     private val getBookingsForHost: GetBookingsForHostUseCase,
-    private val bookingRepo: BookingRepo
+    private val bookingRepo: BookingRepo,
+    private val getUserByIdUseCase: GetUserByIdUseCase,
+    private val getPropertyByIdUseCase: GetPropertyByIdUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<BookingUiState>(BookingUiState.Idle)
     val uiState: StateFlow<BookingUiState> = _uiState.asStateFlow()
@@ -78,6 +84,19 @@ class BookingViewModel @Inject constructor(
         }
     }
 
+    fun rejectBooking(bookingId: String, hostId: String) {
+        viewModelScope.launch {
+            _uiState.value = BookingUiState.Loading
+            rejectBookingUseCase(bookingId, hostId)
+                .onSuccess { _uiState.value = BookingUiState.ActionSuccess }
+                .onFailure {
+                    _uiState.value = BookingUiState.Error(
+                        it.message ?: "Errore nel rifiuto del booking"
+                    )
+                }
+        }
+    }
+
     /**
      * Cancells a booking
      * both renter and host can cancell it. verified in repo
@@ -114,7 +133,10 @@ class BookingViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = BookingUiState.Loading
             getBookingsForRenter(renterId)
-                .onSuccess { _uiState.value = BookingUiState.BookingsLoaded(it) }
+                .onSuccess { bookings ->
+                    val info = enrichBookings(bookings, isHost = false)
+                    _uiState.value = BookingUiState.BookingsLoaded(bookings, info)
+                }
                 .onFailure { _uiState.value = BookingUiState.Error(it.message ?: "Error") }
         }
     }
@@ -123,9 +145,31 @@ class BookingViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = BookingUiState.Loading
             getBookingsForHost(hostId)
-                .onSuccess { _uiState.value = BookingUiState.BookingsLoaded(it) }
+                .onSuccess { bookings ->
+                    val info = enrichBookings(bookings, isHost = true)
+                    _uiState.value = BookingUiState.BookingsLoaded(bookings, info)
+                }
                 .onFailure { _uiState.value = BookingUiState.Error(it.message ?: "Error") }
         }
+    }
+
+    private suspend fun enrichBookings(
+        bookings: List<Booking>,
+        isHost: Boolean
+    ): Map<String, BookingDisplayInfo> {
+        val info = mutableMapOf<String, BookingDisplayInfo>()
+        for (booking in bookings) {
+            val propertyTitle = getPropertyByIdUseCase(booking.propertyId)
+                .getOrNull()?.title ?: "Proprietà"
+            val counterpartyId = if (isHost) booking.renterId else booking.hostId
+            val user = getUserByIdUseCase(counterpartyId).getOrNull()
+            val counterpartyName = user?.let { u ->
+                listOf(u.name, u.lastName).filter { it.isNotBlank() }.joinToString(" ")
+                    .ifBlank { u.email.substringBefore("@") }
+            } ?: if (isHost) "Ospite" else "Host"
+            info[booking.id] = BookingDisplayInfo(propertyTitle, counterpartyName, counterpartyId)
+        }
+        return info
     }
 
     fun loadUnavailableDates(propertyId: String) {

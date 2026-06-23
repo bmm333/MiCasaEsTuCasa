@@ -26,7 +26,9 @@ sealed interface Route {
         val propertyId: String,
         val propertyTitle: String,
         val pricePerDay: Double,
-        val hostId: String
+        val hostId: String,
+        val availableFrom: String = "",
+        val availableTo: String = ""
     ) : Route
 
     @Serializable
@@ -47,7 +49,25 @@ sealed interface Route {
     ) : Route
 
     @Serializable
-    data class EditProfile(val isNewUser: Boolean = false) : Route
+    data object EditProfile : Route
+
+    @Serializable
+    data object SignupOnboarding : Route
+
+    @Serializable
+    data object PostSignupChoice : Route
+
+    @Serializable
+    data object HostIntro : Route
+
+    @Serializable
+    data object CreateProperty : Route
+
+    @Serializable
+    data class EditProperty(val propertyId: String) : Route
+
+    @Serializable
+    data object MyProperties : Route
 
     @Serializable
     data object Admin : Route

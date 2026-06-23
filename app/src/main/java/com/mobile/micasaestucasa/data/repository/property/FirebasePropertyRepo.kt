@@ -95,7 +95,7 @@ class FirebasePropertyRepo @Inject constructor(
 
             if (keywords.isNotEmpty()) {
                 results = results.filter { property ->
-                    keywords.any { kw -> property.keywords.contains(kw) }
+                    keywords.all { kw -> property.keywords.any { it.equals(kw, ignoreCase = true) } }
                 }
             }
             Result.success(results)

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
@@ -24,9 +25,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mobile.micasaestucasa.domain.model.user.UserBadge
 import com.mobile.micasaestucasa.ui.components.atomics.AppAvatar
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Typography
+
+fun UserBadge.displayLabel(): String = when (this) {
+    UserBadge.NEW_RENTER -> "Nuovo viaggiatore"
+    UserBadge.TRUSTED_RENTER -> "Viaggiatore affidabile"
+    UserBadge.NEW_HOST -> "Nuovo ospite"
+    UserBadge.TRUSTED_HOST -> "Ospite affidabile"
+    UserBadge.SUPER_HOST -> "Super ospite"
+}
 
 @Composable
 fun ProfileHeader(
@@ -34,6 +44,7 @@ fun ProfileHeader(
     memberSince: String = "2024",
     bio: String = "Love traveling and discovering new places!",
     imageUrl: String? = null,
+    badge: UserBadge? = null,
     onEditClick: () -> Unit = {}
 ) {
     Column(
@@ -42,7 +53,6 @@ fun ProfileHeader(
             .padding(top = 48.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Avatar Container using AppAvatar
         Box(contentAlignment = Alignment.BottomEnd) {
             AppAvatar(
                 imageUrl = imageUrl,
@@ -50,7 +60,6 @@ fun ProfileHeader(
                 showBorder = true
             )
 
-            // Red Edit Button
             Surface(
                 modifier = Modifier
                     .size(36.dp)
@@ -88,11 +97,27 @@ fun ProfileHeader(
             color = MaterialTheme.colorScheme.onSurface
         )
 
+        if (badge != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Surface(
+                shape = RoundedCornerShape(50.dp),
+                color = Primario.copy(alpha = 0.12f)
+            ) {
+                Text(
+                    text = badge.displayLabel(),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                    style = Typography.labelMedium,
+                    color = Primario,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
         Text(
             text = bio,
             style = Typography.bodyMedium,
             color = Primario,
-            modifier = Modifier.padding(horizontal = 32.dp)
+            modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
         )
     }
 }
@@ -102,6 +127,7 @@ fun ProfileHeader(
 fun ProfileHeaderPreview() {
     ProfileHeader(
         name = "Alex Malibu",
-        bio = "Exploring the best homes around the world."
+        bio = "Exploring the best homes around the world.",
+        badge = UserBadge.NEW_HOST
     )
 }

@@ -5,6 +5,8 @@ data class User(
     val name: String,
     val email: String,
     val roles: List<UserRole>,
+    val lastName: String = "",
+    val profileCompleted: Boolean = false,
     val badge: UserBadge = UserBadge.NEW_RENTER,
     val avgRating: Double = 0.0,
     val reviewsCount: Int = 0,

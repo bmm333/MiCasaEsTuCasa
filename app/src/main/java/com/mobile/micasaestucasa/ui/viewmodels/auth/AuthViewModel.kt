@@ -3,9 +3,12 @@ package com.mobile.micasaestucasa.ui.viewmodels.auth
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import com.mobile.micasaestucasa.domain.repository.notification.NotificationRepo
 import com.mobile.micasaestucasa.domain.usecase.auth.LoginUseCase
 import com.mobile.micasaestucasa.domain.usecase.auth.LogoutUseCase
 import com.mobile.micasaestucasa.domain.usecase.auth.RegisterUseCase
+import com.mobile.micasaestucasa.domain.usecase.notification.SaveFCMTokenUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +20,10 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val registerUseCase: RegisterUseCase,
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    private val saveFCMTokenUseCase: SaveFCMTokenUseCase,
+    private val notificationRepo: NotificationRepo,
+    private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -28,6 +34,12 @@ class AuthViewModel @Inject constructor(
     private val _isAuthSuccessful = MutableStateFlow(false)
     val isAuthSuccessful: StateFlow<Boolean> = _isAuthSuccessful.asStateFlow()
 
+    private suspend fun registerFcmToken() {
+        val userId = firebaseAuth.currentUser?.uid ?: return
+        notificationRepo.getCurrentToken()
+            .onSuccess { token -> saveFCMTokenUseCase(userId, token) }
+    }
+
     fun login(email: String, password: String) {
         viewModelScope.launch {
             Log.d("AuthViewModel", "Login attempt for email: $email")
@@ -37,6 +49,7 @@ class AuthViewModel @Inject constructor(
             result.fold(
                 onSuccess = {
                     Log.i("AuthViewModel", "Login successful for email: $email")
+                    registerFcmToken()
                     _isAuthSuccessful.value = true
                     _isLoading.value = false
                 },
@@ -59,6 +72,7 @@ class AuthViewModel @Inject constructor(
             result.fold(
                 onSuccess = {
                     Log.i("AuthViewModel", "Registration successful for email: $email")
+                    registerFcmToken()
                     _isAuthSuccessful.value = true
                     _isLoading.value = false
                 },

@@ -8,6 +8,8 @@ import com.mobile.micasaestucasa.domain.model.user.UserStatus
 fun UserDTO.toDomain(): User = User(
     id = id ?: "",
     name = name ?: "",
+    lastName = lastName ?: "",
+    profileCompleted = profileCompleted ?: true,
     email = email ?: "",
     roles = roles?.mapNotNull { UserRole.fromString(it) }
         ?: listOf(UserRole.GUEST),
@@ -35,6 +37,8 @@ fun UserDTO.toDomain(): User = User(
 fun User.toDto(): UserDTO = UserDTO(
     id = id,
     name = name,
+    lastName = lastName,
+    profileCompleted = profileCompleted,
     email = email,
     roles = roles.map { it.name },
 

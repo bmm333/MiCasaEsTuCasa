@@ -59,7 +59,14 @@ exports.onBookingUpdate = functions.firestore
             title = "Booking Rejected";
             body = "Your booking request has been rejected";
             type = "BOOKING_REJECTED";
-        } else {
+        }
+        else if(after.status=="COMPLETED")
+        {
+            title="Booking Completed";
+            body ="You have completed your stay";
+            type="BOOKING_COMPLETED";
+        }
+        else {
             return null;
         }
         return admin.messaging().send({

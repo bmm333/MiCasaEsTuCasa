@@ -58,6 +58,20 @@ import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Villa
 import androidx.compose.material3.Button
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import android.app.Activity
+import android.content.Intent
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
+import com.google.android.libraries.places.widget.AutocompleteActivity
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePickerDefaults
@@ -216,7 +230,7 @@ fun CreatePropertyScreen(
         val isLastStep = step == viewModel.totalSteps - 1
         val isNextEnabled = when (step) {
             0 -> draft.propertyType.isNotBlank()
-            1 -> draft.city.isNotBlank()
+            1 -> draft.city.isNotBlank() && (draft.latitude != 0.0 || draft.longitude != 0.0)
             2 -> draft.capacity >= 1
             3 -> true
             4 -> draft.imageUris.size >= 2
@@ -317,30 +331,103 @@ private fun StepPropertyType(draft: PropertyDraft, vm: CreatePropertyViewModel) 
 @Composable
 private fun StepLocation(draft: PropertyDraft, vm: CreatePropertyViewModel) {
     StepScaffold(title = "Dov'è la tua proprietà?", subtitle = "Gli ospiti vedranno solo la città finché non confermano la prenotazione.") {
-        OutlinedTextField(
-            value = draft.city,
-            onValueChange = { vm.updateCity(it) },
-            label = { Text("Città") },
-            leadingIcon = { Icon(Icons.Rounded.LocationOn, null, tint = CaptionLabels) },
-            singleLine = true,
-            shape = RoundedCornerShape(14.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primario, unfocusedBorderColor = BorderDivider, focusedLabelColor = Primario, unfocusedContainerColor = CardSurface, focusedContainerColor = CardSurface),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-            modifier = Modifier.fillMaxWidth()
-        )
+        val context = LocalContext.current
+        val autocompleteLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            when (result.resultCode) {
+                Activity.RESULT_OK -> {
+                    result.data?.let { intent ->
+                        val place = Autocomplete.getPlaceFromIntent(intent)
+                        vm.updateAddress(place.name ?: "")
+                        val cityComponent = place.addressComponents?.asList()?.find { it.types.contains("locality") }
+                        val city = cityComponent?.name ?: place.name ?: ""
+                        if (city.isNotBlank()) vm.updateCity(city)
+                        
+                        place.latLng?.let {
+                            vm.updateLocation(it.latitude, it.longitude)
+                        }
+                    }
+                }
+                AutocompleteActivity.RESULT_ERROR -> {
+                    result.data?.let { intent ->
+                        val status = Autocomplete.getStatusFromIntent(intent)
+                        android.widget.Toast.makeText(context, "Errore API: ${status.statusMessage}", android.widget.Toast.LENGTH_LONG).show()
+                        android.util.Log.e("PlacesError", "Error: ${status.statusMessage}")
+                    }
+                }
+            }
+        }
+
+        val launchAutocomplete = {
+            val fields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS_COMPONENTS, Place.Field.ADDRESS)
+            val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields).build(context)
+            autocompleteLauncher.launch(intent)
+        }
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = draft.city,
+                onValueChange = { vm.updateCity(it) },
+                label = { Text("Città") },
+                leadingIcon = { Icon(Icons.Rounded.LocationOn, null, tint = CaptionLabels) },
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primario, unfocusedBorderColor = BorderDivider, focusedLabelColor = Primario, unfocusedContainerColor = CardSurface, focusedContainerColor = CardSurface),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Box(modifier = Modifier.matchParentSize().clickable { launchAutocomplete() })
+        }
         Spacer(Modifier.height(14.dp))
-        OutlinedTextField(
-            value = draft.address,
-            onValueChange = { vm.updateAddress(it) },
-            label = { Text("Indirizzo") },
-            leadingIcon = { Icon(Icons.Rounded.LocationOn, null, tint = CaptionLabels) },
-            placeholder = { Text("Via Roma 10, Milano") },
-            singleLine = true,
-            shape = RoundedCornerShape(14.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primario, unfocusedBorderColor = BorderDivider, focusedLabelColor = Primario, unfocusedContainerColor = CardSurface, focusedContainerColor = CardSurface),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
-            modifier = Modifier.fillMaxWidth()
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = draft.address,
+                onValueChange = { vm.updateAddress(it) },
+                label = { Text("Indirizzo") },
+                leadingIcon = { Icon(Icons.Rounded.LocationOn, null, tint = CaptionLabels) },
+                placeholder = { Text("Via Roma 10, Milano") },
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Primario, unfocusedBorderColor = BorderDivider, focusedLabelColor = Primario, unfocusedContainerColor = CardSurface, focusedContainerColor = CardSurface),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Box(modifier = Modifier.matchParentSize().clickable { launchAutocomplete() })
+        }
+        Spacer(Modifier.height(14.dp))
+        Text(
+            "Tocca sulla mappa per impostare la posizione esatta",
+            fontSize = 14.sp,
+            color = CaptionLabels,
+            modifier = Modifier.padding(bottom = 8.dp)
         )
+        val startPosition = if (draft.latitude != 0.0 || draft.longitude != 0.0) LatLng(draft.latitude, draft.longitude) else LatLng(41.9027835, 12.4963655)
+        val cameraPositionState = rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(startPosition, if (draft.latitude != 0.0) 15f else 5f)
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .border(1.dp, BorderDivider, RoundedCornerShape(14.dp))
+        ) {
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                onMapClick = { latLng ->
+                    vm.updateLocation(latLng.latitude, latLng.longitude)
+                }
+            ) {
+                if (draft.latitude != 0.0 || draft.longitude != 0.0) {
+                    Marker(
+                        state = MarkerState(position = LatLng(draft.latitude, draft.longitude)),
+                        title = "Posizione selezionata"
+                    )
+                }
+            }
+        }
     }
 }
 

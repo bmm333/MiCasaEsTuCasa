@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import com.mobile.micasaestucasa.ui.navigation.AppNavigation
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import dagger.hilt.android.AndroidEntryPoint
+import com.google.android.libraries.places.api.Places
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -34,6 +35,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        try {
+            if (!Places.isInitialized()) {
+                Places.initialize(applicationContext, BuildConfig.MAPS_API_KEY)
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Places initialization failed", e)
+        }
         requestNotificationPermission()
         readNotificationExtras(intent)
         setContent {

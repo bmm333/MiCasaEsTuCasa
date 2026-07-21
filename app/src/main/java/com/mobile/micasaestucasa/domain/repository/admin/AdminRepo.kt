@@ -15,6 +15,7 @@ import com.mobile.micasaestucasa.domain.model.admin.UserReport
 interface AdminRepo {
     suspend fun addKeyword(label: String, adminId: String): Result<String>
     suspend fun deleteKeyword(keywordId: String, adminId: String): Result<Unit>
+    suspend fun updateKeyword(keywordId: String, newLabel: String, adminId: String): Result<Unit>
     suspend fun getAllKeywords(): Result<List<Keyword>>
 
     /**

@@ -89,6 +89,7 @@ class CreatePropertyViewModel @Inject constructor(
     fun updatePropertyType(type: String) { _draft.value = _draft.value.copy(propertyType = type) }
     fun updateCity(city: String) { _draft.value = _draft.value.copy(city = city) }
     fun updateAddress(address: String) { _draft.value = _draft.value.copy(address = address) }
+    fun updateLocation(lat: Double, lng: Double) { _draft.value = _draft.value.copy(latitude = lat, longitude = lng) }
     fun updateCapacity(capacity: Int) { _draft.value = _draft.value.copy(capacity = capacity.coerceAtLeast(1)) }
 
     fun toggleKeyword(keyword: String) {

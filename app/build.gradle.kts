@@ -11,6 +11,7 @@ plugins {
     id("jacoco")
     id("org.jlleitschuh.gradle.ktlint")
     kotlin("plugin.serialization") version "2.1.20"
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -49,6 +50,13 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    secrets {
+        // Reads MAPS_API_KEY from local.properties
+        propertiesFileName = "local.properties"
+        defaultPropertiesFileName = "local.defaults.properties"
     }
 }
 
@@ -67,6 +75,9 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation("io.coil-kt.coil3:coil-compose:3.4.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
+    // Google Maps Compose
+    implementation("com.google.maps.android:maps-compose:6.5.2")
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.mockk.android)
@@ -104,6 +115,8 @@ dependencies {
 
     // Firebase
     implementation(platform(libs.firebase.bom))
+    // Google Places API
+    implementation("com.google.android.libraries.places:places:3.4.0")
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore.ktx)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")

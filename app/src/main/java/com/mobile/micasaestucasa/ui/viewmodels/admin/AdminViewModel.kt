@@ -111,6 +111,25 @@ class AdminViewModel @Inject constructor(
         }
     }
 
+    fun updateKeyword(keywordId: String, newLabel: String, adminId: String) {
+        viewModelScope.launch {
+            manageKeywordsUseCase.updateKeyword(keywordId, newLabel, adminId)
+                .onSuccess {
+                    _uiState.update { state ->
+                        state.copy(
+                            keywords = state.keywords.map { kw ->
+                                if (kw.id == keywordId) kw.copy(label = newLabel) else kw
+                            },
+                            snackbarMessage = "Keyword updated"
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(snackbarMessage = "Failed: ${e.message}") }
+                }
+        }
+    }
+
     fun suspendUser(targetUserId: String, adminId: String, reportId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(actionInProgress = it.actionInProgress + reportId) }

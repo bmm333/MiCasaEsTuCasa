@@ -46,6 +46,20 @@ class FirebaseAdminRepo @Inject constructor(
         }
     }
 
+    override suspend fun updateKeyword(
+        keywordId: String,
+        newLabel: String,
+        adminId: String
+    ): Result<Unit> {
+        return try {
+            firestore.collection("keywords").document(keywordId)
+                .update("label", newLabel).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun getAllKeywords(): Result<List<Keyword>> {
         return try {
             val snapshot = firestore.collection("keywords")

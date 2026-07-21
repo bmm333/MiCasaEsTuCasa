@@ -27,12 +27,19 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.ui.theme.BorderDivider
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
@@ -172,28 +179,24 @@ fun PropertyDetailContent(
                     color = HeadingText
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                // placeholder maps Luca integra GoogleMap composable qui
-                Box(
+                val propertyLatLng = remember(property.latitude, property.longitude) {
+                    LatLng(property.latitude, property.longitude)
+                }
+                val cameraPositionState = rememberCameraPositionState {
+                    position = CameraPosition.fromLatLngZoom(propertyLatLng, 13f)
+                }
+                GoogleMap(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(SkeletonLoader),
-                    contentAlignment = Alignment.Center
+                        .height(220.dp)
+                        .clip(RoundedCornerShape(16.dp)),
+                    cameraPositionState = cameraPositionState
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Rounded.Map,
-                            contentDescription = null,
-                            tint = CaptionLabels,
-                            modifier = Modifier.size(40.dp)
-                        )
-                        Text(
-                            text = "${property.city} · ${String.format("%.4f", property.latitude)}, ${String.format("%.4f", property.longitude)}",
-                            fontSize = 12.sp,
-                            color = CaptionLabels
-                        )
-                    }
+                    Marker(
+                        state = MarkerState(position = propertyLatLng),
+                        title = property.title,
+                        snippet = property.city
+                    )
                 }
             }
         }

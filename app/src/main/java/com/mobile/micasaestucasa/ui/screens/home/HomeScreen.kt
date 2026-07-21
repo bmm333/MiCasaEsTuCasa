@@ -1,6 +1,7 @@
 package com.mobile.micasaestucasa.ui.screens.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -35,6 +36,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.ui.components.atomics.ShimmerPropertyCard
 import com.mobile.micasaestucasa.ui.components.home.PropertyCard
@@ -65,6 +72,7 @@ fun HomeScreen(
     val currentUser by userViewModel.user.collectAsState()
     val savedIds by homeViewModel.savedPropertyIds.collectAsState()
     var selectedRoute by remember { mutableStateOf("home_screen") }
+    var showMap by remember { mutableStateOf(false) }
     val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     androidx.compose.runtime.LaunchedEffect(currentUserId) {
@@ -149,57 +157,100 @@ fun HomeScreen(
 
             // destinazioni disponibili
             item {
-                Text(
-                    text = "Destinazioni disponibili",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = HeadingText,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-
-            // loading shimmer
-            if (homeState.isLoading && homeState.properties.isEmpty()) {
-                items(4) {
-                    ShimmerPropertyCard()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Destinazioni",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = HeadingText
+                    )
+                    androidx.compose.material3.TextButton(onClick = { showMap = !showMap }) {
+                        Text(if (showMap) "Vedi Lista" else "Vedi Mappa", color = Primario, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
 
-            // property cards
-            items(homeState.properties) { property ->
-                PropertyCard(
-                    name = property.title,
-                    rating = property.rating,
-                    location = property.city,
-                    price = property.pricePerDay,
-                    imageUrl = property.imageUrls.firstOrNull() ?: "",
-                    isAvailable = true,
-                    isFavorite = savedIds.contains(property.id),
-                    onFavoriteClick = { homeViewModel.toggleSaved(currentUserId, property.id) },
-                    onClick = { onNavigateToProperty(property.id) }
-                )
-            }
-
-            // empty state
-            if (!homeState.isLoading && homeState.properties.isEmpty() && homeState.error == null) {
+            if (showMap) {
                 item {
+                    val defaultPosition = LatLng(41.9027835, 12.4963655)
+                    val startPosition = homeState.properties.firstOrNull()?.let { LatLng(it.latitude, it.longitude) } ?: defaultPosition
+                    val cameraPositionState = rememberCameraPositionState {
+                        position = CameraPosition.fromLatLngZoom(startPosition, 5f)
+                    }
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(48.dp),
-                        contentAlignment = Alignment.Center
+                            .height(500.dp)
+                            .padding(horizontal = 16.dp)
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "Nessuna proprietà disponibile al momento",
-                                color = CaptionLabels,
-                                fontSize = 15.sp
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            com.mobile.micasaestucasa.ui.components.atomics.MiCasaPrimaryButton(
-                                text = "Load sample properties",
-                                onClick = { homeViewModel.seedSampleProperties() }
-                            )
+                        GoogleMap(
+                            modifier = Modifier.fillMaxSize(),
+                            cameraPositionState = cameraPositionState
+                        ) {
+                            homeState.properties.forEach { property ->
+                                Marker(
+                                    state = MarkerState(position = LatLng(property.latitude, property.longitude)),
+                                    title = property.title,
+                                    snippet = "€${property.pricePerDay}/notte",
+                                    onInfoWindowClick = {
+                                        onNavigateToProperty(property.id)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                // loading shimmer
+                if (homeState.isLoading && homeState.properties.isEmpty()) {
+                    items(4) {
+                        ShimmerPropertyCard()
+                    }
+                }
+
+                // property cards
+                items(homeState.properties) { property ->
+                    PropertyCard(
+                        name = property.title,
+                        rating = property.rating,
+                        location = property.city,
+                        price = property.pricePerDay,
+                        imageUrl = property.imageUrls.firstOrNull() ?: "",
+                        isAvailable = true,
+                        isFavorite = savedIds.contains(property.id),
+                        onFavoriteClick = { homeViewModel.toggleSaved(currentUserId, property.id) },
+                        onClick = { onNavigateToProperty(property.id) }
+                    )
+                }
+
+                // empty state
+                if (!homeState.isLoading && homeState.properties.isEmpty() && homeState.error == null) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "Nessuna proprietà disponibile al momento",
+                                    color = CaptionLabels,
+                                    fontSize = 15.sp
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                com.mobile.micasaestucasa.ui.components.atomics.MiCasaPrimaryButton(
+                                    text = "Load sample properties",
+                                    onClick = { homeViewModel.seedSampleProperties() }
+                                )
+                            }
                         }
                     }
                 }

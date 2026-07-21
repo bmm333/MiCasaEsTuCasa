@@ -29,6 +29,7 @@ import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Gavel
 import androidx.compose.material.icons.rounded.PauseCircle
@@ -206,7 +207,8 @@ fun AdminScreen(
                 2 -> KeywordsTab(
                     keywords = uiState.keywords,
                     onAdd = { label -> viewModel.addKeyword(label, currentUserId) },
-                    onDelete = { id -> viewModel.deleteKeyword(id, currentUserId) }
+                    onDelete = { id -> viewModel.deleteKeyword(id, currentUserId) },
+                    onUpdate = { id, newLabel -> viewModel.updateKeyword(id, newLabel, currentUserId) }
                 )
                 3 -> UsersPlaceholderTab()
             }
@@ -525,14 +527,19 @@ private fun ReportCard(
 private fun KeywordsTab(
     keywords: List<Keyword>,
     onAdd: (String) -> Unit,
-    onDelete: (String) -> Unit
+    onDelete: (String) -> Unit,
+    onUpdate: (keywordId: String, newLabel: String) -> Unit
 ) {
     var newKeyword by remember { mutableStateOf("") }
-    var showDialog by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    // Edit dialog state: holds the keyword being edited
+    var editingKeyword by remember { mutableStateOf<Keyword?>(null) }
+    var editLabel by remember { mutableStateOf("") }
 
-    if (showDialog) {
+    // ── Add Dialog ──────────────────────────────────────────────────────────
+    if (showAddDialog) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = { showAddDialog = false },
             containerColor = CardSurface,
             shape = RoundedCornerShape(20.dp),
             title = { Text("New Keyword", fontWeight = FontWeight.Bold, color = HeadingText) },
@@ -554,14 +561,53 @@ private fun KeywordsTab(
                     if (newKeyword.isNotBlank()) {
                         onAdd(newKeyword.trim())
                         newKeyword = ""
-                        showDialog = false
+                        showAddDialog = false
                     }
                 }) {
                     Text("Add", color = Primario, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(onClick = { showAddDialog = false }) {
+                    Text("Cancel", color = CaptionLabels)
+                }
+            }
+        )
+    }
+
+    // ── Edit Dialog ──────────────────────────────────────────────────────────
+    editingKeyword?.let { kw ->
+        AlertDialog(
+            onDismissRequest = { editingKeyword = null },
+            containerColor = CardSurface,
+            shape = RoundedCornerShape(20.dp),
+            title = { Text("Edit Keyword", fontWeight = FontWeight.Bold, color = HeadingText) },
+            text = {
+                OutlinedTextField(
+                    value = editLabel,
+                    onValueChange = { editLabel = it },
+                    label = { Text("New label") },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Primario,
+                        cursorColor = Primario
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (editLabel.isNotBlank()) {
+                        onUpdate(kw.id, editLabel.trim())
+                        editingKeyword = null
+                    }
+                }) {
+                    Text("Save", color = Primario, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { editingKeyword = null }) {
                     Text("Cancel", color = CaptionLabels)
                 }
             }
@@ -580,7 +626,7 @@ private fun KeywordsTab(
             ) {
                 Text("${keywords.size} Keywords", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = HeadingText)
                 IconButton(
-                    onClick = { showDialog = true },
+                    onClick = { showAddDialog = true },
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .background(Primario)
@@ -600,11 +646,22 @@ private fun KeywordsTab(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Icon(Icons.Rounded.Tag, null, tint = Primario, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(keyword.label, fontSize = 15.sp, color = HeadingText)
                 }
+                // Edit button
+                IconButton(onClick = {
+                    editLabel = keyword.label
+                    editingKeyword = keyword
+                }) {
+                    Icon(Icons.Rounded.Edit, null, tint = Primario, modifier = Modifier.size(20.dp))
+                }
+                // Delete button
                 IconButton(onClick = { onDelete(keyword.id) }) {
                     Icon(Icons.Rounded.DeleteOutline, null, tint = ErrorColor, modifier = Modifier.size(20.dp))
                 }

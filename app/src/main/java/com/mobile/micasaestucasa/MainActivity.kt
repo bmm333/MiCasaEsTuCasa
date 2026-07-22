@@ -35,13 +35,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        try {
-            if (!Places.isInitialized()) {
-                Places.initialize(applicationContext, BuildConfig.MAPS_API_KEY)
-            }
-        } catch (e: Exception) {
-            Log.e("MainActivity", "Places initialization failed", e)
-        }
+        // Places initialization moved to Application class
         requestNotificationPermission()
         readNotificationExtras(intent)
         setContent {

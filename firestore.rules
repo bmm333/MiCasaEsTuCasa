@@ -3,8 +3,10 @@ service cloud.firestore{
     match /databases/{database}/documents {
         match /users/{userId} {
             allow read: if request.auth !=null;
-            allow write: if request.auth.uid == userId
+            allow update: if request.auth.uid == userId
+                && !request.resource.data.roles.hasAny(['ADMIN'])
                 || (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles.hasAny(['ADMIN']));
+            allow create: if request.auth.uid == userId;
 
             match /saved_properties/{propertyId} {
                 allow read, write: if request.auth != null && request.auth.uid == userId;

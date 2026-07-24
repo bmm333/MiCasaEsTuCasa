@@ -28,4 +28,14 @@ class FirebaseAuthRepo @Inject constructor(private val firebaseAuth: FirebaseAut
     override suspend fun logout() {
         firebaseAuth.signOut()
     }
+
+    /** Sends a password reset email via Firebase Authentication. */
+    override suspend fun resetPassword(email: String): Result<Unit> {
+        return try {
+            firebaseAuth.sendPasswordResetEmail(email).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

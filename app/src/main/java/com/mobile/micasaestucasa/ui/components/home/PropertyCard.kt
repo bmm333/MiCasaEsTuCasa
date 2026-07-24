@@ -132,13 +132,13 @@ fun PropertyCard(
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        text = "$${price.toInt()}",
+                        text = "€${price.toInt()}",
                         style = Typography.titleLarge,
                         color = Primario,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = " / night",
+                        text = " / notte",
                         style = Typography.bodyMedium,
                         color = MaterialTheme.colorScheme.outline
                     )

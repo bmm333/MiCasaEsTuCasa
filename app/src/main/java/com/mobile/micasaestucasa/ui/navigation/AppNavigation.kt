@@ -181,7 +181,8 @@ fun AppNavigation(
                 },
                 onNavigateToEditProperty = { propertyId ->
                     navController.navigate(Route.EditProperty(propertyId))
-                }
+                },
+                navController = navController
             )
         }
 
@@ -237,6 +238,9 @@ fun AppNavigation(
                 },
                 onNavigateToMyProperties = {
                     navController.navigate(Route.MyProperties)
+                },
+                onNavigateToCreateProperty = {
+                    navController.navigate(Route.CreateProperty)
                 },
                 onNavigateToHostIntro = {
                     navController.navigate(Route.HostIntro)

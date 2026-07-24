@@ -44,6 +44,16 @@ object RepositoryModule {
 
     @Provides
     @Singleton
+    fun provideFirebaseStorage(): com.google.firebase.storage.FirebaseStorage = com.google.firebase.storage.FirebaseStorage.getInstance()
+
+    @Provides
+    @Singleton
+    fun provideFirebaseStorageRepository(
+        storage: com.google.firebase.storage.FirebaseStorage
+    ): com.mobile.micasaestucasa.data.repository.storage.FirebaseStorageRepository = com.mobile.micasaestucasa.data.repository.storage.FirebaseStorageRepository(storage)
+
+    @Provides
+    @Singleton
     fun provideUserRepository(
         firebaseAuth: FirebaseAuth,
         firestore: FirebaseFirestore

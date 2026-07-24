@@ -102,4 +102,21 @@ class FirebaseUserRepo @Inject constructor(
             Result.failure(e)
         }
     }
+    
+    override suspend fun updateUserRolesAndBadge(userId: String, roles: List<com.mobile.micasaestucasa.domain.model.user.UserRole>, badge: com.mobile.micasaestucasa.domain.model.user.UserBadge?): Result<Unit> {
+        return try {
+            val updates = mutableMapOf<String, Any>(
+                "roles" to roles.map { it.name }
+            )
+            if (badge != null) {
+                updates["badge"] = badge.name
+            }
+            firestore.collection("users").document(userId)
+                .update(updates)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

@@ -25,6 +25,7 @@ import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingViewModel
 import androidx.navigation.NavController
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
+import com.mobile.micasaestucasa.ui.components.nav.HostBottomNavItems
 import com.mobile.micasaestucasa.ui.navigation.Route
 
 /**
@@ -84,33 +85,35 @@ fun BookingListScreen(
             )
         },
         bottomBar = {
-            MiCasaBottomNav(
-                items = DefaultBottomNavItems.items,
-                selectedRoute = if (mode == BookingListMode.RENTER) "trips_screen" else "profile_screen",
-                onItemSelected = { route ->
-                    when (route) {
-                        "home_screen"     -> navController.navigate(Route.Home) {
-                            popUpTo(0)
-                        }
-                        "saved_screen"    -> navController.navigate(Route.Wishlist)
-                        "trips_screen"    -> {
-                            if (mode != BookingListMode.RENTER) {
-                                navController.navigate(Route.Trips)
+            if (mode == BookingListMode.HOST) {
+                MiCasaBottomNav(
+                    items = HostBottomNavItems.items,
+                    selectedRoute = "host_bookings",
+                    onItemSelected = { route ->
+                        when (route) {
+                            "host_properties" -> navController.navigate(Route.MyProperties) {
+                                popUpTo(Route.Profile)
                             }
-                        }
-                        "messages_screen" -> navController.navigate(Route.ConversationList)
-                        "profile_screen"  -> {
-                            if (mode == BookingListMode.RENTER) {
-                                navController.navigate(Route.Profile)
-                            } else {
-                                navController.navigate(Route.Profile) {
-                                    popUpTo(Route.Profile) { inclusive = true }
-                                }
-                            }
+                            "host_bookings" -> {} // Already here
+                            "exit_host" -> onNavigateBack()
                         }
                     }
-                }
-            )
+                )
+            } else {
+                MiCasaBottomNav(
+                    items = DefaultBottomNavItems.items,
+                    selectedRoute = "trips_screen",
+                    onItemSelected = { route ->
+                        when (route) {
+                            "home_screen"     -> navController.navigate(Route.Home) { popUpTo(0) }
+                            "saved_screen"    -> navController.navigate(Route.Wishlist)
+                            "trips_screen"    -> {} // Already here
+                            "messages_screen" -> navController.navigate(Route.ConversationList)
+                            "profile_screen"  -> navController.navigate(Route.Profile)
+                        }
+                    }
+                )
+            }
         },
         containerColor = ScreenBackground
     ) { padding ->

@@ -21,6 +21,9 @@ import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PersonOutline
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.BookOnline
+import androidx.compose.material.icons.automirrored.rounded.ExitToApp
+import androidx.compose.material.icons.rounded.HomeWork
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,6 +60,17 @@ object DefaultBottomNavItems {
         BottomNavItem("trips_screen",    "Viaggi",   Icons.Rounded.Luggage),
         BottomNavItem("messages_screen", "Messaggi", Icons.Rounded.ChatBubbleOutline),
         BottomNavItem("profile_screen",  "Profilo",  Icons.Rounded.PersonOutline)
+    )
+}
+
+/**
+ * Host tabs show in the bottom nav bar when in Host Mode.
+ */
+object HostBottomNavItems {
+    val items = listOf(
+        BottomNavItem("host_properties", "Proprietà", Icons.Rounded.HomeWork),
+        BottomNavItem("host_bookings", "Prenotazioni", Icons.Rounded.BookOnline),
+        BottomNavItem("exit_host", "Esci", Icons.AutoMirrored.Rounded.ExitToApp)
     )
 }
 

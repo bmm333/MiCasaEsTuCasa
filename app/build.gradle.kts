@@ -63,6 +63,7 @@ android {
 dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.compose.material.icons.extended)
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
     // compose-runtime is provided transitively by the Compose BOM
     val nav_version = "2.9.7"
     implementation(libs.androidx.core.ktx)
@@ -119,6 +120,7 @@ dependencies {
     implementation("com.google.android.libraries.places:places:3.4.0")
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore.ktx)
+    implementation("com.google.firebase:firebase-storage")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     // Resolve conflict for androidx.concurrent:concurrent-futures

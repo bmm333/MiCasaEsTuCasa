@@ -168,17 +168,6 @@ class CreatePropertyViewModel @Inject constructor(
             )
             createPropertyUseCase(property)
                 .onSuccess { id ->
-                    // Promote user to OWNER role
-                    try {
-                        val currentUser = userRepo.getCurrentUser()
-                        if (currentUser != null && !currentUser.roles.contains(UserRole.OWNER)) {
-                            val updated = currentUser.copy(
-                                roles = currentUser.roles + UserRole.OWNER,
-                                badge = UserBadge.NEW_HOST
-                            )
-                            userRepo.updateUserProfile(updated)
-                        }
-                    } catch (_: Exception) { /* role promotion best-effort */ }
                     _submitState.value = CreatePropertyState.Success(id)
                 }
                 .onFailure { e ->

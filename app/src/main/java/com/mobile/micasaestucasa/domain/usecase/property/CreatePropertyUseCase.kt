@@ -6,8 +6,11 @@ import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import javax.inject.Inject
 
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+
 class CreatePropertyUseCase @Inject constructor(
-    private val propertyRepo: PropertyRepo
+    private val propertyRepo: PropertyRepo,
+    private val userRepo: UserRepo
 ) {
     suspend operator fun invoke(property: Property): Result<String> {
         if (property.title.isBlank()) {
@@ -41,6 +44,16 @@ class CreatePropertyUseCase @Inject constructor(
         if (toDate.isBefore(LocalDate.now())) {
             return Result.failure(IllegalArgumentException("La disponibilita non puo terminare nel passato"))
         }
-        return propertyRepo.createProperty(property)
+        val result = propertyRepo.createProperty(property)
+
+        if (result.isSuccess) {
+            val currentUser = userRepo.getCurrentUser()
+            if (currentUser != null && !currentUser.roles.contains(com.mobile.micasaestucasa.domain.model.user.UserRole.OWNER)) {
+                val updatedRoles = currentUser.roles + com.mobile.micasaestucasa.domain.model.user.UserRole.OWNER
+                userRepo.updateUserRolesAndBadge(currentUser.id, updatedRoles, com.mobile.micasaestucasa.domain.model.user.UserBadge.NEW_HOST)
+            }
+        }
+
+        return result
     }
 }

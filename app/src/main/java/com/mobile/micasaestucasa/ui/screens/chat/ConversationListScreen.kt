@@ -13,12 +13,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil3.compose.AsyncImage
 import com.mobile.micasaestucasa.domain.model.chat.Conversation
+import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.ui.theme.*
 import com.mobile.micasaestucasa.ui.viewmodels.chat.ChatUiState
 import com.mobile.micasaestucasa.ui.viewmodels.chat.ChatViewModel
@@ -40,6 +43,7 @@ fun ConversationListScreen(
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val conversationUsers by viewModel.conversationUsers.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.loadConversations(currentUserId)
@@ -96,6 +100,10 @@ fun ConversationListScreen(
             }
 
             is ChatUiState.ConversationsLoaded -> {
+                // Load user profiles for all conversations
+                LaunchedEffect(state.conversations) {
+                    viewModel.loadConversationUsers(state.conversations, currentUserId)
+                }
                 if (state.conversations.isEmpty()) {
                     EmptyConversationsView(Modifier.padding(padding))
                 } else {
@@ -106,9 +114,13 @@ fun ConversationListScreen(
                         contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
                         items(state.conversations) { conversation ->
+                            val otherUserId = if (currentUserId == conversation.hostId)
+                                conversation.renterId else conversation.hostId
+                            val otherUser = conversationUsers[otherUserId]
                             ConversationItem(
                                 conversation = conversation,
                                 currentUserId = currentUserId,
+                                otherUser = otherUser,
                                 onClick = { onNavigateToChat(conversation) }
                             )
                         }
@@ -137,8 +149,16 @@ fun ConversationListScreen(
 private fun ConversationItem(
     conversation: Conversation,
     currentUserId: String,
+    otherUser: User?,
     onClick: () -> Unit
 ) {
+    val displayName = if (otherUser != null) {
+        "${otherUser.name} ${otherUser.lastName}".trim().ifBlank { "Utente" }
+    } else {
+        if (currentUserId == conversation.hostId) "Renter" else "Owner"
+    }
+    val photoUrl = otherUser?.profileImageUrl
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -147,20 +167,31 @@ private fun ConversationItem(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // avatar place
-        Box(
-            modifier = Modifier
-                .size(52.dp)
-                .clip(CircleShape)
-                .background(Sfumatura),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Rounded.Person,
+        // avatar — photo or initial letter
+        if (!photoUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = photoUrl,
                 contentDescription = null,
-                tint = Primario,
-                modifier = Modifier.size(28.dp)
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
             )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(Sfumatura),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = displayName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Primario
+                )
+            }
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -169,7 +200,7 @@ private fun ConversationItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = if (currentUserId == conversation.hostId) "Renter" else "Owner",
+                    text = displayName,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
                     color = HeadingText

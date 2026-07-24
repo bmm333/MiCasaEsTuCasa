@@ -48,13 +48,16 @@ import com.mobile.micasaestucasa.domain.util.Resource
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
 import com.mobile.micasaestucasa.ui.components.profile.HostBanner
+import com.mobile.micasaestucasa.ui.components.profile.HostDashboardCard
 import com.mobile.micasaestucasa.ui.components.profile.PersonalInfoCard
 import com.mobile.micasaestucasa.ui.components.profile.ProfileHeader
 import com.mobile.micasaestucasa.ui.components.profile.ProfileSectionCard
 import com.mobile.micasaestucasa.ui.components.profile.SettingsRow
 import com.mobile.micasaestucasa.ui.components.profile.WishlistCard
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
+import com.mobile.micasaestucasa.ui.theme.ScreenBackground
 import com.mobile.micasaestucasa.ui.viewmodels.auth.AuthViewModel
+import com.mobile.micasaestucasa.ui.viewmodels.user.HostStats
 import com.mobile.micasaestucasa.ui.viewmodels.user.UserViewModel
 import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistViewModel
 import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistUiState
@@ -69,18 +72,30 @@ fun ProfileScreen(
     onLogoutNavigate: () -> Unit = {},
     onNavigateToHostBookings: () -> Unit = {},
     onNavigateToMyProperties: () -> Unit = {},
+    onNavigateToCreateProperty: () -> Unit = {},
     onNavigateToHostIntro: () -> Unit = {},
     onNavigateToAdmin: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateBack: () -> Boolean
 ) {
     val userState by userViewModel.userState.collectAsStateWithLifecycle()
+    val hostStats by userViewModel.hostStats.collectAsStateWithLifecycle()
+    val isHost by userViewModel.isHost.collectAsStateWithLifecycle()
     val wishlistState by wishlistViewModel.uiState.collectAsStateWithLifecycle()
 
     // Refresh user & wishlist data when the screen is shown
-    LaunchedEffect(Unit) {
-        userViewModel.loadUser()
-        wishlistViewModel.loadWishlist()
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                userViewModel.loadUser()
+                wishlistViewModel.loadWishlist()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     ProfileContent(
@@ -94,9 +109,12 @@ fun ProfileScreen(
         onNavigateToSettings = onNavigateToSettings,
         onNavigateToHostBookings = onNavigateToHostBookings,
         onNavigateToMyProperties = onNavigateToMyProperties,
+        onNavigateToCreateProperty = onNavigateToCreateProperty,
         onNavigateToHostIntro = onNavigateToHostIntro,
         onNavigateToAdmin = onNavigateToAdmin,
-        onNavigateToEditProfile = onNavigateToEditProfile
+        onNavigateToEditProfile = onNavigateToEditProfile,
+        hostStats = hostStats,
+        isHost = isHost
     )
 }
 
@@ -104,17 +122,20 @@ fun ProfileScreen(
 fun ProfileContent(
     userState: Resource<User?>,
     wishlistState: WishlistUiState,
+    hostStats: HostStats,
+    isHost: Boolean,
     navController: NavController,
     onLogout: () -> Unit,
     onNavigateToSettings: (String) -> Unit,
     onNavigateToHostBookings: () -> Unit = {},
     onNavigateToMyProperties: () -> Unit = {},
+    onNavigateToCreateProperty: () -> Unit = {},
     onNavigateToHostIntro: () -> Unit = {},
     onNavigateToAdmin: () -> Unit = {},
     onNavigateToEditProfile: () -> Unit = {}
 ) {
     Scaffold(
-        containerColor = Color(0xFFF7F7F7),
+        containerColor = ScreenBackground,
         bottomBar = {
             MiCasaBottomNav(
                 items = DefaultBottomNavItems.items,
@@ -193,7 +214,7 @@ fun ProfileContent(
                         )
                     }
 
-                    if (user?.roles?.contains(UserRole.OWNER) == false && user?.roles?.contains(UserRole.ADMIN) == false) {
+                    if (!isHost && user?.roles?.contains(UserRole.ADMIN) == false) {
                         item {
                             PaddingWrapper {
                                 HostBanner(onGetStarted = onNavigateToHostIntro)
@@ -230,24 +251,15 @@ fun ProfileContent(
                     }
 
                     // Host section: link to received bookings
-                    if (user?.roles?.contains(UserRole.OWNER) == true) {
+                    if (isHost) {
                         item {
-                            ProfileSectionCard(
-                                title = "Hosting",
-                                icon = Icons.Default.Home
-                            ) {
-                                Column {
-                                    SettingsRow(
-                                        icon = Icons.Default.Home,
-                                        label = "Le mie proprietà",
-                                        onClick = { onNavigateToMyProperties() }
-                                    )
-                                    SettingsRow(
-                                        icon = Icons.Default.CalendarMonth,
-                                        label = "Richieste di prenotazione",
-                                        onClick = { onNavigateToHostBookings() }
-                                    )
-                                }
+                            PaddingWrapper {
+                                HostDashboardCard(
+                                    stats = hostStats,
+                                    onNavigateToMyProperties = onNavigateToMyProperties,
+                                    onNavigateToHostBookings = onNavigateToHostBookings,
+                                    onNavigateToCreateProperty = onNavigateToCreateProperty
+                                )
                             }
                         }
                     }
@@ -325,6 +337,8 @@ fun ProfileScreenPreview() {
                 )
             ),
             wishlistState = WishlistUiState(),
+            hostStats = HostStats(),
+            isHost = false,
             navController = dummyNavController,
             onLogout = {},
             onNavigateToSettings = {},

@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,6 +47,8 @@ fun ChatScreen(
 ) {
     val messages by viewModel.messages.collectAsState()
     val vmConversationId by viewModel.activeConversationId.collectAsState()
+    val otherUserName by viewModel.otherUserName.collectAsState()
+    val otherUserPhotoUrl by viewModel.otherUserPhotoUrl.collectAsState()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
@@ -69,6 +72,11 @@ fun ChatScreen(
             viewModel.openConversation(hostId, renterId, propertyId)
         } else if (conversationId.isNotBlank()) {
             viewModel.openConversationById(conversationId)
+        }
+        // Load the other user's profile
+        val otherUserId = if (currentUserId == hostId) renterId else hostId
+        if (otherUserId.isNotBlank()) {
+            viewModel.loadOtherUser(otherUserId)
         }
     }
 
@@ -116,24 +124,37 @@ fun ChatScreen(
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Sfumatura),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Rounded.Person,
-                                null,
-                                tint = Primario,
-                                modifier = Modifier.size(20.dp)
+                        if (!otherUserPhotoUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = otherUserPhotoUrl,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
                             )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Sfumatura),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = otherUserName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = Primario
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = if (currentUserId == hostId) "Renter" else "Owner",
+                                text = otherUserName.ifBlank {
+                                    if (currentUserId == hostId) "Renter" else "Owner"
+                                },
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 15.sp,
                                 color = HeadingText
@@ -156,19 +177,38 @@ fun ChatScreen(
             )
         },
         bottomBar = {
-            ChatInputBar(text = inputText,
+            val imageUploadState by viewModel.imageUploadState.collectAsState()
+            ChatInputBar(
+                text = inputText,
                 onTextChange = { inputText = it },
                 selectedImage = selectedImageUri,
+                imageUploadState = imageUploadState,
                 onImagePick = { imagePicker.launch("image/*") },
                 onImageClear = { selectedImageUri = null },
                 onSend = {
-                    if (inputText.isNotBlank() || selectedImageUri != null) {
-                        viewModel.sendMessage(
-                            senderId = currentUserId,
-                            text = inputText.trim()
-                        )
-                        inputText = ""
-                        selectedImageUri = null
+                    val convId = activeConversationId.ifBlank { return@ChatInputBar }
+                    val uri = selectedImageUri
+
+                    when {
+                        // caso 1: solo testo
+                        uri == null && inputText.isNotBlank() -> {
+                            viewModel.sendMessage(
+                                senderId = currentUserId,
+                                text = inputText.trim()
+                            )
+                            inputText = ""
+                        }
+                        // caso 2: immagine (con o senza testo)
+                        uri != null -> {
+                            viewModel.sendMessageWithImage(
+                                uri = uri,
+                                conversationId = convId,
+                                senderId = currentUserId,
+                                text = inputText.trim()
+                            )
+                            inputText = ""
+                            selectedImageUri = null
+                        }
                     }
                 }
             )
@@ -251,63 +291,117 @@ private fun MessageBubble(message: Message, isMine: Boolean) {
 
 @Composable
 private fun ChatInputBar(
-    text:String,
+    text: String,
     onTextChange: (String) -> Unit,
     selectedImage: Uri?,
+    imageUploadState: com.mobile.micasaestucasa.ui.viewmodels.chat.ImageUploadState,
     onImagePick: () -> Unit,
     onImageClear: () -> Unit,
     onSend: () -> Unit
 ) {
-    Surface(color=CardSurface, shadowElevation = 8.dp) {
+    val isUploading = imageUploadState is com.mobile.micasaestucasa.ui.viewmodels.chat.ImageUploadState.Uploading
+
+    Surface(color = CardSurface, shadowElevation = 8.dp) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-            if(selectedImage!=null)
-            {
-                Box(
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                ){
+
+            // preview immagine selezionata
+            if (selectedImage != null) {
+                Box(modifier = Modifier.size(72.dp).clip(RoundedCornerShape(12.dp))) {
                     AsyncImage(
-                        model=selectedImage,
-                        contentDescription="Preview",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        model              = selectedImage,
+                        contentDescription = "Preview",
+                        contentScale       = ContentScale.Crop,
+                        modifier           = Modifier.fillMaxSize()
                     )
-                    IconButton(onClick = onImageClear,
-                        modifier = Modifier.size(20.dp).align(Alignment.TopEnd).background(ErrorColor,CircleShape)){
-                        Icon(Icons.Rounded.Close,null,tint=CardSurface, modifier = Modifier.size(12.dp))
+                    // overlay caricamento
+                    if (isUploading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(HeadingText.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color    = CardSurface,
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    } else {
+                        // bottone rimuovi — solo se non sta caricando
+                        IconButton(
+                            onClick  = onImageClear,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .align(Alignment.TopEnd)
+                                .background(ErrorColor, CircleShape)
+                        ) {
+                            Icon(
+                                Icons.Rounded.Close, null,
+                                tint     = CardSurface,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
                     }
                 }
-                Spacer(modifier=Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
-            Row(verticalAlignment = Alignment.CenterVertically)
-            {
-                //gallery vtton
-                IconButton(onClick=onImagePick, modifier = Modifier.size(40.dp).clip(CircleShape).background(SkeletonLoader))
-                {
-                    Icon(Icons.Rounded.Image,null,tint=CaptionLabels, modifier = Modifier.size(20.dp))
+
+            // errore upload
+            if (imageUploadState is com.mobile.micasaestucasa.ui.viewmodels.chat.ImageUploadState.Error) {
+                Text(
+                    text     = imageUploadState.message,
+                    color    = ErrorColor,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // bottone galleria — disabilitato durante upload
+                IconButton(
+                    onClick  = onImagePick,
+                    enabled  = !isUploading,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(if (isUploading) BorderDivider else SkeletonLoader)
+                ) {
+                    Icon(
+                        Icons.Rounded.Image, null,
+                        tint     = if (isUploading) BorderDivider else CaptionLabels,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
-                Spacer(modifier=Modifier.width(8.dp))
-                //text inpt
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 OutlinedTextField(
                     value         = text,
                     onValueChange = onTextChange,
-                    placeholder   = { Text("Send a message", color = BorderDivider) },
-                    shape         = RoundedCornerShape(24.dp),
-                    colors        = OutlinedTextFieldDefaults.colors(
+                    enabled       = !isUploading,
+                    placeholder   = {
+                        Text(
+                            if (isUploading) "Caricamento..." else "Scrivi un messaggio...",
+                            color = BorderDivider
+                        )
+                    },
+                    shape   = RoundedCornerShape(24.dp),
+                    colors  = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor      = Primario,
                         unfocusedBorderColor    = BorderDivider,
                         focusedContainerColor   = ScreenBackground,
                         unfocusedContainerColor = ScreenBackground,
                         cursorColor             = Primario
                     ),
-                    modifier    = Modifier.weight(1f),
-                    maxLines    = 4,
-                    singleLine  = false
+                    modifier   = Modifier.weight(1f),
+                    maxLines   = 4,
+                    singleLine = false
                 )
-                Spacer(modifier=Modifier.width(8.dp))
-                //send btn
-                val canSend = text.isNotBlank() || selectedImage != null
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                val canSend = (text.isNotBlank() || selectedImage != null) && !isUploading
                 IconButton(
                     onClick  = onSend,
                     enabled  = canSend,
@@ -315,12 +409,20 @@ private fun ChatInputBar(
                         .size(44.dp)
                         .clip(CircleShape)
                         .background(if (canSend) Primario else SkeletonLoader)
-                ){
-                    Icon(
-                        Icons.Rounded.Send, null,
-                        tint     = if (canSend) CardSurface else CaptionLabels,
-                        modifier = Modifier.size(20.dp)
-                    )
+                ) {
+                    if (isUploading) {
+                        CircularProgressIndicator(
+                            color       = CardSurface,
+                            modifier    = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.Send, null,
+                            tint     = if (canSend) CardSurface else CaptionLabels,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }

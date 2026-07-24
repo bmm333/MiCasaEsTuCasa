@@ -25,7 +25,9 @@ class PropertyViewModel @Inject constructor(
     private val getPropertyByIdUseCase: GetPropertyByIdUseCase,
     private val addUserReportUseCase: AddUserReportUseCase,
     private val wishlistRepo: WhishlistRepo,
-    private val userRepo: UserRepo
+    private val userRepo: UserRepo,
+    private val deletePropertyUseCase: com.mobile.micasaestucasa.domain.usecase.property.DeletePropertyUseCase,
+    private val demoteHostUseCase: com.mobile.micasaestucasa.domain.usecase.property.DemoteHostUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PropertyUiState>(PropertyUiState.Idle)
     val uiState: StateFlow<PropertyUiState> = _uiState.asStateFlow()
@@ -195,6 +197,21 @@ class PropertyViewModel @Inject constructor(
                 description = description,
                 propertyId = propertyId
             )
+        }
+    }
+
+    fun deleteProperty(propertyId: String, ownerId: String) {
+        viewModelScope.launch {
+            deletePropertyUseCase(propertyId)
+                .onSuccess {
+                    // Refresh properties list
+                    loadOwnerProperties(ownerId)
+                    // Check if demotion is needed
+                    val remaining = getOwnerPropertiesUseCase(ownerId).getOrDefault(emptyList())
+                    if (remaining.isEmpty()) {
+                        demoteHostUseCase(ownerId)
+                    }
+                }
         }
     }
 }

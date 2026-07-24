@@ -8,6 +8,7 @@ import com.mobile.micasaestucasa.domain.repository.notification.NotificationRepo
 import com.mobile.micasaestucasa.domain.usecase.auth.LoginUseCase
 import com.mobile.micasaestucasa.domain.usecase.auth.LogoutUseCase
 import com.mobile.micasaestucasa.domain.usecase.auth.RegisterUseCase
+import com.mobile.micasaestucasa.domain.usecase.auth.ResetPasswordUseCase
 import com.mobile.micasaestucasa.domain.usecase.notification.SaveFCMTokenUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,7 @@ class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val registerUseCase: RegisterUseCase,
     private val logoutUseCase: LogoutUseCase,
+    private val resetPasswordUseCase: ResetPasswordUseCase,
     private val saveFCMTokenUseCase: SaveFCMTokenUseCase,
     private val notificationRepo: NotificationRepo,
     private val firebaseAuth: FirebaseAuth
@@ -33,6 +35,9 @@ class AuthViewModel @Inject constructor(
 
     private val _isAuthSuccessful = MutableStateFlow(false)
     val isAuthSuccessful: StateFlow<Boolean> = _isAuthSuccessful.asStateFlow()
+
+    private val _passwordResetSent = MutableStateFlow(false)
+    val passwordResetSent: StateFlow<Boolean> = _passwordResetSent.asStateFlow()
 
     private suspend fun registerFcmToken() {
         val userId = firebaseAuth.currentUser?.uid ?: return
@@ -96,5 +101,32 @@ class AuthViewModel @Inject constructor(
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    /**
+     * Sends a password reset email to the given email address.
+     * Updates passwordResetSent on success, or errorMessage on failure.
+     */
+    fun resetPassword(email: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            _passwordResetSent.value = false
+            resetPasswordUseCase(email)
+                .onSuccess {
+                    Log.i("AuthViewModel", "Password reset email sent to: $email")
+                    _passwordResetSent.value = true
+                    _isLoading.value = false
+                }
+                .onFailure { exception ->
+                    Log.e("AuthViewModel", "Password reset failed for: $email", exception)
+                    _errorMessage.value = exception.message ?: "Errore nell'invio dell'email"
+                    _isLoading.value = false
+                }
+        }
+    }
+    //helper
+    fun clearPasswordResetState() {
+        _passwordResetSent.value = false
     }
 }

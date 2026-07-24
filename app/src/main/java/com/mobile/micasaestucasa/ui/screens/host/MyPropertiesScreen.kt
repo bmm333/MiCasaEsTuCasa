@@ -32,6 +32,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +57,11 @@ import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.viewmodels.property.PropertyUiState
 import com.mobile.micasaestucasa.ui.viewmodels.property.PropertyViewModel
 
+import androidx.navigation.NavController
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.HostBottomNavItems
+import com.mobile.micasaestucasa.ui.navigation.Route
+
 @Composable
 fun MyPropertiesScreen(
     ownerId: String,
@@ -63,6 +69,7 @@ fun MyPropertiesScreen(
     onNavigateToProperty: (String) -> Unit,
     onNavigateToCreateProperty: () -> Unit,
     onNavigateToEditProperty: (String) -> Unit,
+    navController: NavController,
     viewModel: PropertyViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -71,16 +78,33 @@ fun MyPropertiesScreen(
         viewModel.loadOwnerProperties(ownerId)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF7F7F7))
-            .statusBarsPadding()
-            .navigationBarsPadding()
-    ) {
-        // Top bar
-        Row(
-            modifier = Modifier.fillMaxWidth().background(CardSurface).padding(horizontal = 8.dp, vertical = 4.dp),
+    Scaffold(
+        bottomBar = {
+            MiCasaBottomNav(
+                items = HostBottomNavItems.items,
+                selectedRoute = "host_properties",
+                onItemSelected = { route ->
+                    when (route) {
+                        "host_properties" -> {} // Already here
+                        "host_bookings" -> navController.navigate(Route.HostBookings) {
+                            popUpTo(Route.Profile)
+                        }
+                        "exit_host" -> onNavigateBack()
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF7F7F7))
+                .padding(paddingValues)
+                .statusBarsPadding()
+        ) {
+            // Top bar
+            Row(
+                modifier = Modifier.fillMaxWidth().background(CardSurface).padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onNavigateBack) {
@@ -145,6 +169,7 @@ fun MyPropertiesScreen(
                     CircularProgressIndicator(color = Primario)
                 }
             }
+        }
         }
     }
 }

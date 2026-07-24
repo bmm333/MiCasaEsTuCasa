@@ -28,13 +28,31 @@ class WishlistViewModel @Inject constructor(
         loadWishlist()
     }
 
+    /**
+     * Toggles a property's saved status with optimistic UI removal.
+     * The property is removed from the list immediately for instant UX,
+     * then restored if the backend call fails.
+     */
     fun toggleSaved(propertyId: String) {
         viewModelScope.launch {
             val user = userRepo.getCurrentUser()
             if (user != null) {
+                // Optimistic removal — snapshot current state
+                val previousProperties = _uiState.value.properties
+                _uiState.update { current ->
+                    current.copy(
+                        properties = current.properties.filter { it.id != propertyId }
+                    )
+                }
+
                 wishlistRepo.toggleSavedProperty(user.id, propertyId)
                     .onSuccess {
+                        // Reload to ensure consistency
                         loadWishlist()
+                    }
+                    .onFailure {
+                        // Restore on failure
+                        _uiState.update { it.copy(properties = previousProperties) }
                     }
             }
         }

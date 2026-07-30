@@ -1,7 +1,11 @@
 package com.mobile.micasaestucasa.ui.viewmodels.user
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserRole
+import com.mobile.micasaestucasa.domain.repository.booking.BookingRepo
+import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import com.mobile.micasaestucasa.domain.util.Resource
 import com.mobile.micasaestucasa.util.MainDispatcherRule
@@ -23,6 +27,9 @@ class UserViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val userRepo = mockk<UserRepo>()
+    private val propertyRepo = mockk<PropertyRepo>()
+    private val bookingRepo = mockk<BookingRepo>()
+    private val dataStore = mockk<DataStore<Preferences>>(relaxed = true)
     private lateinit var viewModel: UserViewModel
 
     private val testUser = User(
@@ -39,7 +46,8 @@ class UserViewModelTest {
     fun setup() {
         // Mock caricamento iniziale per il ViewModel init
         coEvery { userRepo.getCurrentUser() } returns testUser
-        viewModel = UserViewModel(userRepo)
+        coEvery { propertyRepo.getPropertiesByOwner(any()) } returns Result.success(emptyList())
+        viewModel = UserViewModel(userRepo, propertyRepo, bookingRepo, dataStore)
     }
 
     @Test
@@ -117,10 +125,8 @@ class UserViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.userState.value
-        // Null user is wrapped in Success(null)
-        assertTrue("Expected Resource.Success but was $state", state is Resource.Success)
-        val data = (state as Resource.Success).data
-        assertEquals(null, data)
+        // Null user results in early return, state remains Loading
+        assertTrue("Expected Resource.Loading but was $state", state is Resource.Loading)
     }
 
     @Test
@@ -144,4 +150,3 @@ class UserViewModelTest {
         assertEquals(updatedUser, viewModel.user.value)
     }
 }
-

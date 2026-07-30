@@ -3,6 +3,8 @@ package com.mobile.micasaestucasa.ui.viewmodels.property
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.model.property.Property
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
 import com.mobile.micasaestucasa.domain.usecase.admin.AddUserReportUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.CreatePropertyUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetOwnerPropertiesUseCase
@@ -14,8 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
-import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 
 @HiltViewModel
 class PropertyViewModel @Inject constructor(
@@ -108,6 +108,7 @@ class PropertyViewModel @Inject constructor(
                 }
         }
     }
+
     /**
      * Loads a single property by its ID
      * Used for the property detail screen

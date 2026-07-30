@@ -21,7 +21,7 @@ class FirebaseWishlistRepo @Inject constructor(
             val savedDocs = savedCol(userId).get().await()
             val propertyIds = savedDocs.documents.mapNotNull { it.getString("propertyId") }
             if (propertyIds.isEmpty()) return Result.success(emptyList())
-            //Firestore whereIn max 30 ids per query
+            // Firestore whereIn max 30 ids per query
             val properties = mutableListOf<Property>()
             propertyIds.chunked(30).forEach { chunk ->
                 val snapshot = firestore.collection("properties")

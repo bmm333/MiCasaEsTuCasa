@@ -1,5 +1,6 @@
 package com.mobile.micasaestucasa.ui.screens.host
 
+import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -7,7 +8,6 @@ import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -40,7 +40,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.collectAsState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Add
@@ -51,27 +50,10 @@ import androidx.compose.material.icons.rounded.Cabin
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Hotel
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Remove
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Villa
 import androidx.compose.material3.Button
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.rememberCameraPositionState
-import android.app.Activity
-import android.content.Intent
-import androidx.compose.material.icons.rounded.Search
-import androidx.compose.ui.platform.LocalContext
-import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.widget.Autocomplete
-import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
-import com.google.android.libraries.places.widget.AutocompleteActivity
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePickerDefaults
@@ -96,7 +78,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -108,6 +89,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.AutocompleteActivity
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 import com.mobile.micasaestucasa.ui.theme.BorderDivider
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
 import com.mobile.micasaestucasa.ui.theme.CardSurface
@@ -120,7 +112,6 @@ import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Date
 import java.util.Locale
 
 private data class PropertyType(val label: String, val icon: ImageVector)
@@ -130,7 +121,7 @@ private val propertyTypes = listOf(
     PropertyType("Villa", Icons.Rounded.Villa),
     PropertyType("Chalet", Icons.Rounded.Cabin),
     PropertyType("Hotel", Icons.Rounded.Hotel),
-    PropertyType("Spiaggia", Icons.Rounded.BeachAccess),
+    PropertyType("Spiaggia", Icons.Rounded.BeachAccess)
 )
 
 @Composable
@@ -203,7 +194,6 @@ fun CreatePropertyScreen(
             )
         }
 
-
         AnimatedContent(
             targetState = step,
             transitionSpec = {
@@ -258,9 +248,14 @@ fun CreatePropertyScreen(
             Button(
                 onClick = {
                     if (isLastStep) {
-                        if (isEditMode) viewModel.saveEdit(ownerId)
-                        else viewModel.publish(ownerId)
-                    } else viewModel.nextStep()
+                        if (isEditMode) {
+                            viewModel.saveEdit(ownerId)
+                        } else {
+                            viewModel.publish(ownerId)
+                        }
+                    } else {
+                        viewModel.nextStep()
+                    }
                 },
                 enabled = isNextEnabled && submitState !is CreatePropertyState.Submitting,
                 modifier = Modifier.fillMaxWidth().height(54.dp),
@@ -343,7 +338,7 @@ private fun StepLocation(draft: PropertyDraft, vm: CreatePropertyViewModel) {
                         val cityComponent = place.addressComponents?.asList()?.find { it.types.contains("locality") }
                         val city = cityComponent?.name ?: place.name ?: ""
                         if (city.isNotBlank()) vm.updateCity(city)
-                        
+
                         place.latLng?.let {
                             vm.updateLocation(it.latitude, it.longitude)
                         }
@@ -422,7 +417,7 @@ private fun StepLocation(draft: PropertyDraft, vm: CreatePropertyViewModel) {
             ) {
                 if (draft.latitude != 0.0 || draft.longitude != 0.0) {
                     Marker(
-                        state = MarkerState(position = LatLng(draft.latitude, draft.longitude)),
+                        state = rememberMarkerState(position = LatLng(draft.latitude, draft.longitude)),
                         title = "Posizione selezionata"
                     )
                 }
@@ -501,7 +496,9 @@ private fun StepPhotos(draft: PropertyDraft, vm: CreatePropertyViewModel) {
                     val w = if (ratio > 1) maxDim else (maxDim * ratio).toInt()
                     val h = if (ratio > 1) (maxDim / ratio).toInt() else maxDim
                     Bitmap.createScaledBitmap(bmp, w, h, true)
-                } else bmp
+                } else {
+                    bmp
+                }
                 val out = ByteArrayOutputStream()
                 scaled.compress(Bitmap.CompressFormat.JPEG, 75, out)
                 val b64 = Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)

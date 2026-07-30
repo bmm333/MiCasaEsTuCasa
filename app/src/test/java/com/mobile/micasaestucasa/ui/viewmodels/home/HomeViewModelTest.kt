@@ -80,8 +80,6 @@ class HomeViewModelTest {
         }
     }
 
-
-
     @Test
     fun `onSearchQueryChanged triggers search when query is long enough`() = runTest {
         viewModel = HomeViewModel(propertyRepo, wishlistRepo)
@@ -114,7 +112,6 @@ class HomeViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
-
 
     @Test
     fun `onSearchQueryChanged does not trigger search when query is too short`() = runTest {

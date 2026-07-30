@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -48,19 +47,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.mobile.micasaestucasa.domain.model.property.Property
+import com.mobile.micasaestucasa.ui.components.nav.HostBottomNavItems
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.navigation.Route
 import com.mobile.micasaestucasa.ui.theme.BorderDivider
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
 import com.mobile.micasaestucasa.ui.theme.CardSurface
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.viewmodels.property.PropertyUiState
 import com.mobile.micasaestucasa.ui.viewmodels.property.PropertyViewModel
-
-import androidx.navigation.NavController
-import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
-import com.mobile.micasaestucasa.ui.components.nav.HostBottomNavItems
-import com.mobile.micasaestucasa.ui.navigation.Route
 
 @Composable
 fun MyPropertiesScreen(
@@ -105,71 +103,71 @@ fun MyPropertiesScreen(
             // Top bar
             Row(
                 modifier = Modifier.fillMaxWidth().background(CardSurface).padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = Color(0xFF222222))
-            }
-            Text(
-                "Le mie proprietà",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF222222),
-                modifier = Modifier.weight(1f)
-            )
-            IconButton(onClick = onNavigateToCreateProperty) {
-                Icon(Icons.Rounded.Add, null, tint = Primario)
-            }
-        }
-
-        when (val state = uiState) {
-            is PropertyUiState.Loading, is PropertyUiState.Idle -> {
-                Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    CircularProgressIndicator(color = Primario)
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = Color(0xFF222222))
+                }
+                Text(
+                    "Le mie proprietà",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF222222),
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onNavigateToCreateProperty) {
+                    Icon(Icons.Rounded.Add, null, tint = Primario)
                 }
             }
 
-            is PropertyUiState.Error -> {
-                Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    Text(state.message, color = CaptionLabels, textAlign = TextAlign.Center, modifier = Modifier.padding(32.dp))
+            when (val state = uiState) {
+                is PropertyUiState.Loading, is PropertyUiState.Idle -> {
+                    Box(Modifier.fillMaxSize(), Alignment.Center) {
+                        CircularProgressIndicator(color = Primario)
+                    }
                 }
-            }
 
-            is PropertyUiState.OwnerSuccess -> {
-                val properties = state.properties
-                if (properties.isEmpty()) {
-                    EmptyHostState(onNavigateToCreateProperty)
-                } else {
-                    LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        item {
-                            Text(
-                                "${properties.size} annunci pubblicati",
-                                fontSize = 14.sp,
-                                color = CaptionLabels,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                        items(properties, key = { it.id }) { property ->
-                            HostPropertyCard(
-                                property = property,
-                                onClick = { onNavigateToProperty(property.id) },
-                                onEdit = { onNavigateToEditProperty(property.id) }
-                            )
+                is PropertyUiState.Error -> {
+                    Box(Modifier.fillMaxSize(), Alignment.Center) {
+                        Text(state.message, color = CaptionLabels, textAlign = TextAlign.Center, modifier = Modifier.padding(32.dp))
+                    }
+                }
+
+                is PropertyUiState.OwnerSuccess -> {
+                    val properties = state.properties
+                    if (properties.isEmpty()) {
+                        EmptyHostState(onNavigateToCreateProperty)
+                    } else {
+                        LazyColumn(
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            item {
+                                Text(
+                                    "${properties.size} annunci pubblicati",
+                                    fontSize = 14.sp,
+                                    color = CaptionLabels,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            items(properties, key = { it.id }) { property ->
+                                HostPropertyCard(
+                                    property = property,
+                                    onClick = { onNavigateToProperty(property.id) },
+                                    onEdit = { onNavigateToEditProperty(property.id) }
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            else -> {
-                // SearchSuccess or DetailSuccess — shouldn't happen here, just show loader
-                Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    CircularProgressIndicator(color = Primario)
+                else -> {
+                    // SearchSuccess or DetailSuccess — shouldn't happen here, just show loader
+                    Box(Modifier.fillMaxSize(), Alignment.Center) {
+                        CircularProgressIndicator(color = Primario)
+                    }
                 }
             }
-        }
         }
     }
 }

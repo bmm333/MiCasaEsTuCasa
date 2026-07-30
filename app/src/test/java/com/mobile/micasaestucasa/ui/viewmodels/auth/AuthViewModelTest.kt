@@ -3,9 +3,12 @@ package com.mobile.micasaestucasa.ui.viewmodels.auth
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.mobile.micasaestucasa.domain.repository.notification.NotificationRepo
+import com.mobile.micasaestucasa.domain.usecase.auth.DeleteAccountUseCase
 import com.mobile.micasaestucasa.domain.usecase.auth.LoginUseCase
 import com.mobile.micasaestucasa.domain.usecase.auth.LogoutUseCase
 import com.mobile.micasaestucasa.domain.usecase.auth.RegisterUseCase
+import com.mobile.micasaestucasa.domain.usecase.auth.ResetPasswordUseCase
+import com.mobile.micasaestucasa.domain.usecase.auth.SignInWithGoogleUseCase
 import com.mobile.micasaestucasa.domain.usecase.notification.SaveFCMTokenUseCase
 import com.mobile.micasaestucasa.util.MainDispatcherRule
 import io.mockk.coEvery
@@ -42,6 +45,9 @@ class AuthViewModelTest {
     private lateinit var notificationRepo: NotificationRepo
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var viewModel: AuthViewModel
+    private lateinit var resetPasswordUseCase: ResetPasswordUseCase
+    private lateinit var signInWithGoogleUseCase: SignInWithGoogleUseCase
+    private lateinit var deleteAccountUseCase: DeleteAccountUseCase
 
     @Before
     fun setUp() {
@@ -51,15 +57,21 @@ class AuthViewModelTest {
         saveFCMTokenUseCase = mockk(relaxed = true)
         notificationRepo = mockk(relaxed = true)
         firebaseAuth = mockk(relaxed = true)
+        resetPasswordUseCase = mockk(relaxed = true)
+        signInWithGoogleUseCase = mockk(relaxed = true)
+        deleteAccountUseCase = mockk(relaxed = true)
         every { firebaseAuth.currentUser?.uid } returns "user-123"
         coEvery { notificationRepo.getCurrentToken() } returns Result.success("fcm-token")
         viewModel = AuthViewModel(
             loginUseCase,
             registerUseCase,
             logoutUseCase,
+            resetPasswordUseCase,
+            signInWithGoogleUseCase,
             saveFCMTokenUseCase,
             notificationRepo,
-            firebaseAuth
+            firebaseAuth,
+            deleteAccountUseCase
         )
 
         mockkStatic(Log::class)

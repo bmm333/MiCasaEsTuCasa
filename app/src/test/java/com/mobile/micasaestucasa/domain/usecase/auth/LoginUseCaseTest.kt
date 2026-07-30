@@ -1,6 +1,7 @@
 package com.mobile.micasaestucasa.domain.usecase.auth
 
 import com.mobile.micasaestucasa.domain.repository.auth.AuthRepo
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -11,17 +12,20 @@ import org.junit.Test
 
 class LoginUseCaseTest {
     private lateinit var authRepo: AuthRepo
+    private lateinit var userRepo: UserRepo
     private lateinit var loginUseCase: LoginUseCase
 
     @Before
     fun setUp() {
         authRepo = mockk()
-        loginUseCase = LoginUseCase(authRepo)
+        userRepo = mockk()
+        loginUseCase = LoginUseCase(authRepo, userRepo)
     }
 
     @Test
     fun `login con credenziali valide ritorna successo`() = runTest {
         coEvery { authRepo.login(any(), any()) } returns Result.success(Unit)
+        coEvery { userRepo.getCurrentUser() } returns null
         val result = loginUseCase("test@email.com", "Password123!")
         assertTrue(result.isSuccess)
         coVerify(exactly = 1) { authRepo.login("test@email.com", "Password123!") }

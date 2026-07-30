@@ -4,14 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.model.admin.ReportStatus
 import com.mobile.micasaestucasa.domain.model.admin.UserReport
+import com.mobile.micasaestucasa.domain.repository.admin.AdminRepo
+import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import com.mobile.micasaestucasa.domain.usecase.admin.BanUserUseCase
 import com.mobile.micasaestucasa.domain.usecase.admin.GetBookingStatsUseCase
 import com.mobile.micasaestucasa.domain.usecase.admin.GetPendingReports
 import com.mobile.micasaestucasa.domain.usecase.admin.ManageKeywordsUseCase
+import com.mobile.micasaestucasa.domain.usecase.admin.ReactivateUserUseCase
 import com.mobile.micasaestucasa.domain.usecase.admin.SuspendUserUseCase
-import com.mobile.micasaestucasa.domain.repository.admin.AdminRepo
-import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
-import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,7 @@ class AdminViewModel @Inject constructor(
     private val manageKeywordsUseCase: ManageKeywordsUseCase,
     private val suspendUserUseCase: SuspendUserUseCase,
     private val banUserUseCase: BanUserUseCase,
+    private val reactivateUserUseCase: ReactivateUserUseCase,
     private val getBookingStatsUseCase: GetBookingStatsUseCase,
     private val getPendingReports: GetPendingReports,
     private val adminRepo: AdminRepo,
@@ -74,6 +76,8 @@ class AdminViewModel @Inject constructor(
                         _uiState.update { it.copy(error = "Reports: ${e.message}") }
                     }
             }
+
+            launch { loadActionedUsers() }
 
             _uiState.update { it.copy(isLoading = false) }
         }
@@ -144,6 +148,8 @@ class AdminViewModel @Inject constructor(
                             snackbarMessage = "User suspended"
                         )
                     }
+                    // Refresh actioned users list
+                    loadActionedUsers()
                 }
                 .onFailure { e ->
                     _uiState.update { state ->
@@ -169,6 +175,7 @@ class AdminViewModel @Inject constructor(
                             snackbarMessage = "User banned permanently"
                         )
                     }
+                    loadActionedUsers()
                 }
                 .onFailure { e ->
                     _uiState.update { state ->
@@ -220,6 +227,48 @@ class AdminViewModel @Inject constructor(
                     _uiState.update { it.copy(error = "Reports: ${e.message}") }
                 }
         }
+    }
+
+    /** Fetches all suspended/banned users for the User Management tab */
+    suspend fun loadActionedUsers() {
+        adminRepo.getActionedUsers()
+            .onSuccess { users ->
+                _uiState.update { it.copy(actionedUsers = users) }
+            }
+            .onFailure { e ->
+                android.util.Log.e("AdminVM", "loadActionedUsers FAILED: ${e.message}", e)
+                _uiState.update { it.copy(error = "Users: ${e.message}") }
+            }
+    }
+
+    /** Reactivates a suspended user and refreshes the actioned users list */
+    fun reactivateUser(targetUserId: String, adminId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(reactivateInProgress = it.reactivateInProgress + targetUserId) }
+            reactivateUserUseCase(targetUserId, adminId)
+                .onSuccess {
+                    _uiState.update { state ->
+                        state.copy(
+                            actionedUsers = state.actionedUsers.filter { it.id != targetUserId },
+                            reactivateInProgress = state.reactivateInProgress - targetUserId,
+                            snackbarMessage = "User reactivated — properties restored"
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update { state ->
+                        state.copy(
+                            reactivateInProgress = state.reactivateInProgress - targetUserId,
+                            snackbarMessage = "Failed: ${e.message}"
+                        )
+                    }
+                }
+        }
+    }
+
+    /** Refreshes the actioned users list (called when Users tab is selected) */
+    fun refreshActionedUsers() {
+        viewModelScope.launch { loadActionedUsers() }
     }
 
     /** Resolves all user IDs in reports to display names */

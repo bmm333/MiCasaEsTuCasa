@@ -1,5 +1,7 @@
 package com.mobile.micasaestucasa.ui.navigation
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -12,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
@@ -50,6 +53,8 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
     val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
+    val sessionEvent by viewModel.sessionEvent.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     var currentUserId by remember { mutableStateOf(FirebaseAuth.getInstance().currentUser?.uid ?: "") }
     DisposableEffect(Unit) {
@@ -65,6 +70,18 @@ fun AppNavigation(
             CircularProgressIndicator(color = Primario)
         }
         return
+    }
+
+    LaunchedEffect(sessionEvent) {
+        when (sessionEvent) {
+            MainViewModel.SessionEvent.Banned,
+            MainViewModel.SessionEvent.Suspended -> {
+                navController.navigate(Route.Login) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+            else -> {}
+        }
     }
 
     LaunchedEffect(startDestination, pendingNotificationType, pendingNotificationTargetId) {
@@ -252,12 +269,28 @@ fun AppNavigation(
                     navController.navigate(Route.EditProfile)
                 },
                 onNavigateToSettings = { settingType ->
-                    val msg = when (settingType) {
-                        "notifications" -> "Impostazioni notifiche in arrivo"
-                        "privacy" -> "Impostazioni privacy in arrivo"
-                        else -> "Funzionalità in arrivo"
+                    when (settingType) {
+                        "notifications" -> {
+                            val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                            }
+                            context.startActivity(intent)
+                        }
+                        "privacy" -> {
+                            android.widget.Toast.makeText(
+                                context,
+                                "Impostazioni privacy in arrivo",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                        else -> {
+                            android.widget.Toast.makeText(
+                                context,
+                                "Funzionalità in arrivo",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
-                    android.widget.Toast.makeText(navController.context, msg, android.widget.Toast.LENGTH_SHORT).show()
                 }
             )
         }

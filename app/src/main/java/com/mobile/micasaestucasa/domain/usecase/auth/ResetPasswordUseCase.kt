@@ -17,11 +17,13 @@ class ResetPasswordUseCase @Inject constructor(
      * @return Result.success if the email was sent, Result.failure otherwise.
      */
     suspend operator fun invoke(email: String): Result<Unit> {
-        if (email.isBlank())
+        if (email.isBlank()) {
             return Result.failure(IllegalArgumentException("Email obbligatoria"))
+        }
         val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
-        if (!email.matches(emailRegex))
+        if (!email.matches(emailRegex)) {
             return Result.failure(IllegalArgumentException("Email non valida"))
+        }
         return authRepo.resetPassword(email)
     }
 }

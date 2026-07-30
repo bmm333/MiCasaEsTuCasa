@@ -24,7 +24,7 @@ class RegisterUseCase @Inject constructor(
 
         // 1. Create Auth User
         val authResult = authRepo.register(email, password)
-        
+
         return authResult.fold(
             onSuccess = { uid ->
                 // 2. Create Firestore User Document

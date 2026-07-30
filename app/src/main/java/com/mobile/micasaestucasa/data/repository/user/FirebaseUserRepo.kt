@@ -2,6 +2,7 @@ package com.mobile.micasaestucasa.data.repository.user
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.mobile.micasaestucasa.data.dto.user.UserDTO
 import com.mobile.micasaestucasa.data.mapper.user.toDomain
 import com.mobile.micasaestucasa.data.mapper.user.toDto
 import com.mobile.micasaestucasa.domain.model.user.User
@@ -9,7 +10,6 @@ import com.mobile.micasaestucasa.domain.model.user.UserBadge
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
-import com.mobile.micasaestucasa.data.dto.user.UserDTO
 
 class FirebaseUserRepo @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
@@ -102,7 +102,7 @@ class FirebaseUserRepo @Inject constructor(
             Result.failure(e)
         }
     }
-    
+
     override suspend fun updateUserRolesAndBadge(userId: String, roles: List<com.mobile.micasaestucasa.domain.model.user.UserRole>, badge: com.mobile.micasaestucasa.domain.model.user.UserBadge?): Result<Unit> {
         return try {
             val updates = mutableMapOf<String, Any>(

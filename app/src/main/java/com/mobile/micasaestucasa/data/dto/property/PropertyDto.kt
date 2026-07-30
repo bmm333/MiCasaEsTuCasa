@@ -15,5 +15,6 @@ data class PropertyDto(
     val availableFrom: String? = null,
     val availableTo: String? = null,
     val rating: Double? = null,
-    val reviewsCount: Int? = null
+    val reviewsCount: Int? = null,
+    val isOnHold: Boolean? = null
 )

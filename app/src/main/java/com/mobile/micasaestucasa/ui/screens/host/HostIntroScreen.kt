@@ -110,12 +110,27 @@ fun HostIntroScreen(
 
                 Spacer(Modifier.height(40.dp))
 
-                HostStep(1, Icons.Rounded.Home, "Descrivi il tuo posto",
-                    "Categoria, location, indirizzo e quanti ospiti puoi accogliere.", Primario)
-                HostStep(2, Icons.Rounded.AddPhotoAlternate, "Aggiungi foto e titolo",
-                    "Foto di qualità e una descrizione che cattura l'essenza del luogo.", Color(0xFFFC642D))
-                HostStep(3, Icons.Rounded.CurrencyExchange, "Imposta il prezzo",
-                    "Prezzo per notte e date di disponibilità. Modificabili in ogni momento.", Color(0xFF00A699))
+                HostStep(
+                    1,
+                    Icons.Rounded.Home,
+                    "Descrivi il tuo posto",
+                    "Categoria, location, indirizzo e quanti ospiti puoi accogliere.",
+                    Primario
+                )
+                HostStep(
+                    2,
+                    Icons.Rounded.AddPhotoAlternate,
+                    "Aggiungi foto e titolo",
+                    "Foto di qualità e una descrizione che cattura l'essenza del luogo.",
+                    Color(0xFFFC642D)
+                )
+                HostStep(
+                    3,
+                    Icons.Rounded.CurrencyExchange,
+                    "Imposta il prezzo",
+                    "Prezzo per notte e date di disponibilità. Modificabili in ogni momento.",
+                    Color(0xFF00A699)
+                )
 
                 Spacer(Modifier.height(8.dp))
 

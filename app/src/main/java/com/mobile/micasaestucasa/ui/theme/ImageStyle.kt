@@ -18,7 +18,6 @@ sealed class ImageStyle(
     open val cornerPercent: Int
 ) {
 
-
     /** Card principale nel listing: immagine hero grande, angoli leggermente arrotondati. */
     data object PropertyCard : ImageStyle(
         size = ImageSize(width = 360.dp, height = 220.dp),
@@ -31,7 +30,6 @@ sealed class ImageStyle(
         cornerPercent = 8
     )
 
-
     /** Avatar standard nella navbar o nei commenti: quadrato medio → cerchio. */
     data object UserAvatarMedium : ImageStyle(
         size = ImageSize(width = 48.dp, height = 48.dp),
@@ -43,8 +41,6 @@ sealed class ImageStyle(
         size = ImageSize(width = 96.dp, height = 96.dp),
         cornerPercent = 50
     )
-
-
 
     /**
      * Per i casi dove nessuno stile predefinito è adatto.

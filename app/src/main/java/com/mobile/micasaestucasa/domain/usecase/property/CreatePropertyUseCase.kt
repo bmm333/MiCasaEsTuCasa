@@ -2,11 +2,10 @@ package com.mobile.micasaestucasa.domain.usecase.property
 
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import javax.inject.Inject
-
-import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 
 class CreatePropertyUseCase @Inject constructor(
     private val propertyRepo: PropertyRepo,

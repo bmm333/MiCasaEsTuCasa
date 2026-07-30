@@ -85,7 +85,6 @@ class SearchViewModel @Inject constructor(private val searchUseCase: SearchAvali
         executeSearch(query.copy(keywords = base + categories))
     }
 
-
     // choose in map
     fun selectProperty(propertyId: String?) {
         _selectedPropertyId.value = propertyId

@@ -66,11 +66,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.ui.components.property.AmenityItem
 import com.mobile.micasaestucasa.ui.components.property.BookingBottomBar
 import com.mobile.micasaestucasa.ui.components.property.FeatureChip
-import com.mobile.micasaestucasa.ui.components.property.TransportCard
 import com.mobile.micasaestucasa.ui.theme.Accenti
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
 import com.mobile.micasaestucasa.ui.theme.ErrorColor
@@ -336,7 +343,7 @@ fun PropertyDetailContent(
                 SectionDivider()
             }
 
-            // ── 9. Location Section ────────────────────────────────────
+            // ── 9. Location Section with Map ───────────────────────────
             item {
                 LocationSection(
                     city = property.city,
@@ -345,14 +352,7 @@ fun PropertyDetailContent(
                 )
             }
 
-            // ── 10. Getting around ─────────────────────────────────────
-            item {
-                Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
-                    TransportCard()
-                }
-            }
-
-            // ── 11. Bottom spacing ─────────────────────────────────────
+            // ── 10. Bottom spacing ─────────────────────────────────────
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -598,7 +598,7 @@ private fun AmenitiesSection(keywords: List<String>) {
     }
 }
 
-/** Location block with city name and coordinates */
+/** Location block with city name, coordinates and interactive map */
 @Composable
 private fun LocationSection(
     city: String,
@@ -611,7 +611,7 @@ private fun LocationSection(
             .padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
         Text(
-            text = "Location",
+            text = "Posizione",
             style = Typography.titleLarge,
             fontWeight = FontWeight.ExtraBold,
             color = MaterialTheme.colorScheme.onSurface
@@ -636,17 +636,48 @@ private fun LocationSection(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = city.ifEmpty { "Location not specified" },
+                text = city.ifEmpty { "Posizione non specificata" },
                 style = Typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
 
+        // Map — show only if coordinates are available
         if (latitude != 0.0 && longitude != 0.0) {
+            Spacer(modifier = Modifier.height(12.dp))
+            val position = LatLng(latitude, longitude)
+            val cameraPositionState = rememberCameraPositionState {
+                this.position = CameraPosition.fromLatLngZoom(position, 14f)
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(14.dp))
+            ) {
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    uiSettings = MapUiSettings(
+                        zoomControlsEnabled = false,
+                        scrollGesturesEnabled = false,
+                        zoomGesturesEnabled = false,
+                        rotationGesturesEnabled = false,
+                        tiltGesturesEnabled = false
+                    ),
+                    properties = MapProperties()
+                ) {
+                    Marker(
+                        state = MarkerState(position = position),
+                        title = city
+                    )
+                }
+            }
+        } else {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "%.4f, %.4f".format(latitude, longitude),
+                text = "Mappa non disponibile",
                 style = Typography.labelSmall,
                 color = CaptionLabels
             )

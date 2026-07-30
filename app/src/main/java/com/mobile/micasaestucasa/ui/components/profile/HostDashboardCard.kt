@@ -28,12 +28,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mobile.micasaestucasa.ui.theme.Badges
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
 import com.mobile.micasaestucasa.ui.theme.CardSurface
 import com.mobile.micasaestucasa.ui.theme.HeadingText
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Sfumatura
-import com.mobile.micasaestucasa.ui.theme.Success
 import com.mobile.micasaestucasa.ui.viewmodels.user.HostStats
 
 @Composable
@@ -109,7 +109,7 @@ fun HostDashboardCard(
                     modifier = Modifier.weight(1f),
                     value = "€${stats.totalRevenue.toInt()}",
                     label = "Guadagni",
-                    color = Success
+                    color = Badges
                 )
             }
         }

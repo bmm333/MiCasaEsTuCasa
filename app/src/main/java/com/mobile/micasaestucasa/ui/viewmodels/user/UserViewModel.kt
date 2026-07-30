@@ -118,7 +118,7 @@ class UserViewModel @Inject constructor(
                     val bookings = bookingsResult.getOrDefault(emptyList())
 
                     val revenue = bookings
-                        .filter { it.status == BookingStatus.ACCEPTED }
+                        .filter { it.status == BookingStatus.ACCEPTED || it.status == BookingStatus.COMPLETED }
                         .sumOf { it.totalPrice }
 
                     _hostStats.value = HostStats(

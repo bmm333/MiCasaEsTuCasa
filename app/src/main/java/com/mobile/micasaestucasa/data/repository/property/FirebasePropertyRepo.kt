@@ -80,17 +80,19 @@ class FirebasePropertyRepo @Inject constructor(
             var results = snapshot.documents
                 .mapNotNull { it.toObject(PropertyDto::class.java)?.toDomain() }
 
-            val requestedStartDate = LocalDate.parse(startDate)
-            val requestedEndDate = LocalDate.parse(endDate)
+            if (startDate.isNotBlank() && endDate.isNotBlank()) {
+                val requestedStartDate = LocalDate.parse(startDate)
+                val requestedEndDate = LocalDate.parse(endDate)
 
-            results = results.filter { property ->
-                val availableFrom = parseDateOrNull(property.availableFrom)
-                val availableTo = parseDateOrNull(property.availableTo)
+                results = results.filter { property ->
+                    val availableFrom = parseDateOrNull(property.availableFrom)
+                    val availableTo = parseDateOrNull(property.availableTo)
 
-                availableFrom != null &&
-                    availableTo != null &&
-                    !requestedStartDate.isBefore(availableFrom) &&
-                    !requestedEndDate.isAfter(availableTo)
+                    availableFrom != null &&
+                        availableTo != null &&
+                        !requestedStartDate.isBefore(availableFrom) &&
+                        !requestedEndDate.isAfter(availableTo)
+                }
             }
 
             if (keywords.isNotEmpty()) {

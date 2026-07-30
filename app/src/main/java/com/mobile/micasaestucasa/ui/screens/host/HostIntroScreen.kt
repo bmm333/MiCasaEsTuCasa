@@ -29,6 +29,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +46,8 @@ import com.mobile.micasaestucasa.ui.theme.Primario
 @Composable
 fun HostIntroScreen(
     onNavigateBack: () -> Unit,
-    onGetStarted: () -> Unit
+    onGetStarted: () -> Unit,
+    onSkip: () -> Unit = onNavigateBack
 ) {
     Box(
         modifier = Modifier
@@ -141,6 +143,20 @@ fun HostIntroScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = Primario)
                 ) {
                     Text("Inizia", fontWeight = FontWeight.ExtraBold, fontSize = 17.sp, color = Color.White)
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                TextButton(
+                    onClick = onSkip,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Non ora",
+                        fontSize = 15.sp,
+                        color = Color(0xFF767676),
+                        fontWeight = FontWeight.Medium
+                    )
                 }
 
                 Spacer(Modifier.height(40.dp))

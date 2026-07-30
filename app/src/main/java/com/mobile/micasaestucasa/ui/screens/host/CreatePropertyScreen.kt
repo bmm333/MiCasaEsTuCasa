@@ -62,7 +62,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import android.app.Activity
 import android.content.Intent
@@ -422,7 +422,7 @@ private fun StepLocation(draft: PropertyDraft, vm: CreatePropertyViewModel) {
             ) {
                 if (draft.latitude != 0.0 || draft.longitude != 0.0) {
                     Marker(
-                        state = MarkerState(position = LatLng(draft.latitude, draft.longitude)),
+                        state = rememberMarkerState(position = LatLng(draft.latitude, draft.longitude)),
                         title = "Posizione selezionata"
                     )
                 }

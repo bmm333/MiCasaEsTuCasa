@@ -72,7 +72,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.ui.components.property.AmenityItem
@@ -669,7 +669,7 @@ private fun LocationSection(
                     properties = MapProperties()
                 ) {
                     Marker(
-                        state = MarkerState(position = position),
+                        state = rememberMarkerState(position = position),
                         title = city
                     )
                 }

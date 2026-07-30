@@ -3,8 +3,6 @@ package com.mobile.micasaestucasa.ui.viewmodels.property
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.model.property.Property
-import com.mobile.micasaestucasa.domain.model.user.UserBadge
-import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.repository.admin.AdminRepo
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import com.mobile.micasaestucasa.domain.usecase.property.CreatePropertyUseCase
@@ -41,7 +39,12 @@ sealed class CreatePropertyState {
 }
 
 private val KNOWN_PROPERTY_TYPES = listOf(
-    "Appartamento", "Casa", "Villa", "Chalet", "Hotel", "Spiaggia"
+    "Appartamento",
+    "Casa",
+    "Villa",
+    "Chalet",
+    "Hotel",
+    "Spiaggia"
 )
 
 @HiltViewModel

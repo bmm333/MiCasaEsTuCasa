@@ -1,12 +1,15 @@
 package com.mobile.micasaestucasa.data.repository.admin
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.SetOptions
+import com.mobile.micasaestucasa.domain.model.admin.ActionedUser
 import com.mobile.micasaestucasa.domain.model.admin.BookingStats
 import com.mobile.micasaestucasa.domain.model.admin.Keyword
 import com.mobile.micasaestucasa.domain.model.admin.ReportStatus
 import com.mobile.micasaestucasa.domain.model.admin.UserReport
 import com.mobile.micasaestucasa.domain.model.booking.BookingStatus
+import com.mobile.micasaestucasa.domain.model.user.UserStatus
 import com.mobile.micasaestucasa.domain.repository.admin.AdminRepo
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -75,41 +78,161 @@ class FirebaseAdminRepo @Inject constructor(
         }
     }
 
+    /**
+     * Suspends a user and cascades: puts all their properties on hold
+     * and cancels their active bookings (as host).
+     */
     override suspend fun suspendUser(
         targetUserId: String,
         adminId: String
     ): Result<Unit> {
         return try {
-            firestore.collection("users").document(targetUserId)
-                .set(mapOf("status" to "SUSPENDED"), com.google.firebase.firestore.SetOptions.merge()).await()
+            val batch = firestore.batch()
+
+            // Update user status
+            val userRef = firestore.collection("users").document(targetUserId)
+            batch.set(userRef, mapOf("status" to "SUSPENDED"), SetOptions.merge())
+            val propertiesSnap = firestore.collection("properties")
+                .whereEqualTo("ownerId", targetUserId)
+                .get().await()
+            propertiesSnap.documents.forEach { doc ->
+                batch.update(doc.reference, "isOnHold", true)
+            }
+            val bookingsSnap = firestore.collection("bookings")
+                .whereEqualTo("hostId", targetUserId)
+                .whereIn("status", listOf("REQUESTED", "ACCEPTED"))
+                .get().await()
+            bookingsSnap.documents.forEach { doc ->
+                batch.update(
+                    doc.reference,
+                    mapOf(
+                        "status" to "CANCELLED",
+                        "cancellationReason" to "Host account suspended"
+                    )
+                )
+            }
+            batch.commit().await()
+            Log.d("FirebaseAdminRepo", "suspendUser: suspended $targetUserId, ${propertiesSnap.size()} properties on hold, ${bookingsSnap.size()} bookings cancelled")
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("FirebaseAdminRepo", "suspendUser FAILED", e)
             Result.failure(e)
         }
     }
 
+    /**
+     * Permanently bans a user and cascades: puts all their properties on hold
+     * and cancels their active bookings (as host).
+     */
     override suspend fun banUser(
         targetUserId: String,
         adminId: String
     ): Result<Unit> {
         return try {
-            firestore.collection("users").document(targetUserId)
-                .set(mapOf("status" to "BANNED"), com.google.firebase.firestore.SetOptions.merge()).await()
+            val batch = firestore.batch()
+            val userRef = firestore.collection("users").document(targetUserId)
+            batch.set(userRef, mapOf("status" to "BANNED"), SetOptions.merge())
+            val propertiesSnap = firestore.collection("properties")
+                .whereEqualTo("ownerId", targetUserId)
+                .get().await()
+            propertiesSnap.documents.forEach { doc ->
+                batch.update(doc.reference, "isOnHold", true)
+            }
+            val bookingsSnap = firestore.collection("bookings")
+                .whereEqualTo("hostId", targetUserId)
+                .whereIn("status", listOf("REQUESTED", "ACCEPTED"))
+                .get().await()
+            bookingsSnap.documents.forEach { doc ->
+                batch.update(
+                    doc.reference,
+                    mapOf(
+                        "status" to "CANCELLED",
+                        "cancellationReason" to "Host account banned"
+                    )
+                )
+            }
+            batch.commit().await()
+            Log.d("FirebaseAdminRepo", "banUser: banned $targetUserId, ${propertiesSnap.size()} properties on hold, ${bookingsSnap.size()} bookings cancelled")
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("FirebaseAdminRepo", "banUser FAILED", e)
             Result.failure(e)
         }
     }
 
+    /**
+     * Reactivates a suspended user and reverses the cascade:
+     * removes hold from all their properties.
+     */
     override suspend fun reactivateUser(
         targetUserId: String,
         adminId: String
     ): Result<Unit> {
         return try {
-            firestore.collection("users").document(targetUserId)
-                .set(mapOf("status" to "ACTIVE"), com.google.firebase.firestore.SetOptions.merge()).await()
+            val batch = firestore.batch()
+            val userRef = firestore.collection("users").document(targetUserId)
+            batch.set(userRef, mapOf("status" to "ACTIVE"), SetOptions.merge())
+            val propertiesSnap = firestore.collection("properties")
+                .whereEqualTo("ownerId", targetUserId)
+                .get().await()
+            propertiesSnap.documents.forEach { doc ->
+                batch.update(doc.reference, "isOnHold", false)
+            }
+            batch.commit().await()
+            Log.d("FirebaseAdminRepo", "reactivateUser: reactivated $targetUserId, ${propertiesSnap.size()} properties restored")
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e("FirebaseAdminRepo", "reactivateUser FAILED", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Fetches all users with SUSPENDED or BANNED status for the admin panel.
+     */
+    override suspend fun getActionedUsers(): Result<List<ActionedUser>> {
+        return try {
+            val suspendedSnap = firestore.collection("users")
+                .whereEqualTo("status", "SUSPENDED")
+                .get().await()
+            val bannedSnap = firestore.collection("users")
+                .whereEqualTo("status", "BANNED")
+                .get().await()
+
+            val allDocs = suspendedSnap.documents + bannedSnap.documents
+            val users = allDocs.mapNotNull { doc ->
+                val id = doc.getString("id") ?: doc.id
+                val name = doc.getString("name") ?: ""
+                val email = doc.getString("email") ?: ""
+                val statusStr = doc.getString("status") ?: return@mapNotNull null
+                val status = try {
+                    UserStatus.valueOf(statusStr)
+                } catch (_: Exception) {
+                    return@mapNotNull null
+                }
+
+                val propsOnHold = try {
+                    firestore.collection("properties")
+                        .whereEqualTo("ownerId", id)
+                        .whereEqualTo("isOnHold", true)
+                        .get().await().size()
+                } catch (_: Exception) {
+                    0
+                }
+
+                ActionedUser(
+                    id = id,
+                    name = name,
+                    email = email,
+                    status = status,
+                    propertiesOnHold = propsOnHold
+                )
+            }
+
+            Log.d("FirebaseAdminRepo", "getActionedUsers: found ${users.size} actioned users")
+            Result.success(users)
+        } catch (e: Exception) {
+            Log.e("FirebaseAdminRepo", "getActionedUsers FAILED", e)
             Result.failure(e)
         }
     }
@@ -122,10 +245,10 @@ class FirebaseAdminRepo @Inject constructor(
             val reports = snapshot.documents.mapNotNull {
                 it.toObject(UserReport::class.java)
             }.sortedByDescending { it.createdAt }
-            android.util.Log.d("FirebaseAdminRepo", "getAllReports: found ${reports.size} reports")
+            Log.d("FirebaseAdminRepo", "getAllReports: found ${reports.size} reports")
             Result.success(reports)
         } catch (e: Exception) {
-            android.util.Log.e("FirebaseAdminRepo", "getAllReports FAILED", e)
+            Log.e("FirebaseAdminRepo", "getAllReports FAILED", e)
             Result.failure(e)
         }
     }
@@ -173,10 +296,10 @@ class FirebaseAdminRepo @Inject constructor(
             val reports = snapshot.documents.mapNotNull {
                 it.toObject(UserReport::class.java)
             }.sortedByDescending { it.createdAt }
-            android.util.Log.d("FirebaseAdminRepo", "getPendingReports: found ${reports.size} reports")
+            Log.d("FirebaseAdminRepo", "getPendingReports: found ${reports.size} reports")
             Result.success(reports)
         } catch (e: Exception) {
-            android.util.Log.e("FirebaseAdminRepo", "getPendingReports FAILED", e)
+            Log.e("FirebaseAdminRepo", "getPendingReports FAILED", e)
             Result.failure(e)
         }
     }

@@ -81,6 +81,9 @@ class FirebaseBookingRepoTest {
         val lockRef = mockk<DocumentReference>()
         val lockDoc = mockk<DocumentSnapshot>()
         val bookingDoc = mockk<DocumentReference>()
+        val propertyCollection = mockk<CollectionReference>()
+        val propertyRef = mockk<DocumentReference>()
+        val propertyDoc = mockk<DocumentSnapshot>()
 
         every { bookingsCollection.whereEqualTo("idempotencyKey", "idem-1") } returns idempotencyQuery
         every { idempotencyQuery.get() } returns Tasks.forResult(idempotencySnapshot)
@@ -90,6 +93,11 @@ class FirebaseBookingRepoTest {
         every { lockCollection.document("prop123") } returns lockRef
         every { transaction.get(lockRef) } returns lockDoc
         every { lockDoc.getLong("lockedUntill") } returns 0L
+
+        every { firestore.collection("properties") } returns propertyCollection
+        every { propertyCollection.document("prop123") } returns propertyRef
+        every { transaction.get(propertyRef) } returns propertyDoc
+        every { propertyDoc.getBoolean("isOnHold") } returns false
 
         every { bookingsCollection.document() } returns bookingDoc
         every { bookingDoc.id } returns "new-booking-id"

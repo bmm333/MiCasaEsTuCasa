@@ -1,29 +1,28 @@
 package com.mobile.micasaestucasa.ui.viewmodels.user
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.mobile.micasaestucasa.domain.model.user.User
-import com.mobile.micasaestucasa.domain.repository.user.UserRepo
-import com.mobile.micasaestucasa.domain.util.Resource
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-import com.mobile.micasaestucasa.domain.model.user.UserRole
-import com.mobile.micasaestucasa.domain.model.booking.BookingStatus
-import com.mobile.micasaestucasa.domain.repository.booking.BookingRepo
-import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
-import kotlinx.coroutines.async
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.mobile.micasaestucasa.domain.model.booking.BookingStatus
+import com.mobile.micasaestucasa.domain.model.user.User
+import com.mobile.micasaestucasa.domain.model.user.UserRole
+import com.mobile.micasaestucasa.domain.repository.booking.BookingRepo
+import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+import com.mobile.micasaestucasa.domain.util.Resource
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class HostStats(
     val propertyCount: Int = 0,
@@ -79,16 +78,16 @@ class UserViewModel @Inject constructor(
                 }
                 _user.value = user
                 _userState.value = Resource.Success(user)
-                
+
                 val hasOwnerRole = user.roles.contains(UserRole.OWNER)
-                
+
                 if (hasOwnerRole) {
                     persistIsHost(true)
                     loadHostStats(user.id)
                 } else {
                     val propertiesResult = propertyRepo.getPropertiesByOwner(user.id)
                     val hasProperties = propertiesResult.getOrDefault(emptyList()).isNotEmpty()
-                    
+
                     if (hasProperties) {
                         val newRoles = user.roles + UserRole.OWNER
                         userRepo.updateUserRolesAndBadge(user.id, newRoles, com.mobile.micasaestucasa.domain.model.user.UserBadge.NEW_HOST)

@@ -1,6 +1,8 @@
 package com.mobile.micasaestucasa.ui.viewmodels.wishlist
 
 import app.cash.turbine.test
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
 import com.mobile.micasaestucasa.domain.usecase.wishlist.GetWishlistDataUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -14,9 +16,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-
-import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
-import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WishlistViewModelTest {

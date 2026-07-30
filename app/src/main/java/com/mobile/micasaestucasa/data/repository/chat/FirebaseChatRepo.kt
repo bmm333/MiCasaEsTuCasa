@@ -42,6 +42,13 @@ class FirebaseChatRepo @Inject constructor(private val firestore: FirebaseFirest
         imageUrl: String?
     ): Result<Message> {
         return try {
+            val userRef = firestore.collection("users").document(senderId)
+            val userDoc = userRef.get().await()
+            val status = userDoc.getString("status")
+            if (status == "BANNED" || status == "SUSPENDED") {
+                return Result.failure(Exception("Non puoi inviare messaggi. Account $status"))
+            }
+
             val messageRef = conversationsCollection
                 .document(conversationId)
                 .collection("messages")

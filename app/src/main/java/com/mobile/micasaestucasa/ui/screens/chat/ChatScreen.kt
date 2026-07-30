@@ -1,23 +1,54 @@
 package com.mobile.micasaestucasa.ui.screens.chat
 
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.Composable
-import com.mobile.micasaestucasa.ui.viewmodels.chat.ChatViewModel
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.rounded.Send
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Flag
+import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,10 +60,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.mobile.micasaestucasa.domain.model.chat.Message
 import com.mobile.micasaestucasa.ui.components.report.ReportDialog
-import com.mobile.micasaestucasa.ui.theme.*
+import com.mobile.micasaestucasa.ui.theme.BorderDivider
+import com.mobile.micasaestucasa.ui.theme.CaptionLabels
+import com.mobile.micasaestucasa.ui.theme.CardSurface
+import com.mobile.micasaestucasa.ui.theme.ErrorColor
+import com.mobile.micasaestucasa.ui.theme.HeadingText
+import com.mobile.micasaestucasa.ui.theme.Primario
+import com.mobile.micasaestucasa.ui.theme.ScreenBackground
+import com.mobile.micasaestucasa.ui.theme.Secondary
+import com.mobile.micasaestucasa.ui.theme.Sfumatura
+import com.mobile.micasaestucasa.ui.theme.SkeletonLoader
+import com.mobile.micasaestucasa.ui.viewmodels.chat.ChatViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +97,6 @@ fun ChatScreen(
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var showReportDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-
 
     val activeConversationId = vmConversationId.ifBlank { conversationId }
 
@@ -235,15 +276,16 @@ fun ChatScreen(
 @Composable
 private fun MessageBubble(message: Message, isMine: Boolean) {
     val bubbleColor = if (isMine) Primario else CardSurface
-    val textColor   = if (isMine) CardSurface else HeadingText
-    val alignment   = if (isMine) Alignment.End else Alignment.Start
-    val shape = if (isMine)
+    val textColor = if (isMine) CardSurface else HeadingText
+    val alignment = if (isMine) Alignment.End else Alignment.Start
+    val shape = if (isMine) {
         RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp)
-    else
+    } else {
         RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp)
+    }
 
     Column(
-        modifier            = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = alignment
     ) {
         Column(
@@ -255,10 +297,10 @@ private fun MessageBubble(message: Message, isMine: Boolean) {
         ) {
             if (!message.imageUrl.isNullOrBlank()) {
                 AsyncImage(
-                    model              = message.imageUrl,
+                    model = message.imageUrl,
                     contentDescription = "Foto",
-                    contentScale       = ContentScale.Crop,
-                    modifier           = Modifier
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp)
                         .clip(RoundedCornerShape(12.dp))
@@ -270,8 +312,8 @@ private fun MessageBubble(message: Message, isMine: Boolean) {
 
             if (message.text.isNotBlank()) {
                 Text(
-                    text     = message.text,
-                    color    = textColor,
+                    text = message.text,
+                    color = textColor,
                     fontSize = 15.sp,
                     lineHeight = 21.sp
                 )
@@ -280,14 +322,13 @@ private fun MessageBubble(message: Message, isMine: Boolean) {
 
         Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text     = formatTime(message.timestamp),
+            text = formatTime(message.timestamp),
             fontSize = 10.sp,
-            color    = CaptionLabels,
+            color = CaptionLabels,
             modifier = Modifier.padding(horizontal = 4.dp)
         )
     }
 }
-
 
 @Composable
 private fun ChatInputBar(
@@ -303,15 +344,14 @@ private fun ChatInputBar(
 
     Surface(color = CardSurface, shadowElevation = 8.dp) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-
             // preview immagine selezionata
             if (selectedImage != null) {
                 Box(modifier = Modifier.size(72.dp).clip(RoundedCornerShape(12.dp))) {
                     AsyncImage(
-                        model              = selectedImage,
+                        model = selectedImage,
                         contentDescription = "Preview",
-                        contentScale       = ContentScale.Crop,
-                        modifier           = Modifier.fillMaxSize()
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
                     // overlay caricamento
                     if (isUploading) {
@@ -322,7 +362,7 @@ private fun ChatInputBar(
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
-                                color    = CardSurface,
+                                color = CardSurface,
                                 modifier = Modifier.size(24.dp),
                                 strokeWidth = 2.dp
                             )
@@ -330,15 +370,16 @@ private fun ChatInputBar(
                     } else {
                         // bottone rimuovi — solo se non sta caricando
                         IconButton(
-                            onClick  = onImageClear,
+                            onClick = onImageClear,
                             modifier = Modifier
                                 .size(20.dp)
                                 .align(Alignment.TopEnd)
                                 .background(ErrorColor, CircleShape)
                         ) {
                             Icon(
-                                Icons.Rounded.Close, null,
-                                tint     = CardSurface,
+                                Icons.Rounded.Close,
+                                null,
+                                tint = CardSurface,
                                 modifier = Modifier.size(12.dp)
                             )
                         }
@@ -350,8 +391,8 @@ private fun ChatInputBar(
             // errore upload
             if (imageUploadState is com.mobile.micasaestucasa.ui.viewmodels.chat.ImageUploadState.Error) {
                 Text(
-                    text     = imageUploadState.message,
-                    color    = ErrorColor,
+                    text = imageUploadState.message,
+                    color = ErrorColor,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
@@ -360,16 +401,17 @@ private fun ChatInputBar(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // bottone galleria — disabilitato durante upload
                 IconButton(
-                    onClick  = onImagePick,
-                    enabled  = !isUploading,
+                    onClick = onImagePick,
+                    enabled = !isUploading,
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(if (isUploading) BorderDivider else SkeletonLoader)
                 ) {
                     Icon(
-                        Icons.Rounded.Image, null,
-                        tint     = if (isUploading) BorderDivider else CaptionLabels,
+                        Icons.Rounded.Image,
+                        null,
+                        tint = if (isUploading) BorderDivider else CaptionLabels,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -377,25 +419,25 @@ private fun ChatInputBar(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 OutlinedTextField(
-                    value         = text,
+                    value = text,
                     onValueChange = onTextChange,
-                    enabled       = !isUploading,
-                    placeholder   = {
+                    enabled = !isUploading,
+                    placeholder = {
                         Text(
                             if (isUploading) "Caricamento..." else "Scrivi un messaggio...",
                             color = BorderDivider
                         )
                     },
-                    shape   = RoundedCornerShape(24.dp),
-                    colors  = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor      = Primario,
-                        unfocusedBorderColor    = BorderDivider,
-                        focusedContainerColor   = ScreenBackground,
+                    shape = RoundedCornerShape(24.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Primario,
+                        unfocusedBorderColor = BorderDivider,
+                        focusedContainerColor = ScreenBackground,
                         unfocusedContainerColor = ScreenBackground,
-                        cursorColor             = Primario
+                        cursorColor = Primario
                     ),
-                    modifier   = Modifier.weight(1f),
-                    maxLines   = 4,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 4,
                     singleLine = false
                 )
 
@@ -403,8 +445,8 @@ private fun ChatInputBar(
 
                 val canSend = (text.isNotBlank() || selectedImage != null) && !isUploading
                 IconButton(
-                    onClick  = onSend,
-                    enabled  = canSend,
+                    onClick = onSend,
+                    enabled = canSend,
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
@@ -412,14 +454,15 @@ private fun ChatInputBar(
                 ) {
                     if (isUploading) {
                         CircularProgressIndicator(
-                            color       = CardSurface,
-                            modifier    = Modifier.size(18.dp),
+                            color = CardSurface,
+                            modifier = Modifier.size(18.dp),
                             strokeWidth = 2.dp
                         )
                     } else {
                         Icon(
-                            Icons.AutoMirrored.Rounded.Send, null,
-                            tint     = if (canSend) CardSurface else CaptionLabels,
+                            Icons.AutoMirrored.Rounded.Send,
+                            null,
+                            tint = if (canSend) CardSurface else CaptionLabels,
                             modifier = Modifier.size(20.dp)
                         )
                     }

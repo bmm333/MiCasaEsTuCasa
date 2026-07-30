@@ -2,7 +2,6 @@ package com.mobile.micasaestucasa.data.repository.storage
 
 import android.net.Uri
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -36,7 +35,7 @@ class FirebaseStorageRepository @Inject constructor(
         return try {
             val timestamp = System.currentTimeMillis()
             val ref = storage.reference
-                .child("chat/$conversationId/${timestamp}_${senderId}.jpg")
+                .child("chat/$conversationId/${timestamp}_$senderId.jpg")
 
             val metadata = com.google.firebase.storage.StorageMetadata.Builder()
                 .setContentType("image/jpeg")
@@ -76,7 +75,7 @@ class FirebaseStorageRepository @Inject constructor(
         return try {
             val ref = storage.reference
                 .child("profile_photos/$userId.jpg")
-                
+
             val metadata = com.google.firebase.storage.StorageMetadata.Builder()
                 .setContentType("image/jpeg")
                 .build()
@@ -96,7 +95,7 @@ class FirebaseStorageRepository @Inject constructor(
                         cont.resumeWithException(exception)
                     }
             }
-            
+
             Result.success(downloadUrl)
         } catch (e: Exception) {
             Result.failure(e)

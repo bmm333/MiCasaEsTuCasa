@@ -1,12 +1,6 @@
 package com.mobile.micasaestucasa.ui.screens.search
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -108,8 +101,8 @@ import java.util.Date
 import java.util.Locale
 
 private val sortOrderLabels = mapOf(
-    SearchSortOrder.RELEVANCE  to "Rilevanza",
-    SearchSortOrder.PRICE_ASC  to "Prezzo: basso → alto",
+    SearchSortOrder.RELEVANCE to "Rilevanza",
+    SearchSortOrder.PRICE_ASC to "Prezzo: basso → alto",
     SearchSortOrder.PRICE_DESC to "Prezzo: alto → basso",
     SearchSortOrder.RATING_DESC to "Valutazione"
 )
@@ -259,10 +252,14 @@ fun SearchScreen(
                         Icon(Icons.Default.LocationOn, contentDescription = null, tint = Primario)
                     },
                     trailingIcon = if (city.isNotEmpty()) {
-                        { IconButton(onClick = { city = "" }) {
-                            Icon(Icons.Default.Close, contentDescription = "Cancella", tint = CaptionLabels)
-                        }}
-                    } else null,
+                        {
+                            IconButton(onClick = { city = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Cancella", tint = CaptionLabels)
+                            }
+                        }
+                    } else {
+                        null
+                    },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()

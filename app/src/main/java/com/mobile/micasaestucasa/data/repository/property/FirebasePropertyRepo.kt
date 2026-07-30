@@ -100,6 +100,8 @@ class FirebasePropertyRepo @Inject constructor(
                     keywords.all { kw -> property.keywords.any { it.equals(kw, ignoreCase = true) } }
                 }
             }
+
+            results = results.filter { !it.isOnHold }
             Result.success(results)
         } catch (e: Exception) {
             Result.failure(e)
@@ -111,6 +113,9 @@ class FirebasePropertyRepo @Inject constructor(
             val doc = propertiesCollection.document(id).get().await()
             val property = doc.toObject(PropertyDto::class.java)?.toDomain()
                 ?: return Result.failure(Exception("Proprietà non trovata"))
+            if (property.isOnHold) {
+                return Result.failure(Exception("Proprietà non disponibile"))
+            }
             Result.success(property)
         } catch (e: Exception) {
             Result.failure(e)
@@ -127,6 +132,7 @@ class FirebasePropertyRepo @Inject constructor(
             if (snapshot != null) {
                 val properties = snapshot.documents
                     .mapNotNull { it.toObject(PropertyDto::class.java)?.toDomain() }
+                    .filter { !it.isOnHold }
                 trySend(Resource.Success(properties))
             }
         }

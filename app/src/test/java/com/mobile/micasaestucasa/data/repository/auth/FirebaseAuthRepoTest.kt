@@ -4,6 +4,7 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FirebaseFirestore
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -17,7 +18,8 @@ import org.junit.Test
 class FirebaseAuthRepoTest {
 
     private val firebaseAuth = mockk<FirebaseAuth>()
-    private val repo = FirebaseAuthRepo(firebaseAuth)
+    private val firestore = mockk<FirebaseFirestore>()
+    private val repo = FirebaseAuthRepo(firebaseAuth, firestore)
 
     @Test
     fun `login riuscito ritorna success`() = runTest {
@@ -50,7 +52,7 @@ class FirebaseAuthRepoTest {
         val mockAuthResult = mockk<AuthResult> {
             every { user } returns mockUser
         }
-        
+
         every {
             firebaseAuth.createUserWithEmailAndPassword("test@email.com", "Password123!")
         } returns Tasks.forResult(mockAuthResult)

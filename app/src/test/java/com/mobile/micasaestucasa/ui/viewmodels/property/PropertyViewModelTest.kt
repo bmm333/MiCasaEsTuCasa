@@ -2,15 +2,17 @@ package com.mobile.micasaestucasa.ui.viewmodels.property
 
 import app.cash.turbine.test
 import com.mobile.micasaestucasa.domain.model.property.Property
+import com.mobile.micasaestucasa.domain.model.user.User
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
+import com.mobile.micasaestucasa.domain.usecase.admin.AddUserReportUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.CreatePropertyUseCase
+import com.mobile.micasaestucasa.domain.usecase.property.DeletePropertyUseCase
+import com.mobile.micasaestucasa.domain.usecase.property.DemoteHostUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetOwnerPropertiesUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.SearchPropertiesUseCase
 import com.mobile.micasaestucasa.util.MainDispatcherRule
-import com.mobile.micasaestucasa.domain.usecase.admin.AddUserReportUseCase
-import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
-import com.mobile.micasaestucasa.domain.repository.user.UserRepo
-import com.mobile.micasaestucasa.domain.model.user.User
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -37,8 +39,8 @@ class PropertyViewModelTest {
     private val addUserReportUseCase: AddUserReportUseCase = mockk(relaxed = true)
     private val wishlistRepo: WhishlistRepo = mockk(relaxed = true)
     private val userRepo: UserRepo = mockk(relaxed = true)
-    private val deletePropertyUseCase: com.mobile.micasaestucasa.domain.usecase.property.DeletePropertyUseCase = mockk(relaxed = true)
-    private val demoteHostUseCase: com.mobile.micasaestucasa.domain.usecase.property.DemoteHostUseCase = mockk(relaxed = true)
+    private val deletePropertyUseCase: DeletePropertyUseCase = mockk(relaxed = true)
+    private val demoteHostUseCase: DemoteHostUseCase = mockk(relaxed = true)
 
     private val sampleProperty = Property(
         id = "prop-1",

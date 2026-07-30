@@ -5,6 +5,7 @@ import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.repository.notification.NotificationRepo
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+import com.mobile.micasaestucasa.domain.session.SessionManager
 import com.mobile.micasaestucasa.domain.usecase.notification.SaveFCMTokenUseCase
 import com.mobile.micasaestucasa.ui.navigation.Route
 import io.mockk.coEvery
@@ -41,10 +42,11 @@ class MainViewModelTest {
         firebaseAuth: FirebaseAuth,
         userRepo: UserRepo
     ): MainViewModel {
+        val sessionManager = mockk<SessionManager>(relaxed = true)
         val saveFCMTokenUseCase = mockk<SaveFCMTokenUseCase>(relaxed = true)
         val notificationRepo = mockk<NotificationRepo>(relaxed = true)
         coEvery { notificationRepo.getCurrentToken() } returns Result.success("token")
-        return MainViewModel(firebaseAuth, userRepo, saveFCMTokenUseCase, notificationRepo)
+        return MainViewModel(firebaseAuth, userRepo, sessionManager, saveFCMTokenUseCase, notificationRepo)
     }
 
     @Test

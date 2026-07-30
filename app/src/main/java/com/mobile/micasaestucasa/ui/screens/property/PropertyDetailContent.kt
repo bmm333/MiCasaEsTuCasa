@@ -1,8 +1,6 @@
 package com.mobile.micasaestucasa.ui.screens.property
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Euro
 import androidx.compose.material.icons.rounded.LocationOn
-import androidx.compose.material.icons.rounded.Map
 import androidx.compose.material.icons.rounded.People
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -40,6 +37,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.ui.theme.BorderDivider
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
@@ -47,7 +45,6 @@ import com.mobile.micasaestucasa.ui.theme.Caution
 import com.mobile.micasaestucasa.ui.theme.HeadingText
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.SecondaryText
-import com.mobile.micasaestucasa.ui.theme.SkeletonLoader
 
 @Composable
 fun PropertyDetailContent(

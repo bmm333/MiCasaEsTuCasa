@@ -68,6 +68,17 @@ class FirebaseBookingRepo @Inject constructor(
                         FirebaseFirestoreException.Code.ABORTED
                     )
                 }
+
+                // Check if property is on hold (owner is banned)
+                val propertyRef = firestore.collection("properties").document(booking.propertyId)
+                val propertyDoc = transaction.get(propertyRef)
+                val isOnHold = propertyDoc.getBoolean("isOnHold") ?: false
+                if (isOnHold) {
+                    throw FirebaseFirestoreException(
+                        "Property is not available for booking",
+                        FirebaseFirestoreException.Code.FAILED_PRECONDITION
+                    )
+                }
                 val docRef = bookingsCollection.document()
                 newBookingId = docRef.id
                 val dto = BookingDto(

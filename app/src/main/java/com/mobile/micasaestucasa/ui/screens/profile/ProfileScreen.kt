@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -29,12 +28,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,6 +44,7 @@ import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.util.Resource
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.profile.DeleteAccountSection
 import com.mobile.micasaestucasa.ui.components.profile.HostBanner
 import com.mobile.micasaestucasa.ui.components.profile.HostDashboardCard
 import com.mobile.micasaestucasa.ui.components.profile.PersonalInfoCard
@@ -59,8 +57,8 @@ import com.mobile.micasaestucasa.ui.theme.ScreenBackground
 import com.mobile.micasaestucasa.ui.viewmodels.auth.AuthViewModel
 import com.mobile.micasaestucasa.ui.viewmodels.user.HostStats
 import com.mobile.micasaestucasa.ui.viewmodels.user.UserViewModel
-import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistViewModel
 import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistUiState
+import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistViewModel
 
 @Composable
 fun ProfileScreen(
@@ -102,7 +100,7 @@ fun ProfileScreen(
         userState = userState,
         wishlistState = wishlistState,
         navController = navController,
-        onLogout = { 
+        onLogout = {
             authViewModel.logout()
             onLogoutNavigate()
         },
@@ -142,13 +140,13 @@ fun ProfileContent(
                 selectedRoute = "profile_screen",
                 onItemSelected = { route ->
                     when (route) {
-                        "home_screen"     -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Home) {
+                        "home_screen" -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Home) {
                             popUpTo(0)
                         }
-                        "saved_screen"    -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Wishlist)
-                        "trips_screen"    -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Trips)
+                        "saved_screen" -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Wishlist)
+                        "trips_screen" -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Trips)
                         "messages_screen" -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.ConversationList)
-                        "profile_screen"  -> { /* already here */ }
+                        "profile_screen" -> { /* already here */ }
                     }
                 }
             )
@@ -286,6 +284,14 @@ fun ProfileContent(
                                     onClick = { onNavigateToSettings("privacy") }
                                 )
                             }
+                        }
+                    }
+
+                    item {
+                        PaddingWrapper {
+                            DeleteAccountSection(
+                                onAccountDeleted = { onLogout() }
+                            )
                         }
                     }
 

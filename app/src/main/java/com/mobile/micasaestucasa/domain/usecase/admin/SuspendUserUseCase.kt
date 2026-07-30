@@ -32,4 +32,3 @@ class SuspendUserUseCase @Inject constructor(
         return adminRepo.suspendUser(targetUserId, adminId)
     }
 }
-

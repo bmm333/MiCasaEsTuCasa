@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -30,6 +29,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.KingBed
 import androidx.compose.material.icons.filled.Kitchen
+import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material.icons.filled.LocalLaundryService
 import androidx.compose.material.icons.filled.LocalParking
 import androidx.compose.material.icons.filled.LocationOn
@@ -37,7 +37,6 @@ import androidx.compose.material.icons.filled.Pool
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -96,7 +95,7 @@ private val keywordIconMap: Map<String, ImageVector> = mapOf(
     "kitchen" to Icons.Default.Kitchen,
     "laundry" to Icons.Default.LocalLaundryService,
     "workspace" to Icons.Default.Laptop,
-    "bathtub" to Icons.Default.Bathtub,
+    "bathtub" to Icons.Default.Bathtub
 )
 
 private fun iconForKeyword(keyword: String): ImageVector {
@@ -491,8 +490,11 @@ private fun ImageCarousel(
                             .size(if (isSelected) 8.dp else 6.dp)
                             .clip(CircleShape)
                             .background(
-                                if (isSelected) Color.White
-                                else Color.White.copy(alpha = 0.4f)
+                                if (isSelected) {
+                                    Color.White
+                                } else {
+                                    Color.White.copy(alpha = 0.4f)
+                                }
                             )
                     )
                 }
@@ -696,12 +698,12 @@ fun PropertyDetailScreenPreview() {
         ownerId = "owner_123",
         title = "The Earth & Clay Villa",
         description = "Perched on the edges of the ancient caldera, The Earth & Clay Villa is one " +
-                "better to be believed with one's eyes. Every corner has been curated with raw, " +
-                "minimal materials — dark travertine stone, hand-woven linens and local pottery — " +
-                "to create an atmosphere of profound tranquility.\n\n" +
-                "Wake up to the scent of wild sage and sea salt. This expansive terrace offers " +
-                "the kind of ocean view of the Aegean, where the blue of the sea melts into the " +
-                "sky in an endless horizon. This isn't just a place to stay; it is an invitation to breathe.",
+            "better to be believed with one's eyes. Every corner has been curated with raw, " +
+            "minimal materials — dark travertine stone, hand-woven linens and local pottery — " +
+            "to create an atmosphere of profound tranquility.\n\n" +
+            "Wake up to the scent of wild sage and sea salt. This expansive terrace offers " +
+            "the kind of ocean view of the Aegean, where the blue of the sea melts into the " +
+            "sky in an endless horizon. This isn't just a place to stay; it is an invitation to breathe.",
         latitude = 36.4161,
         longitude = 25.4322,
         city = "Santorini, Greece",

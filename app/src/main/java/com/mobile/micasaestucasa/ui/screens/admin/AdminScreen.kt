@@ -1,6 +1,5 @@
 package com.mobile.micasaestucasa.ui.screens.admin
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -24,16 +23,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Gavel
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.material.icons.rounded.People
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Tag
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -74,9 +78,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mobile.micasaestucasa.domain.model.admin.ActionedUser
 import com.mobile.micasaestucasa.domain.model.admin.BookingStats
 import com.mobile.micasaestucasa.domain.model.admin.Keyword
 import com.mobile.micasaestucasa.domain.model.admin.UserReport
+import com.mobile.micasaestucasa.domain.model.user.UserStatus
 import com.mobile.micasaestucasa.ui.theme.Badges
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
 import com.mobile.micasaestucasa.ui.theme.CardSurface
@@ -101,17 +107,18 @@ fun AdminScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(
         "Dashboard" to Icons.Rounded.Dashboard,
-        "Reports"   to Icons.Rounded.Flag,
-        "Keywords"  to Icons.Rounded.Tag,
-        "Users"     to Icons.Rounded.People
+        "Reports" to Icons.Rounded.Flag,
+        "Keywords" to Icons.Rounded.Tag,
+        "Users" to Icons.Rounded.People
     )
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) { viewModel.loadAll(currentUserId) }
 
-    // Refresh reports when the Reports tab is (re)selected
+    // Refresh data when specific tabs are (re)selected
     LaunchedEffect(selectedTab) {
         if (selectedTab == 1) viewModel.refreshReports(currentUserId)
+        if (selectedTab == 3) viewModel.refreshActionedUsers()
     }
 
     LaunchedEffect(uiState.snackbarMessage) {
@@ -167,7 +174,8 @@ fun AdminScreen(
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    icon, null,
+                                    icon,
+                                    null,
                                     modifier = Modifier.size(16.dp),
                                     tint = if (selectedTab == index) Primario else CaptionLabels
                                 )
@@ -175,8 +183,11 @@ fun AdminScreen(
                                 Text(
                                     title,
                                     fontSize = 12.sp,
-                                    fontWeight = if (selectedTab == index) FontWeight.SemiBold
-                                    else FontWeight.Normal,
+                                    fontWeight = if (selectedTab == index) {
+                                        FontWeight.SemiBold
+                                    } else {
+                                        FontWeight.Normal
+                                    },
                                     color = if (selectedTab == index) Primario else CaptionLabels
                                 )
                             }
@@ -210,7 +221,11 @@ fun AdminScreen(
                     onDelete = { id -> viewModel.deleteKeyword(id, currentUserId) },
                     onUpdate = { id, newLabel -> viewModel.updateKeyword(id, newLabel, currentUserId) }
                 )
-                3 -> UsersPlaceholderTab()
+                3 -> UserManagementTab(
+                    actionedUsers = uiState.actionedUsers,
+                    reactivateInProgress = uiState.reactivateInProgress,
+                    onReactivate = { userId -> viewModel.reactivateUser(userId, currentUserId) }
+                )
             }
         }
     }
@@ -670,15 +685,276 @@ private fun KeywordsTab(
     }
 }
 
-// ──────────────────────────────── USERS TAB (placeholder) ──────────────────────
+// ──────────────────────────────── USERS TAB ────────────────────────────────────
 
 @Composable
-private fun UsersPlaceholderTab() {
-    Box(Modifier.fillMaxSize(), Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Rounded.People, null, tint = CaptionLabels, modifier = Modifier.size(56.dp))
-            Spacer(Modifier.height(12.dp))
-            Text("User management coming soon", color = CaptionLabels, fontSize = 14.sp)
+private fun UserManagementTab(
+    actionedUsers: List<ActionedUser>,
+    reactivateInProgress: Set<String>,
+    onReactivate: (userId: String) -> Unit
+) {
+    var showReactivateDialog by remember { mutableStateOf<ActionedUser?>(null) }
+
+    showReactivateDialog?.let { user ->
+        AlertDialog(
+            onDismissRequest = { showReactivateDialog = null },
+            containerColor = CardSurface,
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Text(
+                    "Reactivate User",
+                    fontWeight = FontWeight.Bold,
+                    color = HeadingText
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        "Are you sure you want to reactivate this user?",
+                        color = SecondaryText
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "${user.name.ifBlank { user.email }} will regain access and their ${user.propertiesOnHold} properties will be restored.",
+                        color = SecondaryText,
+                        fontSize = 13.sp
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onReactivate(user.id)
+                    showReactivateDialog = null
+                }) {
+                    Text("Reactivate", color = Secondary, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReactivateDialog = null }) {
+                    Text("Cancel", color = CaptionLabels)
+                }
+            }
+        )
+    }
+
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
+            Text(
+                "${actionedUsers.size} Actioned Users",
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = HeadingText
+            )
+        }
+
+        if (actionedUsers.isEmpty()) {
+            item {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Rounded.CheckCircle,
+                            null,
+                            tint = Secondary,
+                            modifier = Modifier.size(56.dp)
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            "No suspended or banned users",
+                            color = CaptionLabels,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        items(actionedUsers, key = { it.id }) { user ->
+            val inProgress = reactivateInProgress.contains(user.id)
+            ActionedUserCard(
+                user = user,
+                inProgress = inProgress,
+                onReactivate = { showReactivateDialog = user }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActionedUserCard(
+    user: ActionedUser,
+    inProgress: Boolean,
+    onReactivate: () -> Unit
+) {
+    val alpha by animateFloatAsState(if (inProgress) 0.5f else 1f, label = "alpha")
+    val isBanned = user.status == UserStatus.BANNED
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(CardSurface.copy(alpha = alpha))
+            .padding(16.dp)
+    ) {
+        // Header: user info + status badge
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Avatar placeholder
+                Surface(
+                    shape = CircleShape,
+                    color = if (isBanned) {
+                        ErrorColor.copy(alpha = 0.12f)
+                    } else {
+                        Caution.copy(alpha = 0.12f)
+                    },
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Rounded.Person,
+                            null,
+                            tint = if (isBanned) ErrorColor else Caution,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        user.name.ifBlank { "Unknown" },
+                        fontWeight = FontWeight.SemiBold,
+                        color = HeadingText,
+                        fontSize = 15.sp
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Rounded.Email,
+                            null,
+                            tint = CaptionLabels,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            user.email.ifBlank { "No email" },
+                            fontSize = 12.sp,
+                            color = CaptionLabels
+                        )
+                    }
+                }
+            }
+
+            // Status badge
+            Surface(
+                shape = RoundedCornerShape(50.dp),
+                color = if (isBanned) {
+                    ErrorColor.copy(alpha = 0.15f)
+                } else {
+                    Caution.copy(alpha = 0.15f)
+                }
+            ) {
+                Text(
+                    if (isBanned) "BANNED" else "SUSPENDED",
+                    fontSize = 10.sp,
+                    color = if (isBanned) ErrorColor else Caution,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            }
+        }
+
+        // Properties on hold count
+        if (user.propertiesOnHold > 0) {
+            Spacer(Modifier.height(10.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Primario.copy(alpha = 0.06f))
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            ) {
+                Icon(
+                    Icons.Rounded.Home,
+                    null,
+                    tint = Primario,
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    "${user.propertiesOnHold} properties on hold",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Primario
+                )
+            }
+        }
+
+        Spacer(Modifier.height(14.dp))
+
+        // Action area
+        if (inProgress) {
+            Box(Modifier.fillMaxWidth(), Alignment.Center) {
+                CircularProgressIndicator(
+                    color = Primario,
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp
+                )
+            }
+        } else if (isBanned) {
+            // Banned users cannot be reactivated
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(ErrorColor.copy(alpha = 0.06f))
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    Icons.Rounded.Block,
+                    null,
+                    tint = ErrorColor,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "Permanently banned — cannot be reactivated",
+                    fontSize = 12.sp,
+                    color = ErrorColor,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        } else {
+            // Suspended users can be reactivated
+            Button(
+                onClick = onReactivate,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Secondary)
+            ) {
+                Icon(
+                    Icons.Rounded.PlayArrow,
+                    null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    "Reactivate User",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp
+                )
+            }
         }
     }
 }

@@ -272,9 +272,11 @@ class SearchViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) {
-            searchUseCase(match { query ->
-                query.keywords.containsAll(listOf("piscina", "vista"))
-            })
+            searchUseCase(
+                match { query ->
+                    query.keywords.containsAll(listOf("piscina", "vista"))
+                }
+            )
         }
     }
 

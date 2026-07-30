@@ -44,10 +44,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import coil3.compose.AsyncImage
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.mobile.micasaestucasa.ui.theme.AppShapes
 import com.mobile.micasaestucasa.ui.theme.IconSize
 import com.mobile.micasaestucasa.ui.theme.Primario

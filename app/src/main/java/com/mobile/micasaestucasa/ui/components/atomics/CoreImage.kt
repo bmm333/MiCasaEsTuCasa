@@ -1,7 +1,5 @@
 package com.mobile.micasaestucasa.ui.components.atomics
 
-import com.mobile.micasaestucasa.ui.theme.ImageStyle
-
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -9,8 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
-
-
+import com.mobile.micasaestucasa.ui.theme.ImageStyle
 
 /**
  * Componente core per il recupero e rendering asincrono di immagini remote.
@@ -29,14 +26,14 @@ import coil3.compose.AsyncImage
  * @param contentScale   Modalità di scala dell'immagine. Default: [ContentScale.Crop].
  */
 @Composable
-fun CoreImage (
-    url : String?,
+fun CoreImage(
+    url: String?,
     style: ImageStyle,
     contentDescription: String,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop
-){
-    val shape = RoundedCornerShape(percent=style.cornerPercent)
+) {
+    val shape = RoundedCornerShape(percent = style.cornerPercent)
 
     AsyncImage(
         model = url,
@@ -44,7 +41,7 @@ fun CoreImage (
         contentScale = contentScale,
         modifier = modifier
             .size(
-                width  = style.size.width,
+                width = style.size.width,
                 height = style.size.height
             )
             .clip(shape)

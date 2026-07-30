@@ -1,5 +1,6 @@
 package com.mobile.micasaestucasa.domain.repository.admin
 
+import com.mobile.micasaestucasa.domain.model.admin.ActionedUser
 import com.mobile.micasaestucasa.domain.model.admin.BookingStats
 import com.mobile.micasaestucasa.domain.model.admin.Keyword
 import com.mobile.micasaestucasa.domain.model.admin.ReportStatus
@@ -47,4 +48,7 @@ interface AdminRepo {
 
     /** Creates a new user report document */
     suspend fun addUserReport(report: UserReport): Result<Unit>
+
+    /** Fetches all suspended/banned users for the admin user management tab */
+    suspend fun getActionedUsers(): Result<List<ActionedUser>>
 }

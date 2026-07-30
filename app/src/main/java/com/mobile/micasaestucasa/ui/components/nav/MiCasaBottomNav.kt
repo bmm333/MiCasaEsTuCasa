@@ -16,14 +16,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ExitToApp
+import androidx.compose.material.icons.rounded.BookOnline
 import androidx.compose.material.icons.rounded.ChatBubbleOutline
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.HomeWork
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PersonOutline
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.BookOnline
-import androidx.compose.material.icons.automirrored.rounded.ExitToApp
-import androidx.compose.material.icons.rounded.HomeWork
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,11 +55,11 @@ data class BottomNavItem(
  */
 object DefaultBottomNavItems {
     val items = listOf(
-        BottomNavItem("home_screen",     "Esplora",  Icons.Rounded.Search),
-        BottomNavItem("saved_screen",    "Salvati",  Icons.Rounded.FavoriteBorder),
-        BottomNavItem("trips_screen",    "Viaggi",   Icons.Rounded.Luggage),
+        BottomNavItem("home_screen", "Esplora", Icons.Rounded.Search),
+        BottomNavItem("saved_screen", "Salvati", Icons.Rounded.FavoriteBorder),
+        BottomNavItem("trips_screen", "Viaggi", Icons.Rounded.Luggage),
         BottomNavItem("messages_screen", "Messaggi", Icons.Rounded.ChatBubbleOutline),
-        BottomNavItem("profile_screen",  "Profilo",  Icons.Rounded.PersonOutline)
+        BottomNavItem("profile_screen", "Profilo", Icons.Rounded.PersonOutline)
     )
 }
 

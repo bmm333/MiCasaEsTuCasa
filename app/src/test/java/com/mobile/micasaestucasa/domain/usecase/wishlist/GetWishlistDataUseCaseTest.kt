@@ -1,9 +1,9 @@
 package com.mobile.micasaestucasa.domain.usecase.wishlist
 
 import com.mobile.micasaestucasa.domain.model.user.User
+import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
-import com.mobile.micasaestucasa.domain.model.user.UserRole
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest

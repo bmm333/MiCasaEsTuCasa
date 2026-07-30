@@ -56,7 +56,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -83,6 +82,7 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     // Forgot password dialog state
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
@@ -295,6 +295,36 @@ fun LoginScreen(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(1.dp)
+                        .background(BorderDivider)
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(1.dp)
+                        .background(BorderDivider)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            com.mobile.micasaestucasa.ui.components.auth.GoogleSignInButton(
+                isLoading = isLoading,
+                onSignInSuccess = { idToken -> viewModel.signInWithGoogle(idToken) },
+                onSignInFailure = { e ->
+                    android.widget.Toast.makeText(context, "Google Sign-In Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 

@@ -32,11 +32,11 @@ class ImageStyleTest {
     @Test
     fun imageSize_equality_sameValues() {
         val a = ImageSize(
-            width  = androidx.compose.ui.unit.Dp(360f),
+            width = androidx.compose.ui.unit.Dp(360f),
             height = androidx.compose.ui.unit.Dp(220f)
         )
         val b = ImageSize(
-            width  = androidx.compose.ui.unit.Dp(360f),
+            width = androidx.compose.ui.unit.Dp(360f),
             height = androidx.compose.ui.unit.Dp(220f)
         )
         assertEquals(a, b)
@@ -98,7 +98,7 @@ class ImageStyleTest {
     @Test
     fun propertyThumbnail_size_is120x80() {
         assertDpEquals(120f, ImageStyle.PropertyThumbnail.size.width)
-        assertDpEquals(80f,  ImageStyle.PropertyThumbnail.size.height)
+        assertDpEquals(80f, ImageStyle.PropertyThumbnail.size.height)
     }
 
     @Test
@@ -211,7 +211,8 @@ class ImageStyleTest {
     @Test
     fun custom_isInstanceOfImageStyle() {
         val style = ImageStyle.Custom(
-            ImageSize(androidx.compose.ui.unit.Dp(100f), androidx.compose.ui.unit.Dp(100f)), 0
+            ImageSize(androidx.compose.ui.unit.Dp(100f), androidx.compose.ui.unit.Dp(100f)),
+            0
         )
         assertTrue(style is ImageStyle)
     }
@@ -253,11 +254,11 @@ class ImageStyleTest {
 
         val labels = styles.map { style ->
             when (style) {
-                is ImageStyle.PropertyCard      -> "property_card"
+                is ImageStyle.PropertyCard -> "property_card"
                 is ImageStyle.PropertyThumbnail -> "property_thumbnail"
-                is ImageStyle.UserAvatarMedium  -> "avatar_medium"
-                is ImageStyle.UserAvatarLarge   -> "avatar_large"
-                is ImageStyle.Custom            -> "custom"
+                is ImageStyle.UserAvatarMedium -> "avatar_medium"
+                is ImageStyle.UserAvatarLarge -> "avatar_large"
+                is ImageStyle.Custom -> "custom"
             }
         }
 
@@ -279,7 +280,8 @@ class ImageStyleTest {
             ImageStyle.UserAvatarMedium,
             ImageStyle.UserAvatarLarge,
             ImageStyle.Custom(
-                ImageSize(androidx.compose.ui.unit.Dp(1f), androidx.compose.ui.unit.Dp(1f)), 0
+                ImageSize(androidx.compose.ui.unit.Dp(1f), androidx.compose.ui.unit.Dp(1f)),
+                0
             )
         )
         for (i in all.indices) {

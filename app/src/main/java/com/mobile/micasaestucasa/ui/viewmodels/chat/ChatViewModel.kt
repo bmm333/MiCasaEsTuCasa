@@ -242,8 +242,8 @@ class ChatViewModel @Inject constructor(
 }
 
 sealed class ImageUploadState {
-    object Idle      : ImageUploadState()
+    object Idle : ImageUploadState()
     object Uploading : ImageUploadState()
-    object Success   : ImageUploadState()
+    object Success : ImageUploadState()
     data class Error(val message: String) : ImageUploadState()
 }

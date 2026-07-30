@@ -72,7 +72,11 @@ class UserViewModel @Inject constructor(
         viewModelScope.launch {
             _userState.value = Resource.Loading
             try {
-                val user = userRepo.getCurrentUser() ?: return@launch
+                val user = userRepo.getCurrentUser()
+                if (user == null) {
+                    _userState.value = Resource.Success(null)
+                    return@launch
+                }
                 _user.value = user
                 _userState.value = Resource.Success(user)
                 

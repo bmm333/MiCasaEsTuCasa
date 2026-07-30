@@ -33,7 +33,7 @@ class CreatePropertyUseCaseTest {
     @Before
     fun setUp() {
         propertyRepository = mockk()
-        val userRepo = mockk<com.mobile.micasaestucasa.domain.repository.user.UserRepo>()
+        val userRepo = mockk<com.mobile.micasaestucasa.domain.repository.user.UserRepo>(relaxed = true)
         createPropertyUseCase = CreatePropertyUseCase(propertyRepository, userRepo)
     }
 

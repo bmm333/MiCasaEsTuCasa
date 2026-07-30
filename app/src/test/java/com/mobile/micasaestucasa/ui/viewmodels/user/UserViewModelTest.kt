@@ -40,9 +40,11 @@ class UserViewModelTest {
         // Mock caricamento iniziale per il ViewModel init
         coEvery { userRepo.getCurrentUser() } returns testUser
         val propertyRepo = mockk<com.mobile.micasaestucasa.domain.repository.property.PropertyRepo>(relaxed = true)
+        coEvery { propertyRepo.getPropertiesByOwner(any()) } returns Result.success(emptyList())
         val bookingRepo = mockk<com.mobile.micasaestucasa.domain.repository.booking.BookingRepo>(relaxed = true)
         val dataStore = mockk<androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>>(relaxed = true)
         io.mockk.every { dataStore.data } returns kotlinx.coroutines.flow.emptyFlow()
+        io.mockk.coEvery { dataStore.updateData(any()) } returns androidx.datastore.preferences.core.emptyPreferences()
         viewModel = UserViewModel(userRepo, propertyRepo, bookingRepo, dataStore)
     }
 

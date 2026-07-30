@@ -38,7 +38,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.ui.theme.BorderDivider
@@ -193,7 +193,7 @@ fun PropertyDetailContent(
                     cameraPositionState = cameraPositionState
                 ) {
                     Marker(
-                        state = MarkerState(position = propertyLatLng),
+                        state = rememberMarkerState(position = propertyLatLng),
                         title = property.title,
                         snippet = property.city
                     )

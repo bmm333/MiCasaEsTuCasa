@@ -61,7 +61,9 @@ class SearchViewModelTest {
 
     @Before
     fun setUp() {
-        viewModel = SearchViewModel(searchUseCase)
+        val adminRepo = mockk<com.mobile.micasaestucasa.domain.repository.admin.AdminRepo>(relaxed = true)
+        coEvery { adminRepo.getAllKeywords() } returns Result.success(emptyList())
+        viewModel = SearchViewModel(searchUseCase, adminRepo)
     }
 
     // ── Initial state ────────────────────────────────────────────────────

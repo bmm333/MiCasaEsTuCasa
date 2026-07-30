@@ -141,18 +141,25 @@ fun AppNavigation(
                     }
                 },
                 onChooseHost = {
-                    navController.navigate(Route.HostIntro) {
-                        popUpTo(Route.PostSignupChoice) { inclusive = true }
-                    }
+                    navController.navigate(Route.HostIntro)
                 }
             )
         }
 
         composable<Route.HostIntro> {
             HostIntroScreen(
-                onNavigateBack = { navController.popBackStack() },
+                onNavigateBack = {
+                    navController.navigate(Route.Home) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 onGetStarted = {
                     navController.navigate(Route.CreateProperty)
+                },
+                onSkip = {
+                    navController.navigate(Route.Home) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }

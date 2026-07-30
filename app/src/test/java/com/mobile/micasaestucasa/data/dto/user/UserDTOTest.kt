@@ -18,10 +18,10 @@ class UserDTOTest {
 
         val copy = dto.copy(name = "Luigi")
 
-        assertEquals("u1", dto.component1())
-        assertEquals("Mario", dto.component2())
-        assertEquals("mario@test.com", dto.component3())
-        assertEquals(listOf("GUEST"), dto.component4())
+        assertEquals("u1", dto.id)
+        assertEquals("Mario", dto.name)
+        assertEquals("mario@test.com", dto.email)
+        assertEquals(listOf("GUEST"), dto.roles)
         assertEquals("Luigi", copy.name)
         assertNotEquals(dto, copy)
     }

@@ -34,23 +34,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.Air
-import androidx.compose.material.icons.filled.BeachAccess
-import androidx.compose.material.icons.filled.Cabin
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Fireplace
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.HolidayVillage
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Park
-import androidx.compose.material.icons.filled.Pool
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Waves
-import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -90,7 +81,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -117,21 +107,6 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
-// ── Amenity categories ──────────────────────────────────────────────────
-private data class AmenityCategory(val label: String, val keyword: String, val icon: ImageVector)
-
-private val amenityCategories = listOf(
-    AmenityCategory("Piscina", "piscina", Icons.Default.Pool),
-    AmenityCategory("Spiaggia", "spiaggia", Icons.Default.BeachAccess),
-    AmenityCategory("WiFi", "wifi", Icons.Default.Wifi),
-    AmenityCategory("Montagna", "montagna", Icons.Default.Park),
-    AmenityCategory("Lago", "lago", Icons.Default.Waves),
-    AmenityCategory("Camino", "camino", Icons.Default.Fireplace),
-    AmenityCategory("Vista", "vista", Icons.Default.HolidayVillage),
-    AmenityCategory("Aria Cond.", "aria condizionata", Icons.Default.Air),
-    AmenityCategory("Cabin", "cabin", Icons.Default.Cabin)
-)
-
 private val sortOrderLabels = mapOf(
     SearchSortOrder.RELEVANCE  to "Rilevanza",
     SearchSortOrder.PRICE_ASC  to "Prezzo: basso → alto",
@@ -150,6 +125,7 @@ fun SearchScreen(
     viewModel: SearchViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val availableKeywords by viewModel.availableKeywords.collectAsState()
 
     // ── Form state ──────────────────────────────────────────────────
     var city by remember { mutableStateOf("") }
@@ -304,40 +280,84 @@ fun SearchScreen(
             // ── Date picker ─────────────────────────────────────────
             item {
                 SearchSectionTitle("Date del soggiorno")
-                Row(
+                val checkInDisplay = checkIn.ifEmpty { null }?.let {
+                    runCatching {
+                        LocalDate.parse(it).let { d ->
+                            displayFormatter.format(Date.from(d.atStartOfDay(ZoneId.systemDefault()).toInstant()))
+                        }
+                    }.getOrNull()
+                }
+                val checkOutDisplay = checkOut.ifEmpty { null }?.let {
+                    runCatching {
+                        LocalDate.parse(it).let { d ->
+                            displayFormatter.format(Date.from(d.atStartOfDay(ZoneId.systemDefault()).toInstant()))
+                        }
+                    }.getOrNull()
+                }
+                val datesSelected = checkInDisplay != null && checkOutDisplay != null
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        .padding(horizontal = 16.dp)
+                        .clickable { showDatePicker = true },
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White,
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (datesSelected) Primario else Color(0xFFDDDDDD)
+                    )
                 ) {
-                    DatePickerButton(
-                        label = "Arrivo",
-                        date = checkIn.ifEmpty { null }?.let {
-                            runCatching {
-                                LocalDate.parse(it).let { d ->
-                                    displayFormatter.format(
-                                        Date.from(d.atStartOfDay(ZoneId.systemDefault()).toInstant())
-                                    )
-                                }
-                            }.getOrNull()
-                        },
-                        modifier = Modifier.weight(1f),
-                        onClick = { showDatePicker = true }
-                    )
-                    DatePickerButton(
-                        label = "Partenza",
-                        date = checkOut.ifEmpty { null }?.let {
-                            runCatching {
-                                LocalDate.parse(it).let { d ->
-                                    displayFormatter.format(
-                                        Date.from(d.atStartOfDay(ZoneId.systemDefault()).toInstant())
-                                    )
-                                }
-                            }.getOrNull()
-                        },
-                        modifier = Modifier.weight(1f),
-                        onClick = { showDatePicker = true }
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.CalendarToday,
+                            contentDescription = null,
+                            tint = if (datesSelected) Primario else CaptionLabels,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        if (datesSelected) {
+                            Text(
+                                text = checkInDisplay!!,
+                                style = Typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "  →  ",
+                                style = Typography.bodyMedium,
+                                color = CaptionLabels
+                            )
+                            Text(
+                                text = checkOutDisplay!!,
+                                style = Typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        } else {
+                            Text(
+                                text = "Seleziona le date del soggiorno",
+                                style = Typography.bodyMedium,
+                                color = CaptionLabels
+                            )
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        if (datesSelected) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Cancella date",
+                                tint = CaptionLabels,
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clickable {
+                                        checkIn = ""
+                                        checkOut = ""
+                                    }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -382,42 +402,43 @@ fun SearchScreen(
                 }
             }
 
-            // ── Amenity / Category chips ─────────────────────────────
+            // ── Amenity / Category chips (from Admin Firestore) ──────
             item {
                 SearchSectionTitle("Servizi e caratteristiche")
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(amenityCategories) { cat ->
-                        val isSelected = selectedCategories.contains(cat.keyword)
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = {
-                                if (isSelected) selectedCategories.remove(cat.keyword)
-                                else selectedCategories.add(cat.keyword)
-                            },
-                            label = { Text(cat.label, style = Typography.labelMedium) },
-                            leadingIcon = {
-                                Icon(
-                                    cat.icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Primario.copy(alpha = 0.12f),
-                                selectedLabelColor = Primario,
-                                selectedLeadingIconColor = Primario
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true,
+                if (availableKeywords.isEmpty()) {
+                    Text(
+                        text = "Caricamento servizi…",
+                        style = Typography.labelMedium,
+                        color = CaptionLabels,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                } else {
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(availableKeywords) { keyword ->
+                            val isSelected = selectedCategories.contains(keyword)
+                            FilterChip(
                                 selected = isSelected,
-                                selectedBorderColor = Primario,
-                                borderColor = Color(0xFFDDDDDD)
+                                onClick = {
+                                    if (isSelected) selectedCategories.remove(keyword)
+                                    else selectedCategories.add(keyword)
+                                },
+                                label = { Text(keyword, style = Typography.labelMedium) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = Primario.copy(alpha = 0.12f),
+                                    selectedLabelColor = Primario
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = isSelected,
+                                    selectedBorderColor = Primario,
+                                    borderColor = Color(0xFFDDDDDD)
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }
@@ -561,9 +582,10 @@ fun SearchScreen(
 
             // ── Search button ────────────────────────────────────────
             item {
+                val searchEnabled = city.isNotBlank()
                 Button(
                     onClick = {
-                        if (city.isNotBlank() && checkIn.isNotBlank() && checkOut.isNotBlank()) {
+                        if (searchEnabled) {
                             viewModel.search(
                                 city = city,
                                 startDate = checkIn,
@@ -574,7 +596,7 @@ fun SearchScreen(
                             )
                         }
                     },
-                    enabled = city.isNotBlank() && checkIn.isNotBlank() && checkOut.isNotBlank(),
+                    enabled = searchEnabled,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
@@ -742,44 +764,7 @@ private fun SearchSectionTitle(title: String) {
     )
 }
 
-@Composable
-private fun DatePickerButton(
-    label: String,
-    date: String?,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = modifier
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
-        color = Color.White,
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (date != null) Primario else Color(0xFFDDDDDD)
-        )
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.CalendarToday,
-                    contentDescription = null,
-                    tint = if (date != null) Primario else CaptionLabels,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(label, style = Typography.labelSmall, color = CaptionLabels)
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                date ?: "Seleziona",
-                style = Typography.bodyMedium,
-                fontWeight = if (date != null) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (date != null) MaterialTheme.colorScheme.onSurface else CaptionLabels
-            )
-        }
-    }
-}
+
 
 @Composable
 private fun IdleSearchHint() {

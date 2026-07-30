@@ -53,10 +53,12 @@ class AuthViewModelTest {
         firebaseAuth = mockk(relaxed = true)
         every { firebaseAuth.currentUser?.uid } returns "user-123"
         coEvery { notificationRepo.getCurrentToken() } returns Result.success("fcm-token")
+        val resetPasswordUseCase = mockk<com.mobile.micasaestucasa.domain.usecase.auth.ResetPasswordUseCase>(relaxed = true)
         viewModel = AuthViewModel(
             loginUseCase,
             registerUseCase,
             logoutUseCase,
+            resetPasswordUseCase,
             saveFCMTokenUseCase,
             notificationRepo,
             firebaseAuth

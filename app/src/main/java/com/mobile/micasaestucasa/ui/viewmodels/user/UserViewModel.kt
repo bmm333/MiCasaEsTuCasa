@@ -72,7 +72,11 @@ class UserViewModel @Inject constructor(
         viewModelScope.launch {
             _userState.value = Resource.Loading
             try {
-                val user = userRepo.getCurrentUser() ?: return@launch
+                val user = userRepo.getCurrentUser()
+                if (user == null) {
+                    _userState.value = Resource.Success(null)
+                    return@launch
+                }
                 _user.value = user
                 _userState.value = Resource.Success(user)
                 
@@ -118,7 +122,7 @@ class UserViewModel @Inject constructor(
                     val bookings = bookingsResult.getOrDefault(emptyList())
 
                     val revenue = bookings
-                        .filter { it.status == BookingStatus.ACCEPTED }
+                        .filter { it.status == BookingStatus.ACCEPTED || it.status == BookingStatus.COMPLETED }
                         .sumOf { it.totalPrice }
 
                     _hostStats.value = HostStats(

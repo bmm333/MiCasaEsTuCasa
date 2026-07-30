@@ -37,6 +37,8 @@ class PropertyViewModelTest {
     private val addUserReportUseCase: AddUserReportUseCase = mockk(relaxed = true)
     private val wishlistRepo: WhishlistRepo = mockk(relaxed = true)
     private val userRepo: UserRepo = mockk(relaxed = true)
+    private val deletePropertyUseCase: com.mobile.micasaestucasa.domain.usecase.property.DeletePropertyUseCase = mockk(relaxed = true)
+    private val demoteHostUseCase: com.mobile.micasaestucasa.domain.usecase.property.DemoteHostUseCase = mockk(relaxed = true)
 
     private val sampleProperty = Property(
         id = "prop-1",
@@ -67,7 +69,9 @@ class PropertyViewModelTest {
             getPropertyByIdUseCase = getPropertyByIdUseCase,
             addUserReportUseCase = addUserReportUseCase,
             wishlistRepo = wishlistRepo,
-            userRepo = userRepo
+            userRepo = userRepo,
+            deletePropertyUseCase = deletePropertyUseCase,
+            demoteHostUseCase = demoteHostUseCase
         )
     }
 

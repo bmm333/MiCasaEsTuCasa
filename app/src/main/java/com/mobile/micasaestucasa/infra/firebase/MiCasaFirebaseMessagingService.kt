@@ -41,9 +41,9 @@ class MiCasaFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         val userId = firebaseAuth.currentUser?.uid ?: return
-        // launched ina  corutinescope bcs onenewtoekn is called
-        // on mianthread and cannot be suspended directly
-        kotlinx.coroutines.MainScope().launch {
+        // launched on IO dispatcher bcs onNewToken is called
+        // on main thread and cannot be suspended directly
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
             saveFCMTokenUseCase(userId, token)
         }
     }

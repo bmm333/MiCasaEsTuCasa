@@ -127,8 +127,8 @@ class UserViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.userState.value
-        // Null user results in early return, state remains Loading
-        assertTrue("Expected Resource.Loading but was $state", state is Resource.Loading)
+        // Null user results in early return with Resource.Success(null)
+        assertTrue("Expected Resource.Success(null) but was $state", state is Resource.Success && state.data == null)
     }
 
     @Test

@@ -29,6 +29,7 @@ import com.mobile.micasaestucasa.ui.screens.auth.RegisterScreen
 import com.mobile.micasaestucasa.ui.screens.auth.SignupOnboardingScreen
 import com.mobile.micasaestucasa.ui.screens.booking.BookingListMode
 import com.mobile.micasaestucasa.ui.screens.booking.BookingListScreen
+import com.mobile.micasaestucasa.ui.screens.booking.TripsScreen
 import com.mobile.micasaestucasa.ui.screens.booking.BookingRequestScreen
 import com.mobile.micasaestucasa.ui.screens.chat.ChatScreen
 import com.mobile.micasaestucasa.ui.screens.chat.ConversationListScreen
@@ -360,11 +361,12 @@ fun AppNavigation(
         }
 
         composable<Route.Trips> {
-            BookingListScreen(
+            TripsScreen(
                 currentUserId = currentUserId,
-                mode = BookingListMode.RENTER,
                 onNavigateBack = { navController.popBackStack() },
-                navController = navController,
+                onNavigateToProperty = { propertyId ->
+                    navController.navigate(Route.PropertyDetail(propertyId))
+                },
                 onNavigateToChat = { hostId, renterId, propertyId ->
                     navController.navigate(
                         Route.Chat(
@@ -374,7 +376,8 @@ fun AppNavigation(
                             propertyId = propertyId
                         )
                     )
-                }
+                },
+                navController = navController
             )
         }
 
@@ -423,7 +426,10 @@ fun AppNavigation(
                 renterId = route.renterId,
                 propertyId = route.propertyId,
                 currentUserId = currentUserId,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToProperty = { propId ->
+                    navController.navigate(Route.PropertyDetail(propId))
+                }
             )
         }
 

@@ -74,6 +74,7 @@ fun ConversationListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val conversationUsers by viewModel.conversationUsers.collectAsState()
+    val conversationProperties by viewModel.conversationProperties.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.loadConversations(currentUserId)
@@ -150,10 +151,12 @@ fun ConversationListScreen(
                                 conversation.hostId
                             }
                             val otherUser = conversationUsers[otherUserId]
+                            val propertyTitle = conversationProperties[conversation.propertyId]
                             ConversationItem(
                                 conversation = conversation,
                                 currentUserId = currentUserId,
                                 otherUser = otherUser,
+                                propertyTitle = propertyTitle,
                                 onClick = { onNavigateToChat(conversation) }
                             )
                         }
@@ -182,6 +185,7 @@ private fun ConversationItem(
     conversation: Conversation,
     currentUserId: String,
     otherUser: User?,
+    propertyTitle: String?,
     onClick: () -> Unit
 ) {
     val displayName = if (otherUser != null) {
@@ -241,6 +245,17 @@ private fun ConversationItem(
                     text = formatTimestamp(conversation.lastMessageTimestamp),
                     fontSize = 11.sp,
                     color = CaptionLabels
+                )
+            }
+            // property title subtitle
+            if (!propertyTitle.isNullOrBlank()) {
+                Text(
+                    text = propertyTitle,
+                    fontSize = 12.sp,
+                    color = Primario,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.Medium
                 )
             }
             Spacer(modifier = Modifier.height(2.dp))

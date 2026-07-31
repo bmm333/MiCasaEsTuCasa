@@ -28,6 +28,10 @@ import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -85,12 +89,14 @@ fun ChatScreen(
     propertyId: String,
     currentUserId: String,
     onNavigateBack: () -> Unit,
+    onNavigateToProperty: (String) -> Unit = {},
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val messages by viewModel.messages.collectAsState()
     val vmConversationId by viewModel.activeConversationId.collectAsState()
     val otherUserName by viewModel.otherUserName.collectAsState()
     val otherUserPhotoUrl by viewModel.otherUserPhotoUrl.collectAsState()
+    val currentPropertyTitle by viewModel.currentPropertyTitle.collectAsState()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
@@ -201,6 +207,15 @@ fun ChatScreen(
                                 color = HeadingText
                             )
                             Text("Online", fontSize = 11.sp, color = Secondary)
+                        if (currentPropertyTitle.isNotBlank()) {
+                            Text(
+                                currentPropertyTitle,
+                                fontSize = 11.sp,
+                                color = Primario,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
                         }
                     }
                 },
@@ -263,6 +278,19 @@ fun ChatScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            if (currentPropertyTitle.isNotBlank()) {
+                item {
+                    PropertyChatHeader(
+                        title = currentPropertyTitle,
+                        onClick = {
+                            if (propertyId.isNotBlank()) {
+                                onNavigateToProperty(propertyId)
+                            }
+                        }
+                    )
+                }
+            }
+
             items(messages, key = { it.id }) { message ->
                 MessageBubble(
                     message = message,
@@ -475,4 +503,42 @@ private fun ChatInputBar(
 private fun formatTime(timestamp: Long): String {
     if (timestamp == 0L) return ""
     return SimpleDateFormat("HH:mm", Locale.ITALY).format(Date(timestamp))
+}
+
+@Composable
+private fun PropertyChatHeader(title: String, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp, top = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(CardSurface)
+                .border(1.dp, Primario.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                .clickable { onClick() }
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    Icons.Rounded.Home,
+                    contentDescription = null,
+                    tint = Primario,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Vedi $title",
+                    color = Primario,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
 }

@@ -29,6 +29,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mobile.micasaestucasa.ui.components.atomics.MiCasaPrimaryButton
+import com.mobile.micasaestucasa.ui.components.atomics.NetworkStatusBar
 import com.mobile.micasaestucasa.ui.navigation.AppNavigation
 import com.mobile.micasaestucasa.ui.theme.CardSurface
 import com.mobile.micasaestucasa.ui.theme.Caution
@@ -68,14 +69,23 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation(
-                        pendingNotificationType = pendingNotificationType,
-                        pendingNotificationTargetId = pendingNotificationTargetId,
-                        onNotificationHandled = {
-                            pendingNotificationType = null
-                            pendingNotificationTargetId = null
+                    androidx.compose.foundation.layout.Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        NetworkStatusBar()
+                        androidx.compose.foundation.layout.Box(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            AppNavigation(
+                                pendingNotificationType = pendingNotificationType,
+                                pendingNotificationTargetId = pendingNotificationTargetId,
+                                onNotificationHandled = {
+                                    pendingNotificationType = null
+                                    pendingNotificationTargetId = null
+                                }
+                            )
                         }
-                    )
+                    }
                 }
 
                 if (showBanDialog) {

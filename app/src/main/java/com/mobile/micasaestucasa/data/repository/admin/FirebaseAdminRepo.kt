@@ -86,6 +86,9 @@ class FirebaseAdminRepo @Inject constructor(
         targetUserId: String,
         adminId: String
     ): Result<Unit> {
+        if (targetUserId == adminId) {
+            return Result.failure(IllegalArgumentException("Non puoi sospendere te stesso"))
+        }
         return try {
             val batch = firestore.batch()
 
@@ -128,6 +131,9 @@ class FirebaseAdminRepo @Inject constructor(
         targetUserId: String,
         adminId: String
     ): Result<Unit> {
+        if (targetUserId == adminId) {
+            return Result.failure(IllegalArgumentException("Non puoi bannare te stesso"))
+        }
         return try {
             val batch = firestore.batch()
             val userRef = firestore.collection("users").document(targetUserId)

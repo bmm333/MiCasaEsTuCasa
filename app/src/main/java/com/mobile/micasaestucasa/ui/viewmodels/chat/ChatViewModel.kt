@@ -9,6 +9,7 @@ import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import com.mobile.micasaestucasa.domain.usecase.admin.AddUserReportUseCase
 import com.mobile.micasaestucasa.domain.usecase.chat.GetOrCreateConversationUseCase
 import com.mobile.micasaestucasa.domain.usecase.chat.SendMessageUseCase
+import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,8 @@ class ChatViewModel @Inject constructor(
     private val chatRepo: ChatRepo,
     private val addUserReportUseCase: AddUserReportUseCase,
     private val userRepo: UserRepo,
-    private val storageRepository: com.mobile.micasaestucasa.data.repository.storage.FirebaseStorageRepository
+    private val storageRepository: com.mobile.micasaestucasa.data.repository.storage.FirebaseStorageRepository,
+    private val getPropertyByIdUseCase: GetPropertyByIdUseCase
 ) : ViewModel() {
     private val _imageUploadState = MutableStateFlow<ImageUploadState>(ImageUploadState.Idle)
     val imageUploadState: StateFlow<ImageUploadState> = _imageUploadState.asStateFlow()
@@ -48,6 +50,14 @@ class ChatViewModel @Inject constructor(
     private val _conversationUsers = MutableStateFlow<Map<String, User>>(emptyMap())
     val conversationUsers: StateFlow<Map<String, User>> = _conversationUsers.asStateFlow()
 
+    /** Cached property titles keyed by propertyId, used by the conversation list. */
+    private val _conversationProperties = MutableStateFlow<Map<String, String>>(emptyMap())
+    val conversationProperties: StateFlow<Map<String, String>> = _conversationProperties.asStateFlow()
+
+    /** Property title of the currently active chat. */
+    private val _currentPropertyTitle = MutableStateFlow("")
+    val currentPropertyTitle: StateFlow<String> = _currentPropertyTitle.asStateFlow()
+
     /**
      * Opens or creates the conversations and starts the observer
      *
@@ -65,6 +75,12 @@ class ChatViewModel @Inject constructor(
                     _activeConversationId.value = conversation.id
                     _currentConversationId.value = conversation.id
                     observeMessages(conversation.id)
+                    // resolve property title for the chat top bar
+                    if (propertyId.isNotBlank()) {
+                        getPropertyByIdUseCase(propertyId)
+                            .onSuccess { prop -> _currentPropertyTitle.value = prop.title }
+                            .onFailure { _currentPropertyTitle.value = "" }
+                    }
                 }
                 .onFailure {
                     _uiState.value = ChatUiState.Error(
@@ -82,6 +98,12 @@ class ChatViewModel @Inject constructor(
         _activeConversationId.value = conversationId
         _currentConversationId.value = conversationId
         observeMessages(conversationId)
+        // resolve property title from the conversation doc
+        viewModelScope.launch {
+            chatRepo.getConversationsForUser(_activeConversationId.value)
+            // We don't have a direct getConversationById; the title will be
+            // populated by loadConversationUsers if navigating from ConversationList
+        }
     }
 
     /**
@@ -155,7 +177,16 @@ class ChatViewModel @Inject constructor(
                     if (user != null) {
                         _otherUserName.value = "${user.name} ${user.lastName}".trim()
                         _otherUserPhotoUrl.value = user.profileImageUrl
+                    } else {
+                        // utente eliminato — mostra placeholder
+                        _otherUserName.value = "Utente eliminato"
+                        _otherUserPhotoUrl.value = null
                     }
+                }
+                .onFailure {
+                    // utente eliminato o errore — mostra placeholder
+                    _otherUserName.value = "Utente eliminato"
+                    _otherUserPhotoUrl.value = null
                 }
         }
     }
@@ -173,6 +204,7 @@ class ChatViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             val usersMap = mutableMapOf<String, User>()
+            val propsMap = mutableMapOf<String, String>()
             for (conv in conversations) {
                 val otherUserId = if (currentUserId == conv.hostId) conv.renterId else conv.hostId
                 if (otherUserId !in usersMap) {
@@ -181,8 +213,14 @@ class ChatViewModel @Inject constructor(
                             if (user != null) usersMap[otherUserId] = user
                         }
                 }
+                // fetch property title if not already cached
+                if (conv.propertyId.isNotBlank() && conv.propertyId !in propsMap) {
+                    getPropertyByIdUseCase(conv.propertyId)
+                        .onSuccess { prop -> propsMap[conv.propertyId] = prop.title }
+                }
             }
             _conversationUsers.value = usersMap
+            _conversationProperties.value = propsMap
         }
     }
 

@@ -286,6 +286,7 @@ class FirebaseBookingRepoTest {
         every { bookingsCollection.document("booking-1") } returns docRef
         every { transaction.get(docRef) } returns doc
         every { doc.getString("hostId") } returns "host-1"
+        every { doc.getString("status") } returns BookingStatus.REQUESTED.name
         every { transaction.update(docRef, "status", BookingStatus.REJECTED.name) } returns transaction
         stubRunTransactionExecuting(transaction)
 

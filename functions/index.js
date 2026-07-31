@@ -328,3 +328,62 @@ function chunkArray(array, size) {
     }
     return chunks;
 }
+
+/**
+ * Scheduled Cloud Function.
+ * Marks as COMPLETED all ACCEPTED bookings with endDate in the past.
+ * Sends FCM notifications to both renter and host prompting them to leave a review.
+ */
+exports.completeExpiredBookings = functions.region("europe-west1").pubsub
+    .schedule("0 0 * * *")
+    .timeZone("Europe/Rome")
+    .onRun(async () => {
+        const today = new Date().toISOString().split("T")[0]; // "2026-07-31"
+
+        const snap = await db
+            .collection("bookings")
+            .where("status", "==", "ACCEPTED")
+            .where("endDate", "<", today)
+            .get();
+
+        if (snap.empty) {
+            console.log("No bookings to complete");
+            return null;
+        }
+
+        // batch update — max 500 per batch
+        const chunks = chunkArray(snap.docs, 500);
+        for (const chunk of chunks) {
+            const batch = db.batch();
+            chunk.forEach((doc) => {
+                batch.update(doc.ref, {
+                    status: "COMPLETED",
+                    completedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+            });
+            await batch.commit();
+        }
+
+        console.log(`Completed ${snap.size} bookings`);
+
+        // send FCM notifications to renter and host
+        for (const doc of snap.docs) {
+            const booking = doc.data();
+
+            await sendPushToUser(booking.renterId, {
+                title: "Soggiorno concluso!",
+                body: "Come e andata? Lascia una recensione",
+                type: "BOOKING_COMPLETED",
+                targetId: doc.id,
+            });
+
+            await sendPushToUser(booking.hostId, {
+                title: "Soggiorno concluso!",
+                body: "Valuta il tuo ospite",
+                type: "BOOKING_COMPLETED",
+                targetId: doc.id,
+            });
+        }
+
+        return null;
+    });

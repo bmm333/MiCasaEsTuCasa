@@ -166,7 +166,11 @@ private fun <T> BookingTab(items: List<T>, emptyIcon: ImageVector, emptyTitle: S
     if (items.isEmpty()) {
         EmptyTabView(emptyIcon, emptyTitle, emptySubtitle)
     } else {
-        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             items(items) { item -> content(item) }
         }
     }

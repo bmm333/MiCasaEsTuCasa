@@ -58,7 +58,7 @@ sealed interface Route {
     data object PostSignupChoice : Route
 
     @Serializable
-    data object HostIntro : Route
+    data class HostIntro(val canSkip: Boolean = true) : Route
 
     @Serializable
     data object CreateProperty : Route

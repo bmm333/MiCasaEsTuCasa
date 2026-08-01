@@ -52,6 +52,7 @@ import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.ScreenBackground
 import com.mobile.micasaestucasa.ui.viewmodels.home.HomeViewModel
 import com.mobile.micasaestucasa.ui.viewmodels.user.UserViewModel
+import com.mobile.micasaestucasa.ui.viewmodels.chat.ChatViewModel
 
 @Composable
 fun HomeScreen(
@@ -63,17 +64,22 @@ fun HomeScreen(
     onNavigateToSaved: () -> Unit,
     onNavigateToMessages: () -> Unit = {},
     homeViewModel: HomeViewModel = hiltViewModel(),
-    userViewModel: UserViewModel = hiltViewModel()
+    userViewModel: UserViewModel = hiltViewModel(),
+    chatViewModel: ChatViewModel = hiltViewModel()
 ) {
     val homeState by homeViewModel.uiState.collectAsState()
     val currentUser by userViewModel.user.collectAsState()
     val savedIds by homeViewModel.savedPropertyIds.collectAsState()
+    val totalUnreadCount by chatViewModel.totalUnreadCount.collectAsState()
     var selectedRoute by remember { mutableStateOf("home_screen") }
     var showMap by remember { mutableStateOf(false) }
     val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     androidx.compose.runtime.LaunchedEffect(currentUserId) {
-        if (currentUserId.isNotBlank()) homeViewModel.loadSavedIds(currentUserId)
+        if (currentUserId.isNotBlank()) {
+            homeViewModel.loadSavedIds(currentUserId)
+            chatViewModel.loadConversations(currentUserId)
+        }
     }
 
     Scaffold(
@@ -82,6 +88,9 @@ fun HomeScreen(
             MiCasaBottomNav(
                 items = DefaultBottomNavItems.items,
                 selectedRoute = selectedRoute,
+                badgeRoutes = buildSet {
+                    if (totalUnreadCount > 0) add("messages_screen")
+                },
                 onItemSelected = { route ->
                     selectedRoute = route
                     when (route) {

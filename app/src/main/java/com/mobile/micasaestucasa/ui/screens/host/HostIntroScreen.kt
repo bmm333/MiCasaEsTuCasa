@@ -47,7 +47,8 @@ import com.mobile.micasaestucasa.ui.theme.Primario
 fun HostIntroScreen(
     onNavigateBack: () -> Unit,
     onGetStarted: () -> Unit,
-    onSkip: () -> Unit = onNavigateBack
+    onSkip: () -> Unit = onNavigateBack,
+    canSkip: Boolean = true
 ) {
     Box(
         modifier = Modifier
@@ -73,8 +74,13 @@ fun HostIntroScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Indietro", tint = Color(0xFF222222))
+                if (canSkip) {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Indietro", tint = Color(0xFF222222))
+                    }
+                } else {
+                    // Mandatory onboarding: no back arrow
+                    Spacer(Modifier.height(48.dp))
                 }
             }
 
@@ -162,16 +168,18 @@ fun HostIntroScreen(
 
                 Spacer(Modifier.height(12.dp))
 
-                TextButton(
-                    onClick = onSkip,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        "Non ora",
-                        fontSize = 15.sp,
-                        color = Color(0xFF767676),
-                        fontWeight = FontWeight.Medium
-                    )
+                if (canSkip) {
+                    TextButton(
+                        onClick = onSkip,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "Non ora",
+                            fontSize = 15.sp,
+                            color = Color(0xFF767676),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(40.dp))

@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.ChatBubbleOutline
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -75,6 +76,7 @@ fun ConversationListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val conversationUsers by viewModel.conversationUsers.collectAsState()
     val conversationProperties by viewModel.conversationProperties.collectAsState()
+    val totalUnreadCount by viewModel.totalUnreadCount.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.loadConversations(currentUserId)
@@ -104,6 +106,10 @@ fun ConversationListScreen(
             MiCasaBottomNav(
                 items = DefaultBottomNavItems.items,
                 selectedRoute = "messages_screen",
+                badgeRoutes = buildSet {
+                    // Don't show badge on messages_screen itself (user is already here)
+                    // but keep it on other routes that might have notifications
+                },
                 onItemSelected = { route ->
                     when (route) {
                         "home_screen" -> navController.navigate(Route.Home) {
@@ -188,86 +194,140 @@ private fun ConversationItem(
     propertyTitle: String?,
     onClick: () -> Unit
 ) {
+    val isHost = currentUserId == conversation.hostId
     val displayName = if (otherUser != null) {
         "${otherUser.name} ${otherUser.lastName}".trim().ifBlank { "Utente" }
     } else {
-        if (currentUserId == conversation.hostId) "Renter" else "Owner"
+        if (isHost) "Renter" else "Owner"
     }
     val photoUrl = otherUser?.profileImageUrl
+    val hasUnread = conversation.unreadCount > 0
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .background(CardSurface)
+            .background(if (hasUnread) CardSurface else CardSurface)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // avatar — photo or initial letter
-        if (!photoUrl.isNullOrBlank()) {
-            AsyncImage(
-                model = photoUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(Sfumatura),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = displayName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = Primario
+        Box {
+            if (!photoUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = photoUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(Sfumatura),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = displayName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = Primario
+                    )
+                }
+            }
+            // Unread indicator dot on avatar
+            if (hasUnread) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .clip(CircleShape)
+                        .background(androidx.compose.ui.graphics.Color(0xFFE5474B))
+                        .align(Alignment.TopEnd)
                 )
             }
         }
+
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = displayName,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
-                    color = HeadingText
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = displayName,
+                        fontWeight = if (hasUnread) FontWeight.Bold else FontWeight.SemiBold,
+                        fontSize = 15.sp,
+                        color = HeadingText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    // Role chip: Host or Guest
+                    Box(
+                        modifier = Modifier
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                            .background(if (isHost) Primario.copy(alpha = 0.12f) else androidx.compose.ui.graphics.Color(0xFF00A699).copy(alpha = 0.12f))
+                            .padding(horizontal = 5.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = if (isHost) "Host" else "Ospite",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isHost) Primario else androidx.compose.ui.graphics.Color(0xFF00A699)
+                        )
+                    }
+                }
                 Text(
                     text = formatTimestamp(conversation.lastMessageTimestamp),
                     fontSize = 11.sp,
-                    color = CaptionLabels
+                    color = if (hasUnread) Primario else CaptionLabels,
+                    fontWeight = if (hasUnread) FontWeight.SemiBold else FontWeight.Normal
                 )
             }
-            // property title subtitle
+            Spacer(modifier = Modifier.height(3.dp))
+            // Property chip – prominent colored tag
             if (!propertyTitle.isNullOrBlank()) {
-                Text(
-                    text = propertyTitle,
-                    fontSize = 12.sp,
-                    color = Primario,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+                        .background(Primario.copy(alpha = 0.08f))
+                        .padding(horizontal = 6.dp, vertical = 3.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Home,
+                        contentDescription = null,
+                        tint = Primario,
+                        modifier = Modifier.size(11.dp)
+                    )
+                    Spacer(Modifier.width(3.dp))
+                    Text(
+                        text = propertyTitle,
+                        fontSize = 11.sp,
+                        color = Primario,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Spacer(modifier = Modifier.height(3.dp))
             }
-            Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = conversation.lastMessage.ifBlank { "No Message" },
+                text = conversation.lastMessage.ifBlank { "Nessun messaggio" },
                 fontSize = 13.sp,
-                color = CaptionLabels,
+                color = if (hasUnread) HeadingText else CaptionLabels,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = if (hasUnread) FontWeight.Medium else FontWeight.Normal
             )
         }
-        if (conversation.unreadCount > 0) {
+        if (hasUnread) {
             Spacer(modifier = Modifier.width(8.dp))
             Box(
                 modifier = Modifier

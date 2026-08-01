@@ -3,6 +3,7 @@ package com.mobile.micasaestucasa.ui.screens.booking
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -20,7 +21,6 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.CreditCard
 import androidx.compose.material.icons.rounded.Remove
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
@@ -47,8 +47,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mobile.micasaestucasa.domain.model.booking.Booking
 import com.mobile.micasaestucasa.domain.model.booking.BookingStatus
@@ -480,60 +482,94 @@ private fun MockPaymentDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = CardSurface,
-        shape = RoundedCornerShape(20.dp),
-        title = {
-            Text("Confirm payment", fontWeight = FontWeight.Bold, color = HeadingText)
-        },
-        text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                when (paymentState) {
-                    is PaymentUiStatus.Processing -> {
-                        CircularProgressIndicator(color = Primario)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Payment processing...", color = CaptionLabels)
-                    }
-                    else -> {
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(CardSurface)
+                .padding(28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            when (paymentState) {
+                is PaymentUiStatus.Processing -> {
+                    CircularProgressIndicator(color = Primario)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "Elaborazione pagamento...",
+                        color = CaptionLabels,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                else -> {
+                    // Icon
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(Primario.copy(alpha = 0.10f)),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             Icons.Rounded.CreditCard,
                             contentDescription = null,
                             tint = Primario,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(36.dp)
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(
+                        "Conferma pagamento",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = HeadingText,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Totale da pagare",
+                        fontSize = 13.sp,
+                        color = CaptionLabels,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "€${totalPrice.toInt()}",
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = HeadingText,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "Demo – nessun pagamento reale",
+                        fontSize = 11.sp,
+                        color = CaptionLabels,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    MiCasaPrimaryButton(
+                        text = "Paga ora",
+                        onClick = onConfirm,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(
-                            "Total to be paid",
-                            fontSize = 14.sp,
-                            color = CaptionLabels
-                        )
-                        Text(
-                            "€${totalPrice.toInt()}",
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = HeadingText
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "Demo — no real payment",
-                            fontSize = 11.sp,
-                            color = CaptionLabels
+                            "Annulla",
+                            color = CaptionLabels,
+                            fontSize = 14.sp
                         )
                     }
                 }
             }
-        },
-        confirmButton = {
-            if (paymentState !is PaymentUiStatus.Processing) {
-                MiCasaPrimaryButton(
-                    text = "Pay now",
-                    onClick = onConfirm,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
         }
-    )
+    }
 }
 
 private fun millisToIso(millis: Long): String {

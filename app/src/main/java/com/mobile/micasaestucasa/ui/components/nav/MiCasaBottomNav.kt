@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ExitToApp
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -79,7 +81,9 @@ fun MiCasaBottomNav(
     items: List<BottomNavItem>,
     selectedRoute: String,
     onItemSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Routes that should show a red notification dot on their icon. */
+    badgeRoutes: Set<String> = emptySet()
 ) {
     Box(
         modifier = modifier
@@ -130,14 +134,25 @@ fun MiCasaBottomNav(
                         .padding(vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.label,
-                        tint = tint,
-                        modifier = Modifier
-                            .size(22.dp)
-                            .scale(scale)
-                    )
+                    // Badge dot overlay when the route has notifications
+                    Box(contentAlignment = Alignment.TopEnd) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                            tint = tint,
+                            modifier = Modifier
+                                .size(22.dp)
+                                .scale(scale)
+                        )
+                        if (item.route in badgeRoutes) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE5474B))
+                            )
+                        }
+                    }
                     Text(
                         text = item.label,
                         fontSize = 10.sp,

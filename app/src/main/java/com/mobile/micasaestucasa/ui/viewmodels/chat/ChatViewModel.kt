@@ -58,6 +58,11 @@ class ChatViewModel @Inject constructor(
     private val _currentPropertyTitle = MutableStateFlow("")
     val currentPropertyTitle: StateFlow<String> = _currentPropertyTitle.asStateFlow()
 
+    /** Total number of unread messages across all conversations for the current user.
+     *  Drives the red badge on the Messages tab in the bottom nav. */
+    private val _totalUnreadCount = MutableStateFlow(0)
+    val totalUnreadCount: StateFlow<Int> = _totalUnreadCount.asStateFlow()
+
     /**
      * Opens or creates the conversations and starts the observer
      *
@@ -147,7 +152,10 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = ChatUiState.Loading
             chatRepo.getConversationsForUser(userId)
-                .onSuccess { _uiState.value = ChatUiState.ConversationsLoaded(it) }
+                .onSuccess { conversations ->
+                    _uiState.value = ChatUiState.ConversationsLoaded(conversations)
+                    _totalUnreadCount.value = conversations.sumOf { it.unreadCount }
+                }
                 .onFailure {
                     _uiState.value = ChatUiState.Error(
                         it.message ?: "Errore loading the conversation"

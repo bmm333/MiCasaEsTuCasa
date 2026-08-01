@@ -159,13 +159,16 @@ fun AppNavigation(
                     }
                 },
                 onChooseHost = {
-                    navController.navigate(Route.HostIntro)
+                    // Mandatory onboarding: canSkip = false
+                    navController.navigate(Route.HostIntro(canSkip = false))
                 }
             )
         }
 
-        composable<Route.HostIntro> {
+        composable<Route.HostIntro> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.HostIntro>()
             HostIntroScreen(
+                canSkip = route.canSkip,
                 onNavigateBack = {
                     navController.navigate(Route.Home) {
                         popUpTo(0) { inclusive = true }
@@ -268,7 +271,8 @@ fun AppNavigation(
                     navController.navigate(Route.CreateProperty)
                 },
                 onNavigateToHostIntro = {
-                    navController.navigate(Route.HostIntro)
+                    // From profile: optional (canSkip = true by default)
+                    navController.navigate(Route.HostIntro(canSkip = true))
                 },
                 onNavigateToAdmin = {
                     navController.navigate(Route.Admin)

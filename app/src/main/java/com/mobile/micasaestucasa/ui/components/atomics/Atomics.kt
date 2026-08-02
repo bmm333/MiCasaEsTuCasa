@@ -195,7 +195,7 @@ fun RatingBadge(
         )
         Spacer(modifier = Modifier.width(Spacing.ExtraSmall))
         Text(
-            text = rating.toString(),
+            text = "%.1f".format(rating),
             style = Typography.bodyLarge,
             color = Primario,
             fontWeight = FontWeight.Bold

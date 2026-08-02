@@ -11,5 +11,7 @@ data class Review(
     val body: String = "",
     val stars: Int = 0,
     val hostReply: String? = null,
+    val authorName: String = "",
+    val authorProfilePicture: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

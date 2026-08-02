@@ -44,6 +44,16 @@ class FirebasePropertyRepo @Inject constructor(
 
     override suspend fun deleteProperty(id: String): Result<String> {
         return try {
+            val db = propertiesCollection.firestore
+            val activeBookings = db.collection("bookings")
+                .whereEqualTo("propertyId", id)
+                .whereIn("status", listOf("REQUESTED", "ACCEPTED"))
+                .get().await()
+
+            if (!activeBookings.isEmpty) {
+                return Result.failure(IllegalStateException("Non puoi eliminare una proprietà con prenotazioni attive o in attesa."))
+            }
+
             propertiesCollection.document(id).delete().await()
             Result.success(id)
         } catch (e: Exception) {

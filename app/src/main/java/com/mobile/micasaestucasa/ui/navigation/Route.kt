@@ -74,4 +74,12 @@ sealed interface Route {
 
     @Serializable
     data object Search : Route
+
+    @Serializable
+    data class WriteReview(
+        val bookingId: String,
+        val propertyId: String,
+        val hostId: String,
+        val renterId: String
+    ) : Route
 }

@@ -49,14 +49,26 @@ fun TripsScreen(
     viewModel: BookingViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val reviewedIds by viewModel.reviewedBookingIds.collectAsState()
     val pagerState = rememberPagerState(pageCount = { 3 })
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) { viewModel.loadRenterBookings(currentUserId) }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                viewModel.loadRenterBookings(currentUserId)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
     LaunchedEffect(uiState) {
         if (uiState is BookingUiState.ActionSuccess) viewModel.loadRenterBookings(currentUserId)
     }
-
     val allBookings = (uiState as? BookingUiState.BookingsLoaded)?.bookings ?: emptyList()
     val today = remember { LocalDate.now().toString() }
 
@@ -128,7 +140,21 @@ fun TripsScreen(
                             ActiveCard(booking, onChat = { onNavigateToChat(booking.hostId, currentUserId, booking.propertyId) },
                                 onClick = { onNavigateToProperty(booking.propertyId) })
                         }
-                        2 -> PastTab(past, onNavigateToProperty)
+                        2 -> PastTab(
+                            past,
+                            onNavigateToProperty,
+                            reviewedIds,
+                            onNavigateToReview = { b ->
+                                navController.navigate(
+                                    Route.WriteReview(
+                                        bookingId = b.id,
+                                        propertyId = b.propertyId,
+                                        hostId = b.hostId,
+                                        renterId = b.renterId
+                                    )
+                                )
+                            }
+                        )
                     }
                 }
             }
@@ -248,18 +274,30 @@ private fun ActiveCard(booking: Booking, onChat: () -> Unit, onClick: () -> Unit
 }
 
 @Composable
-private fun PastTab(bookings: List<Booking>, onNavigateToProperty: (String) -> Unit) {
+private fun PastTab(
+    bookings: List<Booking>,
+    onNavigateToProperty: (String) -> Unit,
+    reviewedIds: Set<String>,
+    onNavigateToReview: (Booking) -> Unit
+) {
     if (bookings.isEmpty()) {
         EmptyTabView(Icons.Rounded.History, "Nessun viaggio passato", "I tuoi soggiorni completati appariranno qui")
         return
     }
-    val completed = bookings.filter { it.status == BookingStatus.COMPLETED || (it.status == BookingStatus.ACCEPTED && it.endDate < LocalDate.now().toString()) }
-    val cancelled = bookings.filter { it.status == BookingStatus.CANCELLED || it.status == BookingStatus.REJECTED }
+    val completed = bookings.filter { it.status == BookingStatus.COMPLETED }.sortedByDescending { it.endDate }
+    val cancelled = bookings.filter { it.status == BookingStatus.CANCELLED || it.status == BookingStatus.REJECTED }.sortedByDescending { it.endDate }
 
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (completed.isNotEmpty()) {
             item { Text("Soggiorni completati", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = HeadingText, modifier = Modifier.padding(bottom = 4.dp)) }
-            items(completed) { booking -> CompletedCard(booking, onClick = { onNavigateToProperty(booking.propertyId) }) }
+            items(completed) { booking -> 
+                CompletedCard(
+                    booking = booking,
+                    hasReviewed = booking.id in reviewedIds,
+                    onClick = { onNavigateToProperty(booking.propertyId) },
+                    onReview = { onNavigateToReview(booking) }
+                ) 
+            }
         }
         if (cancelled.isNotEmpty()) {
             item { Spacer(Modifier.height(8.dp)); Text("Cancellate / Rifiutate", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = CaptionLabels, modifier = Modifier.padding(bottom = 4.dp)) }
@@ -269,7 +307,12 @@ private fun PastTab(bookings: List<Booking>, onNavigateToProperty: (String) -> U
 }
 
 @Composable
-private fun CompletedCard(booking: Booking, onClick: () -> Unit) {
+private fun CompletedCard(
+    booking: Booking,
+    hasReviewed: Boolean,
+    onClick: () -> Unit,
+    onReview: () -> Unit
+) {
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(CardSurface)) {
         Row(Modifier.fillMaxWidth().background(Success).padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.CheckCircle, null, tint = Badges, modifier = Modifier.size(16.dp))
@@ -280,9 +323,28 @@ private fun CompletedCard(booking: Booking, onClick: () -> Unit) {
             DateRow(booking); Spacer(Modifier.height(4.dp))
             Text("${booking.totalPrice.toInt()} EUR totale", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = HeadingText)
             Spacer(Modifier.height(12.dp)); HorizontalDivider(color = BorderDivider); Spacer(Modifier.height(12.dp))
-            OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = CaptionLabels), border = BorderStroke(1.dp, BorderDivider)) {
-                Text("Vedi casa", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = onClick,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = CaptionLabels),
+                    border = BorderStroke(1.dp, BorderDivider)
+                ) {
+                    Text("Vedi casa", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                if (!hasReviewed) {
+                    Button(
+                        onClick = onReview,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Primario)
+                    ) {
+                        Text("Recensisci", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
             }
         }
     }

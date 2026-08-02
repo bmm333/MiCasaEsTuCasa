@@ -12,6 +12,7 @@ import com.mobile.micasaestucasa.domain.usecase.property.GetOwnerPropertiesUseCa
 import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.SearchPropertiesUseCase
 import com.mobile.micasaestucasa.domain.usecase.review.GetPropertyReviewsUseCase
+import com.mobile.micasaestucasa.domain.usecase.review.ReplyToReviewUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,7 +31,8 @@ class PropertyViewModel @Inject constructor(
     private val userRepo: UserRepo,
     private val deletePropertyUseCase: com.mobile.micasaestucasa.domain.usecase.property.DeletePropertyUseCase,
     private val demoteHostUseCase: com.mobile.micasaestucasa.domain.usecase.property.DemoteHostUseCase,
-    private val getPropertyReviewsUseCase: GetPropertyReviewsUseCase
+    private val getPropertyReviewsUseCase: GetPropertyReviewsUseCase,
+    private val replyToReviewUseCase: ReplyToReviewUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PropertyUiState>(PropertyUiState.Idle)
     val uiState: StateFlow<PropertyUiState> = _uiState.asStateFlow()
@@ -40,6 +42,15 @@ class PropertyViewModel @Inject constructor(
 
     private val _propertyReviews = MutableStateFlow<List<Review>>(emptyList())
     val propertyReviews: StateFlow<List<Review>> = _propertyReviews.asStateFlow()
+
+    private val _currentUserId = MutableStateFlow<String?>(null)
+    val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _currentUserId.value = userRepo.getCurrentUser()?.id
+        }
+    }
 
     // cache last search - lower the firestore rate if city and params dont change
     private var lastSearchParams: SearchParams? = null
@@ -145,6 +156,14 @@ class PropertyViewModel @Inject constructor(
                 .onFailure {
                     _propertyReviews.value = emptyList()
                 }
+        }
+    }
+
+    fun replyToReview(reviewId: String, hostId: String, propertyId: String, replyText: String) {
+        viewModelScope.launch {
+            replyToReviewUseCase(reviewId, hostId, replyText).onSuccess {
+                loadPropertyReviews(propertyId)
+            }
         }
     }
 

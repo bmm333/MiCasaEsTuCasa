@@ -46,6 +46,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -149,8 +152,12 @@ fun PropertyDetailScreen(
                 property = state.property,
                 reviews = reviews,
                 isSaved = isSaved,
+                currentUserId = currentUserId,
                 onFavoriteClick = { viewModel.toggleSaved(propertyId) },
                 onNavigateBack = onNavigateBack,
+                onReplySubmit = { reviewId, replyText ->
+                    viewModel.replyToReview(reviewId, currentUserId, propertyId, replyText)
+                },
                 onBookClick = {
                     onNavigateToBooking(
                         propertyId,
@@ -205,8 +212,10 @@ fun PropertyDetailContent(
     property: Property,
     reviews: List<Review> = emptyList(),
     isSaved: Boolean = false,
+    currentUserId: String = "",
     onFavoriteClick: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
+    onReplySubmit: (String, String) -> Unit = { _, _ -> },
     onBookClick: () -> Unit = {},
     onChatClick: () -> Unit = {},
     showChatButton: Boolean = true,
@@ -369,7 +378,12 @@ fun PropertyDetailContent(
 
             // ── 11. Reviews Section ────────────────────────────────────
             item {
-                ReviewsSection(reviews = reviews)
+                ReviewsSection(
+                    reviews = reviews,
+                    currentUserId = currentUserId,
+                    propertyOwnerId = property.ownerId,
+                    onReplySubmit = onReplySubmit
+                )
             }
 
             // ── 12. Bottom spacing ─────────────────────────────────────
@@ -723,7 +737,12 @@ private fun LocationSection(
 
 /** Reviews Section */
 @Composable
-private fun ReviewsSection(reviews: List<Review>) {
+private fun ReviewsSection(
+    reviews: List<Review>,
+    currentUserId: String,
+    propertyOwnerId: String,
+    onReplySubmit: (String, String) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -756,7 +775,12 @@ private fun ReviewsSection(reviews: List<Review>) {
             )
         } else {
             reviews.forEach { review ->
-                ReviewItem(review)
+                ReviewItem(
+                    review = review,
+                    currentUserId = currentUserId,
+                    propertyOwnerId = propertyOwnerId,
+                    onReplySubmit = onReplySubmit
+                )
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
@@ -764,7 +788,16 @@ private fun ReviewsSection(reviews: List<Review>) {
 }
 
 @Composable
-private fun ReviewItem(review: Review) {
+private fun ReviewItem(
+    review: Review,
+    currentUserId: String = "",
+    propertyOwnerId: String = "",
+    onReplySubmit: (String, String) -> Unit = { _, _ -> }
+) {
+    var showReplyDialog by remember { mutableStateOf(false) }
+    var replyText by remember { mutableStateOf("") }
+    val isOwner = currentUserId.isNotBlank() && currentUserId == propertyOwnerId
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -834,6 +867,50 @@ private fun ReviewItem(review: Review) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        } else if (isOwner) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Rispondi",
+                style = Typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = Primario,
+                modifier = Modifier
+                    .clickable { showReplyDialog = true }
+                    .padding(vertical = 4.dp)
+            )
         }
+    }
+
+    if (showReplyDialog) {
+        AlertDialog(
+            onDismissRequest = { showReplyDialog = false },
+            title = { Text("Rispondi alla recensione") },
+            text = {
+                OutlinedTextField(
+                    value = replyText,
+                    onValueChange = { replyText = it },
+                    label = { Text("La tua risposta") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (replyText.isNotBlank()) {
+                            onReplySubmit(review.id, replyText)
+                            showReplyDialog = false
+                        }
+                    }
+                ) {
+                    Text("Invia")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReplyDialog = false }) {
+                    Text("Annulla")
+                }
+            }
+        )
     }
 }

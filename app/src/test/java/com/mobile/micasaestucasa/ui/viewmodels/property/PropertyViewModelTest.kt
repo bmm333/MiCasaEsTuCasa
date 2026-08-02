@@ -13,6 +13,7 @@ import com.mobile.micasaestucasa.domain.usecase.property.GetOwnerPropertiesUseCa
 import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.SearchPropertiesUseCase
 import com.mobile.micasaestucasa.domain.usecase.review.GetPropertyReviewsUseCase
+import com.mobile.micasaestucasa.domain.usecase.review.ReplyToReviewUseCase
 import com.mobile.micasaestucasa.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -43,6 +44,7 @@ class PropertyViewModelTest {
     private val deletePropertyUseCase: DeletePropertyUseCase = mockk(relaxed = true)
     private val demoteHostUseCase: DemoteHostUseCase = mockk(relaxed = true)
     private val getPropertyReviewsUseCase: GetPropertyReviewsUseCase = mockk(relaxed = true)
+    private val replyToReviewUseCase: ReplyToReviewUseCase = mockk(relaxed = true)
 
     private val sampleProperty = Property(
         id = "prop-1",
@@ -76,7 +78,8 @@ class PropertyViewModelTest {
             userRepo = userRepo,
             deletePropertyUseCase = deletePropertyUseCase,
             demoteHostUseCase = demoteHostUseCase,
-            getPropertyReviewsUseCase = getPropertyReviewsUseCase
+            getPropertyReviewsUseCase = getPropertyReviewsUseCase,
+            replyToReviewUseCase = replyToReviewUseCase
         )
     }
 

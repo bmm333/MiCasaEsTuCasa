@@ -4,11 +4,14 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.navigation.compose.rememberNavController
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.util.Resource
 import com.mobile.micasaestucasa.ui.screens.profile.ProfileContent
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
+import com.mobile.micasaestucasa.ui.viewmodels.user.HostStats
+import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistUiState
 import org.junit.Rule
 import org.junit.Test
 
@@ -61,16 +64,20 @@ class ProfileComponentTests {
     fun profileScreen_showsLoadingIndicator() {
         composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
+                val navController = rememberNavController()
                 ProfileContent(
                     userState = Resource.Loading,
+                    wishlistState = WishlistUiState(),
+                    hostStats = HostStats(),
+                    isHost = false,
+                    navController = navController,
                     onLogout = {},
                     onNavigateToSettings = {}
                 )
             }
         }
 
-        // Verifica che il CircularProgressIndicator sia presente (tramite matcher generico o testTag se aggiunto)
-        // In questo caso verifichiamo che non ci sia il testo dell'utente
+        // Verifica che non ci sia il testo dell'utente (è in stato Loading)
         composeTestRule.onNodeWithText(testUser.name).assertDoesNotExist()
     }
 
@@ -79,8 +86,13 @@ class ProfileComponentTests {
         var logoutClicked = false
         composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
+                val navController = rememberNavController()
                 ProfileContent(
                     userState = Resource.Success(testUser),
+                    wishlistState = WishlistUiState(),
+                    hostStats = HostStats(),
+                    isHost = false,
+                    navController = navController,
                     onLogout = { logoutClicked = true },
                     onNavigateToSettings = {}
                 )

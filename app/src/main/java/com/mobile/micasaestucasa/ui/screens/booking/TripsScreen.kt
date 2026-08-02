@@ -256,7 +256,11 @@ private fun PastTab(bookings: List<Booking>, onNavigateToProperty: (String) -> U
     val completed = bookings.filter { it.status == BookingStatus.COMPLETED || (it.status == BookingStatus.ACCEPTED && it.endDate < LocalDate.now().toString()) }
     val cancelled = bookings.filter { it.status == BookingStatus.CANCELLED || it.status == BookingStatus.REJECTED }
 
-    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         if (completed.isNotEmpty()) {
             item { Text("Soggiorni completati", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = HeadingText, modifier = Modifier.padding(bottom = 4.dp)) }
             items(completed) { booking -> CompletedCard(booking, onClick = { onNavigateToProperty(booking.propertyId) }) }

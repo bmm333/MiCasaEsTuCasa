@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaTopBar
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import org.junit.Rule
 import org.junit.Test
@@ -18,10 +19,11 @@ class HomeComponentsTest {
     fun topAppBar_automation_test() {
         composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
-                Topnavigation()
+                // MiCasaTopBar renders "MiCasa" as the centred brand label
+                MiCasaTopBar()
             }
         }
-        composeTestRule.onNodeWithText("MiCasaEsTuCasa", ignoreCase = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("MiCasa", ignoreCase = true).assertIsDisplayed()
     }
 
     @Test
@@ -32,11 +34,11 @@ class HomeComponentsTest {
             }
         }
 
-        // Trova il TextField tramite il testo del placeholder e inserisce testo
-        composeTestRule.onNodeWithText("Dove vai?", substring = true).performTextInput("Milano")
+        // The real placeholder text is "Where are you going?"
+        composeTestRule.onNodeWithText("Where are you going?", substring = true).performTextInput("Milano")
         composeTestRule.onNodeWithText("Milano").assertExists()
 
-        // Sostituisce il testo
+        // Replace the text
         composeTestRule.onNodeWithText("Milano").performTextReplacement("Roma")
         composeTestRule.onNodeWithText("Roma").assertExists()
     }

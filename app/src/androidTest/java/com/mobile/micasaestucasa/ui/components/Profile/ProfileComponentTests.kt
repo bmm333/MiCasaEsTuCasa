@@ -4,7 +4,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.navigation.compose.rememberNavController
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.util.Resource
@@ -64,20 +63,20 @@ class ProfileComponentTests {
     fun profileScreen_showsLoadingIndicator() {
         composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
-                val navController = rememberNavController()
                 ProfileContent(
                     userState = Resource.Loading,
                     wishlistState = WishlistUiState(),
                     hostStats = HostStats(),
                     isHost = false,
-                    navController = navController,
                     onLogout = {},
-                    onNavigateToSettings = {}
+                    onNavigateToSettings = {},
+                    navController = androidx.navigation.compose.rememberNavController()
                 )
             }
         }
 
-        // Verifica che non ci sia il testo dell'utente (è in stato Loading)
+        // Verifica che il CircularProgressIndicator sia presente (tramite matcher generico o testTag se aggiunto)
+        // In questo caso verifichiamo che non ci sia il testo dell'utente
         composeTestRule.onNodeWithText(testUser.name).assertDoesNotExist()
     }
 
@@ -86,15 +85,14 @@ class ProfileComponentTests {
         var logoutClicked = false
         composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
-                val navController = rememberNavController()
                 ProfileContent(
                     userState = Resource.Success(testUser),
                     wishlistState = WishlistUiState(),
                     hostStats = HostStats(),
                     isHost = false,
-                    navController = navController,
                     onLogout = { logoutClicked = true },
-                    onNavigateToSettings = {}
+                    onNavigateToSettings = {},
+                    navController = androidx.navigation.compose.rememberNavController()
                 )
             }
         }

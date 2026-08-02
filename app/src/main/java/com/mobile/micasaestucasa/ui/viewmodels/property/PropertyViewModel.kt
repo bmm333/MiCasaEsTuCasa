@@ -3,6 +3,7 @@ package com.mobile.micasaestucasa.ui.viewmodels.property
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.model.property.Property
+import com.mobile.micasaestucasa.domain.model.review.Review
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
 import com.mobile.micasaestucasa.domain.usecase.admin.AddUserReportUseCase
@@ -10,6 +11,7 @@ import com.mobile.micasaestucasa.domain.usecase.property.CreatePropertyUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetOwnerPropertiesUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.SearchPropertiesUseCase
+import com.mobile.micasaestucasa.domain.usecase.review.GetPropertyReviewsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,13 +29,17 @@ class PropertyViewModel @Inject constructor(
     private val wishlistRepo: WhishlistRepo,
     private val userRepo: UserRepo,
     private val deletePropertyUseCase: com.mobile.micasaestucasa.domain.usecase.property.DeletePropertyUseCase,
-    private val demoteHostUseCase: com.mobile.micasaestucasa.domain.usecase.property.DemoteHostUseCase
+    private val demoteHostUseCase: com.mobile.micasaestucasa.domain.usecase.property.DemoteHostUseCase,
+    private val getPropertyReviewsUseCase: GetPropertyReviewsUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<PropertyUiState>(PropertyUiState.Idle)
     val uiState: StateFlow<PropertyUiState> = _uiState.asStateFlow()
 
     private val _isSaved = MutableStateFlow(false)
     val isSaved: StateFlow<Boolean> = _isSaved.asStateFlow()
+
+    private val _propertyReviews = MutableStateFlow<List<Review>>(emptyList())
+    val propertyReviews: StateFlow<List<Review>> = _propertyReviews.asStateFlow()
 
     // cache last search - lower the firestore rate if city and params dont change
     private var lastSearchParams: SearchParams? = null
@@ -120,11 +126,24 @@ class PropertyViewModel @Inject constructor(
             getPropertyByIdUseCase(propertyId)
                 .onSuccess { property ->
                     _uiState.value = PropertyUiState.DetailSuccess(property)
+                    loadPropertyReviews(propertyId)
                 }
                 .onFailure { error ->
                     _uiState.value = PropertyUiState.Error(
                         error.message ?: "Errore caricamento proprietà"
                     )
+                }
+        }
+    }
+
+    private fun loadPropertyReviews(propertyId: String) {
+        viewModelScope.launch {
+            getPropertyReviewsUseCase(propertyId)
+                .onSuccess { reviews ->
+                    _propertyReviews.value = reviews
+                }
+                .onFailure {
+                    _propertyReviews.value = emptyList()
                 }
         }
     }

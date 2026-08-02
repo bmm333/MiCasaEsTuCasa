@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
+import com.mobile.micasaestucasa.domain.repository.review.ReviewRepo
 import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
 import com.mobile.micasaestucasa.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,7 +32,8 @@ data class Category(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val propertyRepo: PropertyRepo,
-    private val wishlistRepo: WhishlistRepo
+    private val wishlistRepo: WhishlistRepo,
+    private val reviewRepo: ReviewRepo
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -61,10 +63,19 @@ class HomeViewModel @Inject constructor(
                     }
                     is Resource.Success -> {
                         authRetried = false
+                        val propsWithReviews = resource.data?.map { prop ->
+                            if (prop.rating == 0.0) {
+                                val reviews = reviewRepo.getPropertyReviews(prop.id).getOrNull() ?: emptyList()
+                                if (reviews.isNotEmpty()) {
+                                    val avg = reviews.map { it.stars }.average()
+                                    prop.copy(rating = avg, reviewsCount = reviews.size)
+                                } else prop
+                            } else prop
+                        } ?: emptyList()
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                properties = resource.data,
+                                properties = propsWithReviews,
                                 error = null
                             )
                         }

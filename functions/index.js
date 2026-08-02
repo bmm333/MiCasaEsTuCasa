@@ -387,3 +387,39 @@ exports.completeExpiredBookings = functions.region("europe-west1").pubsub
 
         return null;
     });
+
+/**
+ * Aggregates property ratings on new/updated/deleted property review
+ */
+exports.onReviewWritten = functions.region("europe-west1").firestore
+    .document("reviews/{reviewId}")
+    .onWrite(async (change, context) => {
+        const review = change.after.exists ? change.after.data() : change.before.data();
+        if (!review || review.reviewType !== "PROPERTY_REVIEW" || !review.propertyId) {
+            return null;
+        }
+
+        const propertyId = review.propertyId;
+        const reviewsSnap = await db.collection("reviews")
+            .where("propertyId", "==", propertyId)
+            .where("reviewType", "==", "PROPERTY_REVIEW")
+            .get();
+
+        let totalRating = 0;
+        let reviewsCount = reviewsSnap.size;
+
+        if (reviewsCount > 0) {
+            reviewsSnap.forEach(doc => {
+                totalRating += (doc.data().rating || 0);
+            });
+        }
+
+        const averageRating = reviewsCount > 0 ? (totalRating / reviewsCount) : 0;
+
+        return db.collection("properties").doc(propertyId).update({
+            rating: averageRating,
+            reviewsCount: reviewsCount
+        }).catch(err => {
+            console.error(`Error updating rating for property ${propertyId}:`, err);
+        });
+    });

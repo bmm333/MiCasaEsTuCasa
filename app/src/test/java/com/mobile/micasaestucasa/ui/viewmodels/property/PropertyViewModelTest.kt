@@ -12,6 +12,7 @@ import com.mobile.micasaestucasa.domain.usecase.property.DemoteHostUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetOwnerPropertiesUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.SearchPropertiesUseCase
+import com.mobile.micasaestucasa.domain.usecase.review.GetPropertyReviewsUseCase
 import com.mobile.micasaestucasa.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -41,6 +42,7 @@ class PropertyViewModelTest {
     private val userRepo: UserRepo = mockk(relaxed = true)
     private val deletePropertyUseCase: DeletePropertyUseCase = mockk(relaxed = true)
     private val demoteHostUseCase: DemoteHostUseCase = mockk(relaxed = true)
+    private val getPropertyReviewsUseCase: GetPropertyReviewsUseCase = mockk(relaxed = true)
 
     private val sampleProperty = Property(
         id = "prop-1",
@@ -73,7 +75,8 @@ class PropertyViewModelTest {
             wishlistRepo = wishlistRepo,
             userRepo = userRepo,
             deletePropertyUseCase = deletePropertyUseCase,
-            demoteHostUseCase = demoteHostUseCase
+            demoteHostUseCase = demoteHostUseCase,
+            getPropertyReviewsUseCase = getPropertyReviewsUseCase
         )
     }
 
@@ -82,6 +85,7 @@ class PropertyViewModelTest {
     @Test
     fun `loadPropertyDetail emette DetailSuccess con la proprietà corretta`() = runTest {
         coEvery { getPropertyByIdUseCase("prop-1") } returns Result.success(sampleProperty)
+        coEvery { getPropertyReviewsUseCase("prop-1") } returns Result.success(emptyList())
 
         viewModel.loadPropertyDetail("prop-1")
         advanceUntilIdle()
@@ -138,6 +142,7 @@ class PropertyViewModelTest {
     @Test
     fun `loadPropertyDetail passa da Loading a DetailSuccess`() = runTest {
         coEvery { getPropertyByIdUseCase("prop-1") } returns Result.success(sampleProperty)
+        coEvery { getPropertyReviewsUseCase("prop-1") } returns Result.success(emptyList())
 
         viewModel.uiState.test {
             // Stato iniziale Idle
@@ -162,6 +167,7 @@ class PropertyViewModelTest {
     @Test
     fun `resetState riporta lo stato a Idle`() = runTest {
         coEvery { getPropertyByIdUseCase("prop-1") } returns Result.success(sampleProperty)
+        coEvery { getPropertyReviewsUseCase("prop-1") } returns Result.success(emptyList())
 
         viewModel.loadPropertyDetail("prop-1")
         advanceUntilIdle()

@@ -28,8 +28,7 @@ class ProfileComponentsTest {
                     name = "Mario Rossi",
                     memberSince = "2022",
                     bio = "Amo viaggiare",
-                    // imageUrl (String?) replaces the old imageRes (Int) parameter
-                    imageUrl = null
+                    imageUrl = ""
                 )
             }
         }

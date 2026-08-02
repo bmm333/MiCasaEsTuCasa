@@ -1,5 +1,7 @@
 package com.mobile.micasaestucasa.ui.screens.property
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -58,6 +60,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -74,6 +77,8 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.mobile.micasaestucasa.domain.model.property.Property
+import com.mobile.micasaestucasa.domain.model.review.Review
+import com.mobile.micasaestucasa.ui.components.atomics.UserAvatarImage
 import com.mobile.micasaestucasa.ui.components.property.AmenityItem
 import com.mobile.micasaestucasa.ui.components.property.BookingBottomBar
 import com.mobile.micasaestucasa.ui.components.property.FeatureChip
@@ -119,6 +124,7 @@ fun PropertyDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isSaved by viewModel.isSaved.collectAsState()
+    val reviews by viewModel.propertyReviews.collectAsState()
 
     LaunchedEffect(propertyId) {
         viewModel.loadPropertyDetail(propertyId)
@@ -141,6 +147,7 @@ fun PropertyDetailScreen(
             val isOwner = currentUserId.isNotBlank() && currentUserId == state.property.ownerId
             PropertyDetailContent(
                 property = state.property,
+                reviews = reviews,
                 isSaved = isSaved,
                 onFavoriteClick = { viewModel.toggleSaved(propertyId) },
                 onNavigateBack = onNavigateBack,
@@ -196,6 +203,7 @@ fun PropertyDetailScreen(
 @Composable
 fun PropertyDetailContent(
     property: Property,
+    reviews: List<Review> = emptyList(),
     isSaved: Boolean = false,
     onFavoriteClick: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
@@ -238,6 +246,9 @@ fun PropertyDetailContent(
 
             // ── 2. Title + Location + Rating ─────────────────────────
             item {
+                val displayRating = if (reviews.isNotEmpty()) reviews.map { it.stars }.average() else property.rating
+                val displayReviewsCount = if (reviews.isNotEmpty()) reviews.size else property.reviewsCount
+                
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -278,14 +289,14 @@ fun PropertyDetailContent(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = if (property.rating > 0) "%.1f".format(property.rating) else "New",
+                                text = if (displayRating > 0) "%.1f".format(displayRating) else "New",
                                 style = Typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            if (property.reviewsCount > 0) {
+                            if (displayReviewsCount > 0) {
                                 Text(
-                                    text = " (${property.reviewsCount})",
+                                    text = " ($displayReviewsCount)",
                                     style = Typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -351,7 +362,17 @@ fun PropertyDetailContent(
                 )
             }
 
-            // ── 10. Bottom spacing ─────────────────────────────────────
+            // ── 10. Divider ────────────────────────────────────────────
+            item {
+                SectionDivider()
+            }
+
+            // ── 11. Reviews Section ────────────────────────────────────
+            item {
+                ReviewsSection(reviews = reviews)
+            }
+
+            // ── 12. Bottom spacing ─────────────────────────────────────
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -647,6 +668,7 @@ private fun LocationSection(
 
         // Map — show only if coordinates are available
         if (latitude != 0.0 && longitude != 0.0) {
+            val context = LocalContext.current
             Spacer(modifier = Modifier.height(12.dp))
             val position = LatLng(latitude, longitude)
             val cameraPositionState = rememberCameraPositionState {
@@ -661,12 +683,24 @@ private fun LocationSection(
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState,
+                    onMapClick = {
+                        val uri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude(${Uri.encode(city)})")
+                        val intent = Intent(Intent.ACTION_VIEW, uri)
+                        intent.setPackage("com.google.android.apps.maps")
+                        if (intent.resolveActivity(context.packageManager) != null) {
+                            context.startActivity(intent)
+                        } else {
+                            // Fallback to browser if Maps app is not installed
+                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=$latitude,$longitude"))
+                            context.startActivity(browserIntent)
+                        }
+                    },
                     uiSettings = MapUiSettings(
                         zoomControlsEnabled = false,
                         scrollGesturesEnabled = false,
                         zoomGesturesEnabled = false,
-                        rotationGesturesEnabled = false,
-                        tiltGesturesEnabled = false
+                        tiltGesturesEnabled = false,
+                        rotationGesturesEnabled = false
                     ),
                     properties = MapProperties()
                 ) {
@@ -687,51 +721,119 @@ private fun LocationSection(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  Preview
-// ═══════════════════════════════════════════════════════════════════════
-@Preview(showBackground = true, showSystemUi = true, name = "Property Detail")
+/** Reviews Section */
 @Composable
-fun PropertyDetailScreenPreview() {
-    val fakeProperty = Property(
-        id = "preview_1",
-        ownerId = "owner_123",
-        title = "The Earth & Clay Villa",
-        description = "Perched on the edges of the ancient caldera, The Earth & Clay Villa is one " +
-            "better to be believed with one's eyes. Every corner has been curated with raw, " +
-            "minimal materials — dark travertine stone, hand-woven linens and local pottery — " +
-            "to create an atmosphere of profound tranquility.\n\n" +
-            "Wake up to the scent of wild sage and sea salt. This expansive terrace offers " +
-            "the kind of ocean view of the Aegean, where the blue of the sea melts into the " +
-            "sky in an endless horizon. This isn't just a place to stay; it is an invitation to breathe.",
-        latitude = 36.4161,
-        longitude = 25.4322,
-        city = "Santorini, Greece",
-        pricePerDay = 450.0,
-        capacity = 6,
-        keywords = listOf(
-            "Private Infinity Pool",
-            "High-speed Fiber WiFi",
-            "Chef's Kitchen",
-            "Free Valet Parking",
-            "Dedicated Workspace",
-            "In-suite Laundry"
-        ),
-        imageUrls = listOf(
-            "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
-            "https://images.unsplash.com/photo-1613490493576-7fde63acd811",
-            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750"
-        ),
-        availableFrom = "2026-06-12",
-        availableTo = "2026-06-18",
-        rating = 4.95,
-        reviewsCount = 128
-    )
+private fun ReviewsSection(reviews: List<Review>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = null,
+                tint = Accenti,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "${reviews.size} Recensioni",
+                style = Typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        if (reviews.isEmpty()) {
+            Text(
+                text = "Nessuna recensione disponibile.",
+                style = Typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            reviews.forEach { review ->
+                ReviewItem(review)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+}
 
-    MiCasaEsTuCasaTheme {
-        PropertyDetailContent(
-            property = fakeProperty,
-            onNavigateBack = {}
+@Composable
+private fun ReviewItem(review: Review) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            UserAvatarImage(
+                imageUrl = review.authorProfilePicture,
+                userName = review.authorName,
+                modifier = Modifier.size(40.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = review.authorName,
+                    style = Typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(review.createdAt)),
+                    style = Typography.labelSmall,
+                    color = CaptionLabels
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            repeat(5) { i ->
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = if (i < review.stars) Accenti else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = review.body,
+            style = Typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        
+        if (!review.hostReply.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surface,
+                        RoundedCornerShape(8.dp)
+                    )
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = "Risposta dell'Host",
+                    style = Typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = review.hostReply,
+                    style = Typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }

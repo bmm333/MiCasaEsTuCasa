@@ -40,6 +40,7 @@ import com.mobile.micasaestucasa.ui.screens.host.MyPropertiesScreen
 import com.mobile.micasaestucasa.ui.screens.profile.EditProfileScreen
 import com.mobile.micasaestucasa.ui.screens.profile.ProfileScreen
 import com.mobile.micasaestucasa.ui.screens.property.PropertyDetailScreen
+import com.mobile.micasaestucasa.ui.screens.review.WriteReviewScreen
 import com.mobile.micasaestucasa.ui.screens.search.SearchScreen
 import com.mobile.micasaestucasa.ui.screens.whishlist.WishlistScreen
 import com.mobile.micasaestucasa.ui.theme.Primario
@@ -434,6 +435,18 @@ fun AppNavigation(
                 onNavigateToProperty = { propId ->
                     navController.navigate(Route.PropertyDetail(propId))
                 }
+            )
+        }
+
+        composable<Route.WriteReview> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.WriteReview>()
+            WriteReviewScreen(
+                bookingId = route.bookingId,
+                propertyId = route.propertyId,
+                hostId = route.hostId,
+                renterId = route.renterId,
+                currentUserId = currentUserId,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 

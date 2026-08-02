@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -53,6 +54,7 @@ import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.HostBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
 import com.mobile.micasaestucasa.ui.navigation.Route
+import com.mobile.micasaestucasa.ui.theme.Background
 import com.mobile.micasaestucasa.ui.theme.Badges
 import com.mobile.micasaestucasa.ui.theme.BorderDivider
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
@@ -86,11 +88,21 @@ fun BookingListScreen(
     viewModel: BookingViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val reviewedIds by viewModel.reviewedBookingIds.collectAsState()
 
-    LaunchedEffect(Unit) {
-        when (mode) {
-            BookingListMode.RENTER -> viewModel.loadRenterBookings(currentUserId)
-            BookingListMode.HOST -> viewModel.loadHostBookings(currentUserId)
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                when (mode) {
+                    BookingListMode.RENTER -> viewModel.loadRenterBookings(currentUserId)
+                    BookingListMode.HOST -> viewModel.loadHostBookings(currentUserId)
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
@@ -190,6 +202,17 @@ fun BookingListScreen(
                                     val hostId = if (mode == BookingListMode.HOST) currentUserId else booking.hostId
                                     val renterId = if (mode == BookingListMode.HOST) booking.renterId else currentUserId
                                     onNavigateToChat(hostId, renterId, booking.propertyId)
+                                },
+                                hasReviewed = booking.id in reviewedIds,
+                                onReview = {
+                                    navController.navigate(
+                                        Route.WriteReview(
+                                            bookingId = booking.id,
+                                            propertyId = booking.propertyId,
+                                            hostId = booking.hostId,
+                                            renterId = booking.renterId
+                                        )
+                                    )
                                 }
                             )
                         }
@@ -215,7 +238,9 @@ private fun BookingCard(
     onAccept: () -> Unit,
     onReject: () -> Unit,
     onCancel: () -> Unit,
-    onMessage: () -> Unit
+    onMessage: () -> Unit,
+    hasReviewed: Boolean = false,
+    onReview: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -329,6 +354,19 @@ private fun BookingCard(
                 border = androidx.compose.foundation.BorderStroke(1.dp, ErrorColor)
             ) {
                 Text("Annulla prenotazione", fontWeight = FontWeight.SemiBold)
+            }
+        }
+
+        // review action for both if completed and not reviewed yet
+        if (booking.status == BookingStatus.COMPLETED && !hasReviewed) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = onReview,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Primario)
+            ) {
+                Text(if (isHost) "Valuta ospite" else "Recensisci", fontWeight = FontWeight.SemiBold)
             }
         }
     }

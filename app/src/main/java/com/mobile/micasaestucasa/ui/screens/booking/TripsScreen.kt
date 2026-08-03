@@ -30,7 +30,6 @@ import androidx.navigation.NavController
 import com.mobile.micasaestucasa.domain.model.booking.Booking
 import com.mobile.micasaestucasa.domain.model.booking.BookingStatus
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
-import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaConnectedBottomNav
 import com.mobile.micasaestucasa.ui.navigation.Route
 import com.mobile.micasaestucasa.ui.theme.*

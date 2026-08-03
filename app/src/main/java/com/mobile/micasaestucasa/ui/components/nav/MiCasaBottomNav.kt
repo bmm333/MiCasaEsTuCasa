@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -163,4 +164,33 @@ fun MiCasaBottomNav(
             }
         }
     }
+}
+
+@Composable
+fun MiCasaConnectedBottomNav(
+    items: List<BottomNavItem>,
+    selectedRoute: String,
+    onItemSelected: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    chatViewModel: com.mobile.micasaestucasa.ui.viewmodels.chat.ChatViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    userViewModel: com.mobile.micasaestucasa.ui.viewmodels.user.UserViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+) {
+    val totalUnreadCount by chatViewModel.totalUnreadCount.collectAsState()
+    val hostStats by userViewModel.hostStats.collectAsState()
+    val isHost by userViewModel.isHost.collectAsState()
+
+    val badgeRoutes = remember(totalUnreadCount, isHost, hostStats.pendingBookingCount) {
+        buildSet {
+            if (totalUnreadCount > 0) add("messages_screen")
+            if (isHost && hostStats.pendingBookingCount > 0) add("host_bookings")
+        }
+    }
+
+    MiCasaBottomNav(
+        items = items,
+        selectedRoute = selectedRoute,
+        badgeRoutes = badgeRoutes,
+        onItemSelected = onItemSelected,
+        modifier = modifier
+    )
 }

@@ -53,6 +53,7 @@ import com.mobile.micasaestucasa.domain.model.booking.BookingStatus
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.HostBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaConnectedBottomNav
 import com.mobile.micasaestucasa.ui.navigation.Route
 import com.mobile.micasaestucasa.ui.theme.Background
 import com.mobile.micasaestucasa.ui.theme.Badges
@@ -139,7 +140,7 @@ fun BookingListScreen(
         },
         bottomBar = {
             if (mode == BookingListMode.HOST) {
-                MiCasaBottomNav(
+                MiCasaConnectedBottomNav(
                     items = HostBottomNavItems.items,
                     selectedRoute = "host_bookings",
                     onItemSelected = { route ->
@@ -153,7 +154,7 @@ fun BookingListScreen(
                     }
                 )
             } else {
-                MiCasaBottomNav(
+                MiCasaConnectedBottomNav(
                     items = DefaultBottomNavItems.items,
                     selectedRoute = "trips_screen",
                     onItemSelected = { route ->

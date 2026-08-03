@@ -44,6 +44,7 @@ import com.mobile.micasaestucasa.ui.components.atomics.ShimmerPropertyCard
 import com.mobile.micasaestucasa.ui.components.home.PropertyCard
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaConnectedBottomNav
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaSearchBar
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
 import com.mobile.micasaestucasa.ui.theme.ErrorColor
@@ -85,12 +86,9 @@ fun HomeScreen(
     Scaffold(
         containerColor = ScreenBackground,
         bottomBar = {
-            MiCasaBottomNav(
+            MiCasaConnectedBottomNav(
                 items = DefaultBottomNavItems.items,
                 selectedRoute = selectedRoute,
-                badgeRoutes = buildSet {
-                    if (totalUnreadCount > 0) add("messages_screen")
-                },
                 onItemSelected = { route ->
                     selectedRoute = route
                     when (route) {

@@ -27,6 +27,7 @@ import javax.inject.Inject
 data class HostStats(
     val propertyCount: Int = 0,
     val bookingCount: Int = 0,
+    val pendingBookingCount: Int = 0,
     val totalRevenue: Double = 0.0,
     val isLoading: Boolean = false,
     val error: String? = null
@@ -124,9 +125,12 @@ class UserViewModel @Inject constructor(
                         .filter { it.status == BookingStatus.ACCEPTED || it.status == BookingStatus.COMPLETED }
                         .sumOf { it.totalPrice }
 
+                    val pendingCount = bookings.count { it.status == BookingStatus.REQUESTED }
+
                     _hostStats.value = HostStats(
                         propertyCount = properties.size,
                         bookingCount = bookings.size,
+                        pendingBookingCount = pendingCount,
                         totalRevenue = revenue,
                         isLoading = false
                     )

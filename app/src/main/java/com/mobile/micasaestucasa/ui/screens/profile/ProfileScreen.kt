@@ -44,6 +44,7 @@ import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.util.Resource
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaConnectedBottomNav
 import com.mobile.micasaestucasa.ui.components.profile.DeleteAccountSection
 import com.mobile.micasaestucasa.ui.components.profile.HostBanner
 import com.mobile.micasaestucasa.ui.components.profile.HostDashboardCard
@@ -135,7 +136,7 @@ fun ProfileContent(
     Scaffold(
         containerColor = ScreenBackground,
         bottomBar = {
-            MiCasaBottomNav(
+            MiCasaConnectedBottomNav(
                 items = DefaultBottomNavItems.items,
                 selectedRoute = "profile_screen",
                 onItemSelected = { route ->

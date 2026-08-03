@@ -34,6 +34,7 @@ import androidx.navigation.NavController
 import com.mobile.micasaestucasa.ui.components.home.PropertyCard
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaConnectedBottomNav
 import com.mobile.micasaestucasa.ui.navigation.Route
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
 import com.mobile.micasaestucasa.ui.theme.CardSurface
@@ -83,7 +84,7 @@ fun WishlistScreen(
             )
         },
         bottomBar = {
-            MiCasaBottomNav(
+            MiCasaConnectedBottomNav(
                 items = DefaultBottomNavItems.items,
                 selectedRoute = "saved_screen",
                 onItemSelected = { route ->

@@ -58,6 +58,7 @@ import coil3.compose.AsyncImage
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.ui.components.nav.HostBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaConnectedBottomNav
 import com.mobile.micasaestucasa.ui.navigation.Route
 import com.mobile.micasaestucasa.ui.theme.BorderDivider
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
@@ -84,7 +85,7 @@ fun MyPropertiesScreen(
 
     Scaffold(
         bottomBar = {
-            MiCasaBottomNav(
+            MiCasaConnectedBottomNav(
                 items = HostBottomNavItems.items,
                 selectedRoute = "host_properties",
                 onItemSelected = { route ->

@@ -49,6 +49,7 @@ import com.mobile.micasaestucasa.domain.model.chat.Conversation
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaConnectedBottomNav
 import com.mobile.micasaestucasa.ui.navigation.Route
 import com.mobile.micasaestucasa.ui.theme.BorderDivider
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
@@ -103,13 +104,9 @@ fun ConversationListScreen(
             )
         },
         bottomBar = {
-            MiCasaBottomNav(
+            MiCasaConnectedBottomNav(
                 items = DefaultBottomNavItems.items,
                 selectedRoute = "messages_screen",
-                badgeRoutes = buildSet {
-                    // Don't show badge on messages_screen itself (user is already here)
-                    // but keep it on other routes that might have notifications
-                },
                 onItemSelected = { route ->
                     when (route) {
                         "home_screen" -> navController.navigate(Route.Home) {

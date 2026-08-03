@@ -27,7 +27,9 @@ import androidx.navigation.NavController
 import com.mobile.micasaestucasa.domain.model.booking.Booking
 import com.mobile.micasaestucasa.domain.model.booking.BookingStatus
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
+import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaConnectedBottomNav
 import com.mobile.micasaestucasa.ui.navigation.Route
 import com.mobile.micasaestucasa.ui.theme.*
 import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingUiState
@@ -105,7 +107,7 @@ fun TripsScreen(
             )
         },
         bottomBar = {
-            MiCasaBottomNav(
+            MiCasaConnectedBottomNav(
                 items = DefaultBottomNavItems.items,
                 selectedRoute = "trips_screen",
                 onItemSelected = { route ->
@@ -129,7 +131,7 @@ fun TripsScreen(
             when (uiState) {
                 is BookingUiState.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = Primario) }
                 is BookingUiState.Error -> Box(Modifier.fillMaxSize(), Alignment.Center) { Text((uiState as BookingUiState.Error).message, color = ErrorColor) }
-                else -> HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+                else -> HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Top) { page ->
                     when (page) {
                         0 -> BookingTab(upcoming, Icons.Rounded.Luggage, "Nessun viaggio in arrivo", "I tuoi prossimi soggiorni appariranno qui") { booking ->
                             UpcomingCard(booking, onCancel = { viewModel.cancelBooking(booking.id, currentUserId) },
@@ -178,7 +180,7 @@ private fun PillTabRow(tabs: List<TabItem>, selectedIndex: Int, onTabSelected: (
                     if (tab.count > 0) {
                         Spacer(Modifier.width(6.dp))
                         Box(Modifier.size(18.dp).clip(RoundedCornerShape(50.dp)).background(if (isSelected) CardSurface.copy(alpha = 0.3f) else Primario.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-                            Text("${tab.count}", fontSize = 10.sp, color = if (isSelected) CardSurface else Primario, fontWeight = FontWeight.Bold)
+                            Text("${tab.count}", fontSize = 10.sp, color = if (isSelected) CardSurface else Primario, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.wrapContentSize(Alignment.Center))
                         }
                     }
                 }
@@ -255,7 +257,7 @@ private fun ActiveCard(booking: Booking, onChat: () -> Unit, onClick: () -> Unit
         }
         Column(Modifier.padding(16.dp)) {
             DateRow(booking); Spacer(Modifier.height(6.dp))
-            Text("${booking.totalPrice.toInt()} EUR totale", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = HeadingText)
+            Text("${booking.totalPrice.toInt()} EUR totale", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = HeadingText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             Spacer(Modifier.height(12.dp)); HorizontalDivider(color = BorderDivider); Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onChat, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp),
@@ -321,7 +323,7 @@ private fun CompletedCard(
         }
         Column(Modifier.padding(16.dp)) {
             DateRow(booking); Spacer(Modifier.height(4.dp))
-            Text("${booking.totalPrice.toInt()} EUR totale", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = HeadingText)
+            Text("${booking.totalPrice.toInt()} EUR totale", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = HeadingText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             Spacer(Modifier.height(12.dp)); HorizontalDivider(color = BorderDivider); Spacer(Modifier.height(12.dp))
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -375,13 +377,14 @@ private fun CancelledCard(booking: Booking) {
 }
 
 @Composable private fun GuestsPriceRow(booking: Booking) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.align(Alignment.Start)) {
             Icon(Icons.Rounded.People, null, tint = CaptionLabels, modifier = Modifier.size(14.dp))
             Spacer(Modifier.width(4.dp))
             Text("${booking.guestsCount} ospiti", fontSize = 13.sp, color = CaptionLabels)
         }
-        Text("${booking.totalPrice.toInt()} EUR totale", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = HeadingText)
+        Spacer(Modifier.height(8.dp))
+        Text("${booking.totalPrice.toInt()} EUR totale", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = HeadingText, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
     }
 }
 

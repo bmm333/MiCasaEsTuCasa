@@ -18,7 +18,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -179,7 +182,20 @@ private fun PillTabRow(tabs: List<TabItem>, selectedIndex: Int, onTabSelected: (
                     if (tab.count > 0) {
                         Spacer(Modifier.width(6.dp))
                         Box(Modifier.size(18.dp).clip(RoundedCornerShape(50.dp)).background(if (isSelected) CardSurface.copy(alpha = 0.3f) else Primario.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-                            Text("${tab.count}", fontSize = 10.sp, color = if (isSelected) CardSurface else Primario, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.wrapContentSize(Alignment.Center))
+                            Text(
+                                text = "${tab.count}", 
+                                fontSize = 10.sp, 
+                                color = if (isSelected) CardSurface else Primario, 
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                style = TextStyle(
+                                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                                    lineHeightStyle = LineHeightStyle(
+                                        alignment = LineHeightStyle.Alignment.Center,
+                                        trim = LineHeightStyle.Trim.Both
+                                    )
+                                )
+                            )
                         }
                     }
                 }

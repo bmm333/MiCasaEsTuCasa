@@ -7,6 +7,7 @@ data class ReviewDto(
     val propertyId: String? = null,
     val authorId: String? = null,
     val targetId: String? = null,
+    val hostId: String? = null,
     val title: String? = null,
     val body: String? = null,
     val stars: Int? = null,

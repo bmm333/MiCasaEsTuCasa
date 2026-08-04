@@ -395,31 +395,80 @@ exports.onReviewWritten = functions.region("europe-west1").firestore
     .document("reviews/{reviewId}")
     .onWrite(async (change, context) => {
         const review = change.after.exists ? change.after.data() : change.before.data();
-        if (!review || review.reviewType !== "PROPERTY_REVIEW" || !review.propertyId) {
-            return null;
+        if (!review) return null;
+
+        if (review.reviewType === "PROPERTY_REVIEW") {
+            const propertyId = review.propertyId;
+            const hostId = review.hostId;
+
+            // 1. Update Property Rating
+            if (propertyId) {
+                const propReviewsSnap = await db.collection("reviews")
+                    .where("propertyId", "==", propertyId)
+                    .where("reviewType", "==", "PROPERTY_REVIEW")
+                    .get();
+
+                let propTotal = 0;
+                const propCount = propReviewsSnap.size;
+                propReviewsSnap.forEach(doc => {
+                    propTotal += (doc.data().stars || 0);
+                });
+                const propAvg = propCount > 0 ? (propTotal / propCount) : 0;
+
+                await db.collection("properties").doc(propertyId).update({
+                    rating: propAvg,
+                    reviewsCount: propCount
+                }).catch(err => console.error(err));
+            }
+
+            // 2. Update Host Rating & Badge
+            if (hostId) {
+                const hostReviewsSnap = await db.collection("reviews")
+                    .where("hostId", "==", hostId)
+                    .where("reviewType", "==", "PROPERTY_REVIEW")
+                    .get();
+
+                let hostTotal = 0;
+                const hostCount = hostReviewsSnap.size;
+                hostReviewsSnap.forEach(doc => {
+                    hostTotal += (doc.data().hostStars || doc.data().stars || 0);
+                });
+                const hostAvg = hostCount > 0 ? (hostTotal / hostCount) : 0;
+
+                let badge = "NEW_HOST";
+                if (hostCount >= 10 && hostAvg >= 4.7) badge = "SUPER_HOST";
+                else if (hostCount >= 3 && hostAvg >= 4.0) badge = "TRUSTED_HOST";
+
+                await db.collection("users").doc(hostId).update({
+                    avgRating: hostAvg,
+                    reviewsCount: hostCount,
+                    badge: badge
+                }).catch(err => console.error(err));
+            }
+        } else if (review.reviewType === "RENTER_REVIEW") {
+            const renterId = review.targetId;
+            if (renterId) {
+                const renterReviewsSnap = await db.collection("reviews")
+                    .where("targetId", "==", renterId)
+                    .where("reviewType", "==", "RENTER_REVIEW")
+                    .get();
+
+                let renterTotal = 0;
+                const renterCount = renterReviewsSnap.size;
+                renterReviewsSnap.forEach(doc => {
+                    renterTotal += (doc.data().stars || 0);
+                });
+                const renterAvg = renterCount > 0 ? (renterTotal / renterCount) : 0;
+
+                let badge = "NEW_RENTER";
+                if (renterCount >= 3 && renterAvg >= 4.0) badge = "TRUSTED_RENTER";
+
+                await db.collection("users").doc(renterId).update({
+                    reliabilityScore: renterAvg,
+                    renterReviewsCount: renterCount,
+                    badge: badge
+                }).catch(err => console.error(err));
+            }
         }
-
-        const propertyId = review.propertyId;
-        const reviewsSnap = await db.collection("reviews")
-            .where("propertyId", "==", propertyId)
-            .where("reviewType", "==", "PROPERTY_REVIEW")
-            .get();
-
-        let totalRating = 0;
-        let reviewsCount = reviewsSnap.size;
-
-        if (reviewsCount > 0) {
-            reviewsSnap.forEach(doc => {
-                totalRating += (doc.data().stars || 0);
-            });
-        }
-
-        const averageRating = reviewsCount > 0 ? (totalRating / reviewsCount) : 0;
-
-        return db.collection("properties").doc(propertyId).update({
-            rating: averageRating,
-            reviewsCount: reviewsCount
-        }).catch(err => {
-            console.error(`Error updating rating for property ${propertyId}:`, err);
-        });
+        return null;
     });

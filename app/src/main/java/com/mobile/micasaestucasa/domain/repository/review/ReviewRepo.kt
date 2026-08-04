@@ -11,6 +11,8 @@ interface ReviewRepo {
 
     suspend fun getUserReviews(userId: String): Result<List<Review>>
 
+    suspend fun getHostReviews(hostId: String): Result<List<Review>>
+
     suspend fun deleteReview(reviewId: String, userId: String): Result<Unit>
 
     suspend fun editReview(review: Review, userId: String): Result<Unit>

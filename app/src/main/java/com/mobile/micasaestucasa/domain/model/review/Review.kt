@@ -7,6 +7,7 @@ data class Review(
     val authorId: String = "",
     val targetId: String = "",
     val propertyId: String = "",
+    val hostId: String = "",
     val title: String = "",
     val body: String = "",
     val stars: Int = 0,

@@ -170,6 +170,7 @@ fun WriteReviewScreen(
                             propertyId = propertyId,
                             authorId = currentUserId,
                             targetId = targetId,
+                            hostId = hostId,
                             reviewType = reviewType,
                             stars = rating,
                             hostStars = if (!isHostReviewingRenter) hostRating else null,

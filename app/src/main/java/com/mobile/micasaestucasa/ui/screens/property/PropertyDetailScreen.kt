@@ -81,6 +81,7 @@ import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.domain.model.review.Review
+import com.mobile.micasaestucasa.ui.components.atomics.AppAvatar
 import com.mobile.micasaestucasa.ui.components.atomics.UserAvatarImage
 import com.mobile.micasaestucasa.ui.components.property.AmenityItem
 import com.mobile.micasaestucasa.ui.components.property.BookingBottomBar
@@ -948,10 +949,10 @@ fun HostProfileSection(host: com.mobile.micasaestucasa.domain.model.user.User) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            UserAvatarImage(
+            AppAvatar(
                 imageUrl = host.profileImageUrl,
-                userName = host.name,
-                modifier = Modifier.size(64.dp)
+                size = 64.dp,
+                modifier = Modifier
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {

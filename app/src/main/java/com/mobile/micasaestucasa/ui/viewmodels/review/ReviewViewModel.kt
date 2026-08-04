@@ -6,8 +6,6 @@ import com.mobile.micasaestucasa.domain.model.review.Review
 import com.mobile.micasaestucasa.domain.model.review.ReviewType
 import com.mobile.micasaestucasa.domain.usecase.review.EditReviewUseCase
 import com.mobile.micasaestucasa.domain.usecase.review.WriteReviewUseCase
-import com.mobile.micasaestucasa.domain.usecase.user.UpdateBadgeUseCase
-import com.mobile.micasaestucasa.domain.usecase.user.UpdateRenterScoreUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,9 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ReviewViewModel @Inject constructor(
     private val writeReviewUseCase: WriteReviewUseCase,
-    private val editReviewUseCase: EditReviewUseCase,
-    private val updateBadgeUseCase: UpdateBadgeUseCase,
-    private val updateRenterScoreUseCase: UpdateRenterScoreUseCase
+    private val editReviewUseCase: EditReviewUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ReviewUiState>(ReviewUiState.Idle)
     val uiState: StateFlow<ReviewUiState> = _uiState.asStateFlow()
@@ -37,13 +33,6 @@ class ReviewViewModel @Inject constructor(
             _uiState.value = ReviewUiState.Loading
             writeReviewUseCase(review, userId)
                 .onSuccess {
-                    // background task , should not block
-                    launch {
-                        when (review.reviewType) {
-                            ReviewType.PROPERTY_REVIEW -> updateBadgeUseCase(review.targetId)
-                            ReviewType.RENTER_REVIEW -> updateRenterScoreUseCase(review.targetId)
-                        }
-                    }
                     _uiState.value = ReviewUiState.ReviewSubmitted
                 }
                 .onFailure {

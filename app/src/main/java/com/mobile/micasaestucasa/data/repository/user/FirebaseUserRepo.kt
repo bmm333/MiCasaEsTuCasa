@@ -74,11 +74,13 @@ class FirebaseUserRepo @Inject constructor(
     override suspend fun updateRenterScore(
         renterId: String,
         reliabilityScore: Double,
-        renterReviewsCount: Int
+        renterReviewsCount: Int,
+        badge: UserBadge
     ): Result<Unit> {
         return try {
             usersCollection.document(renterId).update(
                 mapOf(
+                    "badge" to badge.name,
                     "reliabilityScore" to reliabilityScore,
                     "renterReviewsCount" to renterReviewsCount
                 )

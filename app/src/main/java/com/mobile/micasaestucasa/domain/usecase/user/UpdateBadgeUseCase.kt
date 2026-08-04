@@ -17,7 +17,7 @@ class UpdateBadgeUseCase @Inject constructor(private val userRepo: UserRepo, pri
         }
         val reviews = reviewsResult.getOrThrow()
         val count = reviews.size
-        val avgrating = if (count == 0) 0.0 else reviews.sumOf { it.stars } / count.toDouble()
+        val avgrating = if (count == 0) 0.0 else reviews.sumOf { it.hostStars ?: it.stars } / count.toDouble()
         val badge = when {
             count >= 10 && avgrating >= 4.7 -> UserBadge.SUPER_HOST
             count >= 3 && avgrating >= 4.0 -> UserBadge.TRUSTED_HOST

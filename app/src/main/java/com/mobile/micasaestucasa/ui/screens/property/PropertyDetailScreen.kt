@@ -87,7 +87,9 @@ import com.mobile.micasaestucasa.ui.components.property.BookingBottomBar
 import com.mobile.micasaestucasa.ui.components.property.FeatureChip
 import com.mobile.micasaestucasa.ui.theme.Accenti
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
+import com.mobile.micasaestucasa.ui.theme.Caution
 import com.mobile.micasaestucasa.ui.theme.ErrorColor
+import com.mobile.micasaestucasa.ui.theme.HeadingText
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.ScreenBackground
@@ -150,6 +152,7 @@ fun PropertyDetailScreen(
             val isOwner = currentUserId.isNotBlank() && currentUserId == state.property.ownerId
             PropertyDetailContent(
                 property = state.property,
+                propertyOwner = state.propertyOwner,
                 reviews = reviews,
                 isSaved = isSaved,
                 currentUserId = currentUserId,
@@ -210,6 +213,7 @@ fun PropertyDetailScreen(
 @Composable
 fun PropertyDetailContent(
     property: Property,
+    propertyOwner: com.mobile.micasaestucasa.domain.model.user.User? = null,
     reviews: List<Review> = emptyList(),
     isSaved: Boolean = false,
     currentUserId: String = "",
@@ -360,6 +364,16 @@ fun PropertyDetailContent(
             // ── 8. Divider ─────────────────────────────────────────────
             item {
                 SectionDivider()
+            }
+
+            // ── 8b. Host Profile ───────────────────────────────────────
+            if (propertyOwner != null) {
+                item {
+                    HostProfileSection(host = propertyOwner)
+                }
+                item {
+                    SectionDivider()
+                }
             }
 
             // ── 9. Location Section with Map ───────────────────────────
@@ -912,5 +926,70 @@ private fun ReviewItem(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun HostProfileSection(host: com.mobile.micasaestucasa.domain.model.user.User) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Informazioni sull'host",
+            style = Typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = HeadingText,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            UserAvatarImage(
+                imageUrl = host.profileImageUrl,
+                userName = host.name,
+                modifier = Modifier.size(64.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = host.name,
+                    style = Typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = HeadingText
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Rating",
+                        tint = Caution,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (host.avgRating > 0) "%.1f".format(host.avgRating) else "New",
+                        style = Typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = HeadingText
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "•",
+                        style = Typography.bodyMedium,
+                        color = CaptionLabels
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = host.badge.name.replace("_", " "),
+                        style = Typography.bodyMedium,
+                        color = Primario
+                    )
+                }
+            }
+        }
     }
 }

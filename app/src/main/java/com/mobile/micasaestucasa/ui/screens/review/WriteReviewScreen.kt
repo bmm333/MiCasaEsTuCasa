@@ -32,6 +32,7 @@ fun WriteReviewScreen(
     viewModel: ReviewViewModel = hiltViewModel()
 ) {
     var rating by remember { mutableIntStateOf(0) }
+    var hostRating by remember { mutableIntStateOf(0) }
     var reviewBody by remember { mutableStateOf("") }
     val uiState by viewModel.uiState.collectAsState()
 
@@ -67,24 +68,64 @@ fun WriteReviewScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = if (isHostReviewingRenter) "Come è stato l'ospite?" else "Come è stato il soggiorno?",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = HeadingText
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            if (isHostReviewingRenter) {
+                Text(
+                    text = "Come è stato l'ospite?",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = HeadingText
+                )
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Rating Stars
-            Row(horizontalArrangement = Arrangement.Center) {
-                for (i in 1..5) {
-                    IconButton(onClick = { rating = i }) {
-                        Icon(
-                            imageVector = if (i <= rating) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                            contentDescription = "Star $i",
-                            tint = if (i <= rating) Caution else CaptionLabels,
-                            modifier = Modifier.size(36.dp)
-                        )
+                // Rating Stars
+                Row(horizontalArrangement = Arrangement.Center) {
+                    for (i in 1..5) {
+                        IconButton(onClick = { rating = i }) {
+                            Icon(
+                                imageVector = if (i <= rating) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                                contentDescription = "Star $i",
+                                tint = if (i <= rating) Caution else CaptionLabels,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    text = "Come valuti la struttura?",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = HeadingText
+                )
+                Row(horizontalArrangement = Arrangement.Center) {
+                    for (i in 1..5) {
+                        IconButton(onClick = { rating = i }) {
+                            Icon(
+                                imageVector = if (i <= rating) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                                contentDescription = "Star $i",
+                                tint = if (i <= rating) Caution else CaptionLabels,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Come valuti l'host?",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = HeadingText
+                )
+                Row(horizontalArrangement = Arrangement.Center) {
+                    for (i in 1..5) {
+                        IconButton(onClick = { hostRating = i }) {
+                            Icon(
+                                imageVector = if (i <= hostRating) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                                contentDescription = "Host Star $i",
+                                tint = if (i <= hostRating) Caution else CaptionLabels,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -122,7 +163,8 @@ fun WriteReviewScreen(
 
             Button(
                 onClick = {
-                    if (rating > 0) {
+                    val isValid = if (isHostReviewingRenter) rating > 0 else (rating > 0 && hostRating > 0)
+                    if (isValid) {
                         val review = Review(
                             bookingId = bookingId,
                             propertyId = propertyId,
@@ -130,6 +172,7 @@ fun WriteReviewScreen(
                             targetId = targetId,
                             reviewType = reviewType,
                             stars = rating,
+                            hostStars = if (!isHostReviewingRenter) hostRating else null,
                             body = reviewBody,
                             title = "Recensione"
                         )
@@ -139,7 +182,7 @@ fun WriteReviewScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                enabled = rating > 0 && uiState !is ReviewUiState.Loading,
+                enabled = (if (isHostReviewingRenter) rating > 0 else (rating > 0 && hostRating > 0)) && uiState !is ReviewUiState.Loading,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primario)
             ) {

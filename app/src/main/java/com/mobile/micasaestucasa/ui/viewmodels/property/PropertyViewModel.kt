@@ -136,7 +136,8 @@ class PropertyViewModel @Inject constructor(
             _uiState.value = PropertyUiState.Loading
             getPropertyByIdUseCase(propertyId)
                 .onSuccess { property ->
-                    _uiState.value = PropertyUiState.DetailSuccess(property)
+                    val owner = userRepo.getUserById(property.ownerId).getOrNull()
+                    _uiState.value = PropertyUiState.DetailSuccess(property, owner)
                     loadPropertyReviews(propertyId)
                 }
                 .onFailure { error ->

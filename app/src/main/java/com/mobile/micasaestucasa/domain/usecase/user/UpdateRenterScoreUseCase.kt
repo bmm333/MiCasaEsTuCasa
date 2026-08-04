@@ -1,5 +1,6 @@
 package com.mobile.micasaestucasa.domain.usecase.user
 
+import com.mobile.micasaestucasa.domain.model.user.UserBadge
 import com.mobile.micasaestucasa.domain.model.review.ReviewType
 import com.mobile.micasaestucasa.domain.repository.review.ReviewRepo
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
@@ -24,18 +25,22 @@ class UpdateRenterScoreUseCase @Inject constructor(
         if (renterId.isBlank()) {
             return Result.failure(IllegalArgumentException("RenterId cannot be blank"))
         }
-        val reviewsResult = reviewRepo.getUserReviews(renterId)
+        val reviewsResult = reviewRepo.getRenterReviews(renterId)
         if (reviewsResult.isFailure) {
             return Result.failure(reviewsResult.exceptionOrNull()!!)
         }
         val renterReviews = reviewsResult.getOrThrow()
-            .filter { it.reviewType == ReviewType.RENTER_REVIEW }
         val count = renterReviews.size
         val reliabilityScore = if (count == 0) {
             0.0
         } else {
             renterReviews.sumOf { it.stars } / count.toDouble()
         }
-        return userRepo.updateRenterScore(renterId, reliabilityScore, count)
+        val badge = if (count >= 3 && reliabilityScore >= 4.0) {
+            UserBadge.TRUSTED_RENTER
+        } else {
+            UserBadge.NEW_RENTER
+        }
+        return userRepo.updateRenterScore(renterId, reliabilityScore, count, badge)
     }
 }

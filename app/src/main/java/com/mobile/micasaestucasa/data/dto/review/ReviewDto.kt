@@ -10,6 +10,7 @@ data class ReviewDto(
     val title: String? = null,
     val body: String? = null,
     val stars: Int? = null,
+    val hostStars: Int? = null,
     val hostReply: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

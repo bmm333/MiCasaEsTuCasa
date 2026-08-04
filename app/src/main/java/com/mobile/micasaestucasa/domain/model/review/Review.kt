@@ -10,6 +10,7 @@ data class Review(
     val title: String = "",
     val body: String = "",
     val stars: Int = 0,
+    val hostStars: Int? = null,
     val hostReply: String? = null,
     val authorName: String = "",
     val authorProfilePicture: String? = null,

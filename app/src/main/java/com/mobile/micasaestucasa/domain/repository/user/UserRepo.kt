@@ -9,7 +9,8 @@ interface UserRepo {
     suspend fun updateRenterScore(
         renterId: String,
         reliabilityScore: Double,
-        renterReviewsCount: Int
+        renterReviewsCount: Int,
+        badge: com.mobile.micasaestucasa.domain.model.user.UserBadge
     ): Result<Unit>
 
     suspend fun updateUserProfile(user: User): Result<Unit>

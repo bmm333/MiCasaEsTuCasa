@@ -410,7 +410,7 @@ exports.onReviewWritten = functions.region("europe-west1").firestore
 
         if (reviewsCount > 0) {
             reviewsSnap.forEach(doc => {
-                totalRating += (doc.data().rating || 0);
+                totalRating += (doc.data().stars || 0);
             });
         }
 

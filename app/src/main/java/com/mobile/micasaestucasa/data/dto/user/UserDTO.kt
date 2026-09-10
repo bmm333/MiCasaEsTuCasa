@@ -18,5 +18,7 @@ data class UserDTO(
     val profileImageUrl: String? = null,
     val address: String? = null,
     val phone: String? = null,
-    val status: String? = null
+    val status: String? = null,
+    val isOnline: Boolean? = null,
+    val lastSeen: Long? = null
 )

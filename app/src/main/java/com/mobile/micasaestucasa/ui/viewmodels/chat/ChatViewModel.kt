@@ -46,6 +46,13 @@ class ChatViewModel @Inject constructor(
     private val _otherUserPhotoUrl = MutableStateFlow<String?>(null)
     val otherUserPhotoUrl: StateFlow<String?> = _otherUserPhotoUrl.asStateFlow()
 
+    /** Stato online (isOnline, lastSeen) dell'altro utente — aggiornato in realtime. */
+    private val _otherUserIsOnline = MutableStateFlow(false)
+    val otherUserIsOnline: StateFlow<Boolean> = _otherUserIsOnline.asStateFlow()
+
+    private val _otherUserLastSeen = MutableStateFlow<Long?>(null)
+    val otherUserLastSeen: StateFlow<Long?> = _otherUserLastSeen.asStateFlow()
+
     /** Cached user profiles keyed by UID, used by the conversation list. */
     private val _conversationUsers = MutableStateFlow<Map<String, User>>(emptyMap())
     val conversationUsers: StateFlow<Map<String, User>> = _conversationUsers.asStateFlow()
@@ -196,6 +203,24 @@ class ChatViewModel @Inject constructor(
                     _otherUserName.value = "Utente eliminato"
                     _otherUserPhotoUrl.value = null
                 }
+        }
+        // Osserva lo stato online in realtime
+        viewModelScope.launch {
+            userRepo.observeUserOnlineStatus(userId).collect { (isOnline, lastSeen) ->
+                _otherUserIsOnline.value = isOnline
+                _otherUserLastSeen.value = lastSeen
+            }
+        }
+    }
+
+    /**
+     * Aggiorna la presenza dell'utente corrente su Firestore.
+     * Chiamare con isOnline=true all'avvio della schermata chat,
+     * false quando si esce dall'app (in onStop/onCleared).
+     */
+    fun setCurrentUserPresence(uid: String, isOnline: Boolean) {
+        viewModelScope.launch {
+            userRepo.updatePresence(uid, isOnline)
         }
     }
 

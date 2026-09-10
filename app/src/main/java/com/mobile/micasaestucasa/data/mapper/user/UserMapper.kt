@@ -31,7 +31,9 @@ fun UserDTO.toDomain(): User = User(
     phone = phone ?: "",
     status = status?.let {
         try { UserStatus.valueOf(it) } catch (e: Exception) { UserStatus.ACTIVE }
-    } ?: UserStatus.ACTIVE
+    } ?: UserStatus.ACTIVE,
+    isOnline = isOnline ?: false,
+    lastSeen = lastSeen
 )
 
 fun User.toDto(): UserDTO = UserDTO(
@@ -54,5 +56,7 @@ fun User.toDto(): UserDTO = UserDTO(
     bio = bio,
     profileImageUrl = profileImageUrl,
     address = address,
-    phone = phone
+    phone = phone,
+    isOnline = isOnline,
+    lastSeen = lastSeen
 )

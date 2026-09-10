@@ -8,6 +8,9 @@ import com.mobile.micasaestucasa.data.mapper.user.toDto
 import com.mobile.micasaestucasa.domain.model.user.User
 import com.mobile.micasaestucasa.domain.model.user.UserBadge
 import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -119,6 +122,42 @@ class FirebaseUserRepo @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Osserva in realtime lo stato di presenza di un utente.
+     * Emette Pair(isOnline, lastSeen) ogni volta che Firestore notifica una modifica.
+     */
+    override fun observeUserOnlineStatus(uid: String): Flow<Pair<Boolean, Long?>> = callbackFlow {
+        val docRef = usersCollection.document(uid)
+        val listener = docRef.addSnapshotListener { snapshot, error ->
+            if (error != null || snapshot == null) {
+                trySend(Pair(false, null))
+                return@addSnapshotListener
+            }
+            val isOnline = snapshot.getBoolean("isOnline") ?: false
+            val lastSeen = snapshot.getLong("lastSeen")
+            trySend(Pair(isOnline, lastSeen))
+        }
+        awaitClose { listener.remove() }
+    }
+
+    /**
+     * Aggiorna il campo isOnline e lastSeen dell'utente su Firestore.
+     * Chiamare con isOnline=true al login/avvio app, false all'uscita.
+     */
+    override suspend fun updatePresence(uid: String, isOnline: Boolean) {
+        try {
+            val updates = mutableMapOf<String, Any>(
+                "isOnline" to isOnline
+            )
+            if (!isOnline) {
+                updates["lastSeen"] = System.currentTimeMillis()
+            }
+            usersCollection.document(uid).update(updates).await()
+        } catch (_: Exception) {
+            // ignoriamo eventuali errori di rete per la presenza
         }
     }
 }

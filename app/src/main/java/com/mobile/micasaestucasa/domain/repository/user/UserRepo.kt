@@ -1,6 +1,7 @@
 package com.mobile.micasaestucasa.domain.repository.user
 
 import com.mobile.micasaestucasa.domain.model.user.User
+import kotlinx.coroutines.flow.Flow
 
 interface UserRepo {
     suspend fun getCurrentUser(): User?
@@ -17,4 +18,6 @@ interface UserRepo {
     suspend fun getUserProfile(uid: String): Result<User>
     suspend fun getUserById(uid: String): Result<User?>
     suspend fun updateUserRolesAndBadge(userId: String, roles: List<com.mobile.micasaestucasa.domain.model.user.UserRole>, badge: com.mobile.micasaestucasa.domain.model.user.UserBadge? = null): Result<Unit>
+    fun observeUserOnlineStatus(uid: String): Flow<Pair<Boolean, Long?>>
+    suspend fun updatePresence(uid: String, isOnline: Boolean)
 }

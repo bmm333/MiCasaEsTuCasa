@@ -108,46 +108,6 @@ fun HomeScreen(
                 .padding(paddingValues),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
-            // Header con indicatore Admin
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Ciao, ${currentUser?.name ?: "Guest"}",
-                            fontSize = 14.sp,
-                            color = CaptionLabels
-                        )
-                        Text(
-                            text = "Bentornato a casa",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = HeadingText
-                        )
-                    }
-
-                    if (currentUser?.roles?.contains(UserRole.ADMIN) == true) {
-                        Surface(
-                            color = Primario.copy(alpha = 0.1f),
-                            shape = CircleShape,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Rounded.AdminPanelSettings,
-                                    contentDescription = "Admin",
-                                    tint = Primario,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
 
             // search bar
             item {

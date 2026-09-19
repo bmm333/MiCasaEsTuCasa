@@ -18,9 +18,7 @@ data class User(
     val profileImageUrl: String? = null,
     val address: String = "",
     val phone: String = "",
-    val status: UserStatus = UserStatus.ACTIVE,
-    val isOnline: Boolean = false,
-    val lastSeen: Long? = null
+    val status: UserStatus = UserStatus.ACTIVE
 )
 enum class UserStatus {
     ACTIVE,

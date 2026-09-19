@@ -46,7 +46,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -54,9 +53,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -101,8 +97,6 @@ fun ChatScreen(
     val otherUserName by viewModel.otherUserName.collectAsState()
     val otherUserPhotoUrl by viewModel.otherUserPhotoUrl.collectAsState()
     val currentPropertyTitle by viewModel.currentPropertyTitle.collectAsState()
-    val otherUserIsOnline by viewModel.otherUserIsOnline.collectAsState()
-    val otherUserLastSeen by viewModel.otherUserLastSeen.collectAsState()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
@@ -130,24 +124,6 @@ fun ChatScreen(
         val otherUserId = if (currentUserId == hostId) renterId else hostId
         if (otherUserId.isNotBlank()) {
             viewModel.loadOtherUser(otherUserId)
-            viewModel.setCurrentUserPresence(currentUserId, true)
-        }
-    }
-
-    // Gestione presenza: online quando la schermata è visibile, offline quando va in background
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner, currentUserId) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> viewModel.setCurrentUserPresence(currentUserId, true)
-                Lifecycle.Event.ON_PAUSE  -> viewModel.setCurrentUserPresence(currentUserId, false)
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            viewModel.setCurrentUserPresence(currentUserId, false)
         }
     }
 
@@ -225,77 +201,21 @@ fun ChatScreen(
                                     )
                                 }
                             }
-                            // Pallino verde/grigio presenza
-                            Box(
-                                modifier = Modifier
-                                    .size(9.dp)
-                                    .clip(CircleShape)
-                                    .background(CardSurface)
-                                    .padding(1.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (otherUserIsOnline)
-                                                androidx.compose.ui.graphics.Color(0xFF4CAF50)
-                                            else
-                                                CaptionLabels
-                                        )
-                                )
-                            }
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Column(verticalArrangement = Arrangement.Center) {
-                            // Riga 1: Nome · Stato (inline compatto)
-                            val presenceText = when {
-                                otherUserIsOnline -> "Online"
-                                otherUserLastSeen != null -> {
-                                    val diffMs = System.currentTimeMillis() - otherUserLastSeen!!
-                                    val diffMin = diffMs / 60_000
-                                    val diffHrs = diffMin / 60
-                                    val diffDays = diffHrs / 24
-                                    when {
-                                        diffMin < 1 -> "Visto poco fa"
-                                        diffMin < 60 -> "Visto ${diffMin}m fa"
-                                        diffHrs < 24 -> "Visto ${diffHrs}h fa"
-                                        else -> "Visto ${diffDays}g fa"
-                                    }
-                                }
-                                else -> "Offline"
-                            }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    text = otherUserName.ifBlank {
-                                        if (currentUserId == hostId) "Renter" else "Owner"
-                                    },
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 14.sp,
-                                    color = HeadingText,
-                                    maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    "·",
-                                    fontSize = 12.sp,
-                                    color = CaptionLabels
-                                )
-                                Text(
-                                    presenceText,
-                                    fontSize = 11.sp,
-                                    color = if (otherUserIsOnline)
-                                        androidx.compose.ui.graphics.Color(0xFF4CAF50)
-                                    else
-                                        CaptionLabels,
-                                    maxLines = 1
-                                )
-                            }
+                            Text(
+                                text = otherUserName.ifBlank {
+                                    if (currentUserId == hostId) "Renter" else "Owner"
+                                },
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = HeadingText,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
                             // Riga 2: Titolo casa (solo se disponibile)
                             if (currentPropertyTitle.isNotBlank()) {
                                 Row(

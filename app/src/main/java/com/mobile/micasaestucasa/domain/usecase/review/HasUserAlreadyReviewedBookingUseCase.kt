@@ -1,6 +1,5 @@
 package com.mobile.micasaestucasa.domain.usecase.review
 
-import com.mobile.micasaestucasa.domain.model.review.Review
 import com.mobile.micasaestucasa.domain.model.review.ReviewType
 import com.mobile.micasaestucasa.domain.repository.review.ReviewRepo
 import javax.inject.Inject

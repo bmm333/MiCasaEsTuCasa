@@ -28,7 +28,7 @@ class ProfileComponentsTest {
                     name = "Mario Rossi",
                     memberSince = "2022",
                     bio = "Amo viaggiare",
-                    imageRes = android.R.drawable.ic_menu_gallery
+                    imageUrl = ""
                 )
             }
         }

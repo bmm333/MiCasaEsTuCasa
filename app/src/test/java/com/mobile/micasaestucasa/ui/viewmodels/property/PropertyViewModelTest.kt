@@ -2,10 +2,18 @@ package com.mobile.micasaestucasa.ui.viewmodels.property
 
 import app.cash.turbine.test
 import com.mobile.micasaestucasa.domain.model.property.Property
+import com.mobile.micasaestucasa.domain.model.user.User
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
+import com.mobile.micasaestucasa.domain.repository.whishlist.WhishlistRepo
+import com.mobile.micasaestucasa.domain.usecase.admin.AddUserReportUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.CreatePropertyUseCase
+import com.mobile.micasaestucasa.domain.usecase.property.DeletePropertyUseCase
+import com.mobile.micasaestucasa.domain.usecase.property.DemoteHostUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetOwnerPropertiesUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.SearchPropertiesUseCase
+import com.mobile.micasaestucasa.domain.usecase.review.GetPropertyReviewsUseCase
+import com.mobile.micasaestucasa.domain.usecase.review.ReplyToReviewUseCase
 import com.mobile.micasaestucasa.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -30,6 +38,13 @@ class PropertyViewModelTest {
     private val getOwnerPropertiesUseCase: GetOwnerPropertiesUseCase = mockk()
     private val createPropertyUseCase: CreatePropertyUseCase = mockk()
     private val getPropertyByIdUseCase: GetPropertyByIdUseCase = mockk()
+    private val addUserReportUseCase: AddUserReportUseCase = mockk(relaxed = true)
+    private val wishlistRepo: WhishlistRepo = mockk(relaxed = true)
+    private val userRepo: UserRepo = mockk(relaxed = true)
+    private val deletePropertyUseCase: DeletePropertyUseCase = mockk(relaxed = true)
+    private val demoteHostUseCase: DemoteHostUseCase = mockk(relaxed = true)
+    private val getPropertyReviewsUseCase: GetPropertyReviewsUseCase = mockk(relaxed = true)
+    private val replyToReviewUseCase: ReplyToReviewUseCase = mockk(relaxed = true)
 
     private val sampleProperty = Property(
         id = "prop-1",
@@ -57,8 +72,16 @@ class PropertyViewModelTest {
             searchPropertiesUseCase = searchPropertiesUseCase,
             getOwnerPropertiesUseCase = getOwnerPropertiesUseCase,
             createPropertyUseCase = createPropertyUseCase,
-            getPropertyByIdUseCase = getPropertyByIdUseCase
+            getPropertyByIdUseCase = getPropertyByIdUseCase,
+            addUserReportUseCase = addUserReportUseCase,
+            wishlistRepo = wishlistRepo,
+            userRepo = userRepo,
+            deletePropertyUseCase = deletePropertyUseCase,
+            demoteHostUseCase = demoteHostUseCase,
+            getPropertyReviewsUseCase = getPropertyReviewsUseCase,
+            replyToReviewUseCase = replyToReviewUseCase
         )
+        coEvery { userRepo.getUserById(any()) } returns Result.success(null)
     }
 
     // ── loadPropertyDetail ──────────────────────────────────────────────
@@ -66,6 +89,7 @@ class PropertyViewModelTest {
     @Test
     fun `loadPropertyDetail emette DetailSuccess con la proprietà corretta`() = runTest {
         coEvery { getPropertyByIdUseCase("prop-1") } returns Result.success(sampleProperty)
+        coEvery { getPropertyReviewsUseCase("prop-1") } returns Result.success(emptyList())
 
         viewModel.loadPropertyDetail("prop-1")
         advanceUntilIdle()
@@ -122,6 +146,7 @@ class PropertyViewModelTest {
     @Test
     fun `loadPropertyDetail passa da Loading a DetailSuccess`() = runTest {
         coEvery { getPropertyByIdUseCase("prop-1") } returns Result.success(sampleProperty)
+        coEvery { getPropertyReviewsUseCase("prop-1") } returns Result.success(emptyList())
 
         viewModel.uiState.test {
             // Stato iniziale Idle
@@ -146,6 +171,7 @@ class PropertyViewModelTest {
     @Test
     fun `resetState riporta lo stato a Idle`() = runTest {
         coEvery { getPropertyByIdUseCase("prop-1") } returns Result.success(sampleProperty)
+        coEvery { getPropertyReviewsUseCase("prop-1") } returns Result.success(emptyList())
 
         viewModel.loadPropertyDetail("prop-1")
         advanceUntilIdle()
@@ -291,5 +317,37 @@ class PropertyViewModelTest {
 
         // Non deve aver richiamato loadOwnerProperties
         coVerify(exactly = 0) { getOwnerPropertiesUseCase(any()) }
+    }
+
+    // ── wishlist / saved properties ──────────────────────────────────────
+
+    @Test
+    fun `checkIfSaved updates isSaved state flow successfully`() = runTest {
+        val dummyUser = User(id = "user-1", name = "Mario", email = "m@m.com", roles = emptyList())
+        coEvery { userRepo.getCurrentUser() } returns dummyUser
+        coEvery { wishlistRepo.isPropertySaved("user-1", "prop-1") } returns Result.success(true)
+
+        viewModel.checkIfSaved("prop-1")
+        advanceUntilIdle()
+
+        viewModel.isSaved.test {
+            assertEquals(true, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `toggleSaved updates isSaved state flow successfully`() = runTest {
+        val dummyUser = User(id = "user-1", name = "Mario", email = "m@m.com", roles = emptyList())
+        coEvery { userRepo.getCurrentUser() } returns dummyUser
+        coEvery { wishlistRepo.toggleSavedProperty("user-1", "prop-1") } returns Result.success(true)
+
+        viewModel.toggleSaved("prop-1")
+        advanceUntilIdle()
+
+        viewModel.isSaved.test {
+            assertEquals(true, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }

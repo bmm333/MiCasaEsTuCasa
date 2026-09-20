@@ -1,6 +1,5 @@
 package com.mobile.micasaestucasa.data.repository.user
 
-import com.mobile.micasaestucasa.data.dto.user.UserDTO
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -8,6 +7,7 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.mobile.micasaestucasa.data.dto.user.UserDTO
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic

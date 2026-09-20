@@ -68,6 +68,17 @@ class FirebaseBookingRepo @Inject constructor(
                         FirebaseFirestoreException.Code.ABORTED
                     )
                 }
+
+                // Check if property is on hold (owner is banned)
+                val propertyRef = firestore.collection("properties").document(booking.propertyId)
+                val propertyDoc = transaction.get(propertyRef)
+                val isOnHold = propertyDoc.getBoolean("isOnHold") ?: false
+                if (isOnHold) {
+                    throw FirebaseFirestoreException(
+                        "Property is not available for booking",
+                        FirebaseFirestoreException.Code.FAILED_PRECONDITION
+                    )
+                }
                 val docRef = bookingsCollection.document()
                 newBookingId = docRef.id
                 val dto = BookingDto(
@@ -183,6 +194,13 @@ class FirebaseBookingRepo @Inject constructor(
                         FirebaseFirestoreException.Code.PERMISSION_DENIED
                     )
                 }
+                val currentStatus = doc.getString("status")
+                if (currentStatus != BookingStatus.REQUESTED.name) {
+                    throw FirebaseFirestoreException(
+                        "Transizione illegale: $currentStatus -> REJECTED",
+                        FirebaseFirestoreException.Code.FAILED_PRECONDITION
+                    )
+                }
                 transaction.update(docRef, "status", BookingStatus.REJECTED.name)
             }.await()
             Result.success(Unit)
@@ -208,10 +226,14 @@ class FirebaseBookingRepo @Inject constructor(
                         FirebaseFirestoreException.Code.PERMISSION_DENIED
                     )
                 }
-                // non si puo cancellare un booking gia completto
-                if (status == BookingStatus.COMPLETED.name) {
+                // transizioni valide: solo da REQUESTED o ACCEPTED
+                val cancellableStates = setOf(
+                    BookingStatus.REQUESTED.name,
+                    BookingStatus.ACCEPTED.name
+                )
+                if (status !in cancellableStates) {
                     throw FirebaseFirestoreException(
-                        "Booking gia completato",
+                        "Transizione illegale: $status -> CANCELLED",
                         FirebaseFirestoreException.Code.FAILED_PRECONDITION
                     )
                 }

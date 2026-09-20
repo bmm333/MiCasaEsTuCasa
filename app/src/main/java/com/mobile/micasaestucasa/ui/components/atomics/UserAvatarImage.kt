@@ -28,7 +28,6 @@ fun UserAvatarImage(
     )
 }
 
-
 @Composable
 fun UserAvatarLargeImage(
     imageUrl: String?,

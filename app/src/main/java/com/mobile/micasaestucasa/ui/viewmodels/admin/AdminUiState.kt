@@ -1,5 +1,6 @@
 package com.mobile.micasaestucasa.ui.viewmodels.admin
 
+import com.mobile.micasaestucasa.domain.model.admin.ActionedUser
 import com.mobile.micasaestucasa.domain.model.admin.BookingStats
 import com.mobile.micasaestucasa.domain.model.admin.Keyword
 import com.mobile.micasaestucasa.domain.model.admin.UserReport
@@ -16,5 +17,9 @@ data class AdminUiState(
     val error: String? = null,
     val snackbarMessage: String? = null,
     /** Tracks which report action is in progress (reportId -> true) */
-    val actionInProgress: Set<String> = emptySet()
+    val actionInProgress: Set<String> = emptySet(),
+    /** Suspended/banned users shown in the User Management tab */
+    val actionedUsers: List<ActionedUser> = emptyList(),
+    /** Tracks which user reactivation is in progress */
+    val reactivateInProgress: Set<String> = emptySet()
 )

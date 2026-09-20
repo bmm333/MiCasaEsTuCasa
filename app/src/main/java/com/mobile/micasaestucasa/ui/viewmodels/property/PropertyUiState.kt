@@ -10,7 +10,7 @@ sealed class PropertyUiState {
     object Idle : PropertyUiState()
     object Loading : PropertyUiState()
     data class SearchSuccess(val properties: List<Property>) : PropertyUiState()
-    data class DetailSuccess(val property: Property) : PropertyUiState()
+    data class DetailSuccess(val property: Property, val propertyOwner: com.mobile.micasaestucasa.domain.model.user.User? = null) : PropertyUiState()
     data class OwnerSuccess(val properties: List<Property>) : PropertyUiState()
     data class Error(val message: String) : PropertyUiState()
 }

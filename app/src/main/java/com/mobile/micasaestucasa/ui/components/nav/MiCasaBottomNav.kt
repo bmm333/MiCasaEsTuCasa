@@ -14,22 +14,28 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ExitToApp
+import androidx.compose.material.icons.rounded.BookOnline
 import androidx.compose.material.icons.rounded.ChatBubbleOutline
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.HomeWork
 import androidx.compose.material.icons.rounded.Luggage
 import androidx.compose.material.icons.rounded.PersonOutline
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,11 +58,22 @@ data class BottomNavItem(
  */
 object DefaultBottomNavItems {
     val items = listOf(
-        BottomNavItem("home_screen",     "Esplora",  Icons.Rounded.Search),
-        BottomNavItem("saved_screen",    "Salvati",  Icons.Rounded.FavoriteBorder),
-        BottomNavItem("trips_screen",    "Viaggi",   Icons.Rounded.Luggage),
+        BottomNavItem("home_screen", "Esplora", Icons.Rounded.Search),
+        BottomNavItem("saved_screen", "Salvati", Icons.Rounded.FavoriteBorder),
+        BottomNavItem("trips_screen", "Viaggi", Icons.Rounded.Luggage),
         BottomNavItem("messages_screen", "Messaggi", Icons.Rounded.ChatBubbleOutline),
-        BottomNavItem("profile_screen",  "Profilo",  Icons.Rounded.PersonOutline)
+        BottomNavItem("profile_screen", "Profilo", Icons.Rounded.PersonOutline)
+    )
+}
+
+/**
+ * Host tabs show in the bottom nav bar when in Host Mode.
+ */
+object HostBottomNavItems {
+    val items = listOf(
+        BottomNavItem("host_properties", "Proprietà", Icons.Rounded.HomeWork),
+        BottomNavItem("host_bookings", "Prenotazioni", Icons.Rounded.BookOnline),
+        BottomNavItem("exit_host", "Esci", Icons.AutoMirrored.Rounded.ExitToApp)
     )
 }
 
@@ -65,7 +82,9 @@ fun MiCasaBottomNav(
     items: List<BottomNavItem>,
     selectedRoute: String,
     onItemSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Routes that should show a red notification dot on their icon. */
+    badgeRoutes: Set<String> = emptySet()
 ) {
     Box(
         modifier = modifier
@@ -116,14 +135,25 @@ fun MiCasaBottomNav(
                         .padding(vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.label,
-                        tint = tint,
-                        modifier = Modifier
-                            .size(22.dp)
-                            .scale(scale)
-                    )
+                    // Badge dot overlay when the route has notifications
+                    Box(contentAlignment = Alignment.TopEnd) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                            tint = tint,
+                            modifier = Modifier
+                                .size(22.dp)
+                                .scale(scale)
+                        )
+                        if (item.route in badgeRoutes) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE5474B))
+                            )
+                        }
+                    }
                     Text(
                         text = item.label,
                         fontSize = 10.sp,
@@ -134,4 +164,33 @@ fun MiCasaBottomNav(
             }
         }
     }
+}
+
+@Composable
+fun MiCasaConnectedBottomNav(
+    items: List<BottomNavItem>,
+    selectedRoute: String,
+    onItemSelected: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    chatViewModel: com.mobile.micasaestucasa.ui.viewmodels.chat.ChatViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    userViewModel: com.mobile.micasaestucasa.ui.viewmodels.user.UserViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+) {
+    val totalUnreadCount by chatViewModel.totalUnreadCount.collectAsState()
+    val hostStats by userViewModel.hostStats.collectAsState()
+    val isHost by userViewModel.isHost.collectAsState()
+
+    val badgeRoutes = remember(totalUnreadCount, isHost, hostStats.pendingBookingCount) {
+        buildSet {
+            if (totalUnreadCount > 0) add("messages_screen")
+            if (isHost && hostStats.pendingBookingCount > 0) add("host_bookings")
+        }
+    }
+
+    MiCasaBottomNav(
+        items = items,
+        selectedRoute = selectedRoute,
+        badgeRoutes = badgeRoutes,
+        onItemSelected = onItemSelected,
+        modifier = modifier
+    )
 }

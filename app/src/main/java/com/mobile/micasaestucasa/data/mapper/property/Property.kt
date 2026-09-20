@@ -19,7 +19,8 @@ fun PropertyDto.toDomain(): Property {
         availableFrom = availableFrom ?: "",
         availableTo = availableTo ?: "",
         rating = rating ?: 0.0,
-        reviewsCount = reviewsCount ?: 0
+        reviewsCount = reviewsCount ?: 0,
+        isOnHold = isOnHold ?: false
     )
 }
 
@@ -39,6 +40,7 @@ fun Property.toDto(): PropertyDto {
         availableFrom = availableFrom,
         availableTo = availableTo,
         rating = rating,
-        reviewsCount = reviewsCount
+        reviewsCount = reviewsCount,
+        isOnHold = isOnHold
     )
 }

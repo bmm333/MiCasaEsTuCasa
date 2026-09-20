@@ -13,9 +13,11 @@ fun ReviewDto.toDomain(): Review = Review(
     authorId = authorId ?: "",
     targetId = targetId ?: "",
     propertyId = propertyId ?: "",
+    hostId = hostId ?: "",
     title = title ?: "",
     body = body ?: "",
     stars = stars ?: 0,
+    hostStars = hostStars,
     hostReply = hostReply,
     createdAt = createdAt ?: 0L
 )
@@ -27,9 +29,11 @@ fun Review.toDto(): ReviewDto = ReviewDto(
     authorId = authorId,
     targetId = targetId,
     propertyId = propertyId,
+    hostId = hostId,
     title = title,
     body = body,
     stars = stars,
+    hostStars = hostStars,
     hostReply = hostReply,
     createdAt = createdAt
 )

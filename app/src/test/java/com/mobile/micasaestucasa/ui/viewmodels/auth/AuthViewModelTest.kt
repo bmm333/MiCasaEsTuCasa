@@ -1,9 +1,15 @@
 package com.mobile.micasaestucasa.ui.viewmodels.auth
 
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
+import com.mobile.micasaestucasa.domain.repository.notification.NotificationRepo
+import com.mobile.micasaestucasa.domain.usecase.auth.DeleteAccountUseCase
 import com.mobile.micasaestucasa.domain.usecase.auth.LoginUseCase
 import com.mobile.micasaestucasa.domain.usecase.auth.LogoutUseCase
 import com.mobile.micasaestucasa.domain.usecase.auth.RegisterUseCase
+import com.mobile.micasaestucasa.domain.usecase.auth.ResetPasswordUseCase
+import com.mobile.micasaestucasa.domain.usecase.auth.SignInWithGoogleUseCase
+import com.mobile.micasaestucasa.domain.usecase.notification.SaveFCMTokenUseCase
 import com.mobile.micasaestucasa.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -35,14 +41,39 @@ class AuthViewModelTest {
     private lateinit var loginUseCase: LoginUseCase
     private lateinit var registerUseCase: RegisterUseCase
     private lateinit var logoutUseCase: LogoutUseCase
+    private lateinit var saveFCMTokenUseCase: SaveFCMTokenUseCase
+    private lateinit var notificationRepo: NotificationRepo
+    private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var viewModel: AuthViewModel
+    private lateinit var resetPasswordUseCase: ResetPasswordUseCase
+    private lateinit var signInWithGoogleUseCase: SignInWithGoogleUseCase
+    private lateinit var deleteAccountUseCase: DeleteAccountUseCase
 
     @Before
     fun setUp() {
         loginUseCase = mockk()
         registerUseCase = mockk()
         logoutUseCase = mockk(relaxed = true)
-        viewModel = AuthViewModel(loginUseCase, registerUseCase, logoutUseCase)
+        saveFCMTokenUseCase = mockk(relaxed = true)
+        notificationRepo = mockk(relaxed = true)
+        firebaseAuth = mockk(relaxed = true)
+        resetPasswordUseCase = mockk(relaxed = true)
+        signInWithGoogleUseCase = mockk(relaxed = true)
+        deleteAccountUseCase = mockk(relaxed = true)
+        every { firebaseAuth.currentUser?.uid } returns "user-123"
+        coEvery { notificationRepo.getCurrentToken() } returns Result.success("fcm-token")
+        val resetPasswordUseCase = mockk<com.mobile.micasaestucasa.domain.usecase.auth.ResetPasswordUseCase>(relaxed = true)
+        viewModel = AuthViewModel(
+            loginUseCase,
+            registerUseCase,
+            logoutUseCase,
+            resetPasswordUseCase,
+            signInWithGoogleUseCase,
+            saveFCMTokenUseCase,
+            notificationRepo,
+            firebaseAuth,
+            deleteAccountUseCase
+        )
 
         mockkStatic(Log::class)
         every { Log.d(any(), any()) } returns 0

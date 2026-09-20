@@ -30,7 +30,7 @@ class RegisterUseCaseTest {
         coEvery { userRepo.updateUserProfile(any()) } returns Result.success(Unit)
 
         val result = registerUseCase("test@email.com", "Password123!")
-        
+
         assertTrue(result.isSuccess)
         coVerify(exactly = 1) { authRepo.register("test@email.com", "Password123!") }
         coVerify(exactly = 1) { userRepo.updateUserProfile(match { it.id == uid && it.email == "test@email.com" }) }

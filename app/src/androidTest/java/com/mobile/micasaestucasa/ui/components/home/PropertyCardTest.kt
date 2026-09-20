@@ -60,8 +60,8 @@ class PropertyCardTest {
         composeTestRule.setContent {
             MiCasaEsTuCasaTheme {
                 SearchBar(
-                    location = locationText,
-                    onLocationChange = { locationText = it },
+                    query = locationText,
+                    onQueryChange = { locationText = it },
                     onSearchClick = { searchClicked = true }
                 )
             }
@@ -72,25 +72,6 @@ class PropertyCardTest {
 
         composeTestRule.onNodeWithTag("search_button").performClick()
         assert(searchClicked)
-    }
-
-    @Test
-    fun bottomNavigationBar_selectsItemOnClick() {
-        var selectedIndex = 0
-        composeTestRule.setContent {
-            MiCasaEsTuCasaTheme {
-                BottomNavigationBar(
-                    selectedItem = selectedIndex,
-                    onItemSelected = { selectedIndex = it }
-                )
-            }
-        }
-
-        composeTestRule.onNodeWithTag("nav_item_Profile").performClick()
-        assert(selectedIndex == 3)
-
-        composeTestRule.onNodeWithTag("nav_item_Saved").performClick()
-        assert(selectedIndex == 1)
     }
 
     @Test

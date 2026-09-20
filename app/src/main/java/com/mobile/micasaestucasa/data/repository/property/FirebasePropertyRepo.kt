@@ -44,6 +44,16 @@ class FirebasePropertyRepo @Inject constructor(
 
     override suspend fun deleteProperty(id: String): Result<String> {
         return try {
+            val db = propertiesCollection.firestore
+            val activeBookings = db.collection("bookings")
+                .whereEqualTo("propertyId", id)
+                .whereIn("status", listOf("REQUESTED", "ACCEPTED"))
+                .get().await()
+
+            if (!activeBookings.isEmpty) {
+                return Result.failure(IllegalStateException("Non puoi eliminare una proprietà con prenotazioni attive o in attesa."))
+            }
+
             propertiesCollection.document(id).delete().await()
             Result.success(id)
         } catch (e: Exception) {
@@ -80,24 +90,28 @@ class FirebasePropertyRepo @Inject constructor(
             var results = snapshot.documents
                 .mapNotNull { it.toObject(PropertyDto::class.java)?.toDomain() }
 
-            val requestedStartDate = LocalDate.parse(startDate)
-            val requestedEndDate = LocalDate.parse(endDate)
+            if (startDate.isNotBlank() && endDate.isNotBlank()) {
+                val requestedStartDate = LocalDate.parse(startDate)
+                val requestedEndDate = LocalDate.parse(endDate)
 
-            results = results.filter { property ->
-                val availableFrom = parseDateOrNull(property.availableFrom)
-                val availableTo = parseDateOrNull(property.availableTo)
+                results = results.filter { property ->
+                    val availableFrom = parseDateOrNull(property.availableFrom)
+                    val availableTo = parseDateOrNull(property.availableTo)
 
-                availableFrom != null &&
-                    availableTo != null &&
-                    !requestedStartDate.isBefore(availableFrom) &&
-                    !requestedEndDate.isAfter(availableTo)
+                    availableFrom != null &&
+                        availableTo != null &&
+                        !requestedStartDate.isBefore(availableFrom) &&
+                        !requestedEndDate.isAfter(availableTo)
+                }
             }
 
             if (keywords.isNotEmpty()) {
                 results = results.filter { property ->
-                    keywords.any { kw -> property.keywords.contains(kw) }
+                    keywords.all { kw -> property.keywords.any { it.equals(kw, ignoreCase = true) } }
                 }
             }
+
+            results = results.filter { !it.isOnHold }
             Result.success(results)
         } catch (e: Exception) {
             Result.failure(e)
@@ -109,6 +123,9 @@ class FirebasePropertyRepo @Inject constructor(
             val doc = propertiesCollection.document(id).get().await()
             val property = doc.toObject(PropertyDto::class.java)?.toDomain()
                 ?: return Result.failure(Exception("Proprietà non trovata"))
+            if (property.isOnHold) {
+                return Result.failure(Exception("Proprietà non disponibile"))
+            }
             Result.success(property)
         } catch (e: Exception) {
             Result.failure(e)
@@ -125,6 +142,7 @@ class FirebasePropertyRepo @Inject constructor(
             if (snapshot != null) {
                 val properties = snapshot.documents
                     .mapNotNull { it.toObject(PropertyDto::class.java)?.toDomain() }
+                    .filter { !it.isOnHold }
                 trySend(Resource.Success(properties))
             }
         }

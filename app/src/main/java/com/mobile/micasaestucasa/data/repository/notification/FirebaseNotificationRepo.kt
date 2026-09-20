@@ -15,7 +15,7 @@ class FirebaseNotificationRepo @Inject constructor(
         return try {
             firestore.collection("users")
                 .document(userId)
-                .update("fcmToken", token)
+                .set(mapOf("fcmToken" to token), com.google.firebase.firestore.SetOptions.merge())
                 .await()
             Result.success(Unit)
         } catch (e: Exception) {

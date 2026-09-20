@@ -1,22 +1,58 @@
 package com.mobile.micasaestucasa.ui.screens.chat
 
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.Composable
-import com.mobile.micasaestucasa.ui.viewmodels.chat.ChatViewModel
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Flag
+import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,10 +64,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.mobile.micasaestucasa.domain.model.chat.Message
 import com.mobile.micasaestucasa.ui.components.report.ReportDialog
-import com.mobile.micasaestucasa.ui.theme.*
+import com.mobile.micasaestucasa.ui.theme.BorderDivider
+import com.mobile.micasaestucasa.ui.theme.CaptionLabels
+import com.mobile.micasaestucasa.ui.theme.CardSurface
+import com.mobile.micasaestucasa.ui.theme.ErrorColor
+import com.mobile.micasaestucasa.ui.theme.HeadingText
+import com.mobile.micasaestucasa.ui.theme.Primario
+import com.mobile.micasaestucasa.ui.theme.ScreenBackground
+import com.mobile.micasaestucasa.ui.theme.Secondary
+import com.mobile.micasaestucasa.ui.theme.Sfumatura
+import com.mobile.micasaestucasa.ui.theme.SkeletonLoader
+import com.mobile.micasaestucasa.ui.viewmodels.chat.ChatViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,17 +89,20 @@ fun ChatScreen(
     propertyId: String,
     currentUserId: String,
     onNavigateBack: () -> Unit,
+    onNavigateToProperty: (String) -> Unit = {},
     viewModel: ChatViewModel = hiltViewModel()
 ) {
     val messages by viewModel.messages.collectAsState()
     val vmConversationId by viewModel.activeConversationId.collectAsState()
+    val otherUserName by viewModel.otherUserName.collectAsState()
+    val otherUserPhotoUrl by viewModel.otherUserPhotoUrl.collectAsState()
+    val currentPropertyTitle by viewModel.currentPropertyTitle.collectAsState()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var showReportDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-
 
     val activeConversationId = vmConversationId.ifBlank { conversationId }
 
@@ -69,6 +119,11 @@ fun ChatScreen(
             viewModel.openConversation(hostId, renterId, propertyId)
         } else if (conversationId.isNotBlank()) {
             viewModel.openConversationById(conversationId)
+        }
+        // Load the other user's profile
+        val otherUserId = if (currentUserId == hostId) renterId else hostId
+        if (otherUserId.isNotBlank()) {
+            viewModel.loadOtherUser(otherUserId)
         }
     }
 
@@ -115,33 +170,77 @@ fun ChatScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Sfumatura),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Rounded.Person,
-                                null,
-                                tint = Primario,
-                                modifier = Modifier.size(20.dp)
-                            )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // Avatar con pallino presenza
+                        Box(contentAlignment = Alignment.BottomEnd) {
+                            if (!otherUserPhotoUrl.isNullOrBlank()) {
+                                AsyncImage(
+                                    model = otherUserPhotoUrl,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(Sfumatura),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = otherUserName.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Primario
+                                    )
+                                }
+                            }
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Column(verticalArrangement = Arrangement.Center) {
                             Text(
-                                text = if (currentUserId == hostId) "Renter" else "Owner",
+                                text = otherUserName.ifBlank {
+                                    if (currentUserId == hostId) "Renter" else "Owner"
+                                },
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp,
-                                color = HeadingText
+                                fontSize = 14.sp,
+                                color = HeadingText,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
-                            Text("Online", fontSize = 11.sp, color = Secondary)
+                            // Riga 2: Titolo casa (solo se disponibile)
+                            if (currentPropertyTitle.isNotBlank()) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Home,
+                                        contentDescription = null,
+                                        tint = Primario,
+                                        modifier = Modifier.size(10.dp)
+                                    )
+                                    Text(
+                                        currentPropertyTitle,
+                                        fontSize = 10.sp,
+                                        color = Primario,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
                     }
                 },
+
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Rounded.ArrowBackIosNew, null, tint = HeadingText)
@@ -156,19 +255,38 @@ fun ChatScreen(
             )
         },
         bottomBar = {
-            ChatInputBar(text = inputText,
+            val imageUploadState by viewModel.imageUploadState.collectAsState()
+            ChatInputBar(
+                text = inputText,
                 onTextChange = { inputText = it },
                 selectedImage = selectedImageUri,
+                imageUploadState = imageUploadState,
                 onImagePick = { imagePicker.launch("image/*") },
                 onImageClear = { selectedImageUri = null },
                 onSend = {
-                    if (inputText.isNotBlank() || selectedImageUri != null) {
-                        viewModel.sendMessage(
-                            senderId = currentUserId,
-                            text = inputText.trim()
-                        )
-                        inputText = ""
-                        selectedImageUri = null
+                    val convId = activeConversationId.ifBlank { return@ChatInputBar }
+                    val uri = selectedImageUri
+
+                    when {
+                        // caso 1: solo testo
+                        uri == null && inputText.isNotBlank() -> {
+                            viewModel.sendMessage(
+                                senderId = currentUserId,
+                                text = inputText.trim()
+                            )
+                            inputText = ""
+                        }
+                        // caso 2: immagine (con o senza testo)
+                        uri != null -> {
+                            viewModel.sendMessageWithImage(
+                                uri = uri,
+                                conversationId = convId,
+                                senderId = currentUserId,
+                                text = inputText.trim()
+                            )
+                            inputText = ""
+                            selectedImageUri = null
+                        }
                     }
                 }
             )
@@ -182,6 +300,19 @@ fun ChatScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            if (currentPropertyTitle.isNotBlank()) {
+                item {
+                    PropertyChatHeader(
+                        title = currentPropertyTitle,
+                        onClick = {
+                            if (propertyId.isNotBlank()) {
+                                onNavigateToProperty(propertyId)
+                            }
+                        }
+                    )
+                }
+            }
+
             items(messages, key = { it.id }) { message ->
                 MessageBubble(
                     message = message,
@@ -195,15 +326,16 @@ fun ChatScreen(
 @Composable
 private fun MessageBubble(message: Message, isMine: Boolean) {
     val bubbleColor = if (isMine) Primario else CardSurface
-    val textColor   = if (isMine) CardSurface else HeadingText
-    val alignment   = if (isMine) Alignment.End else Alignment.Start
-    val shape = if (isMine)
+    val textColor = if (isMine) CardSurface else HeadingText
+    val alignment = if (isMine) Alignment.End else Alignment.Start
+    val shape = if (isMine) {
         RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp)
-    else
+    } else {
         RoundedCornerShape(18.dp, 18.dp, 18.dp, 4.dp)
+    }
 
     Column(
-        modifier            = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = alignment
     ) {
         Column(
@@ -215,10 +347,10 @@ private fun MessageBubble(message: Message, isMine: Boolean) {
         ) {
             if (!message.imageUrl.isNullOrBlank()) {
                 AsyncImage(
-                    model              = message.imageUrl,
+                    model = message.imageUrl,
                     contentDescription = "Foto",
-                    contentScale       = ContentScale.Crop,
-                    modifier           = Modifier
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp)
                         .clip(RoundedCornerShape(12.dp))
@@ -230,8 +362,8 @@ private fun MessageBubble(message: Message, isMine: Boolean) {
 
             if (message.text.isNotBlank()) {
                 Text(
-                    text     = message.text,
-                    color    = textColor,
+                    text = message.text,
+                    color = textColor,
                     fontSize = 15.sp,
                     lineHeight = 21.sp
                 )
@@ -240,87 +372,150 @@ private fun MessageBubble(message: Message, isMine: Boolean) {
 
         Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text     = formatTime(message.timestamp),
+            text = formatTime(message.timestamp),
             fontSize = 10.sp,
-            color    = CaptionLabels,
+            color = CaptionLabels,
             modifier = Modifier.padding(horizontal = 4.dp)
         )
     }
 }
 
-
 @Composable
 private fun ChatInputBar(
-    text:String,
+    text: String,
     onTextChange: (String) -> Unit,
     selectedImage: Uri?,
+    imageUploadState: com.mobile.micasaestucasa.ui.viewmodels.chat.ImageUploadState,
     onImagePick: () -> Unit,
     onImageClear: () -> Unit,
     onSend: () -> Unit
 ) {
-    Surface(color=CardSurface, shadowElevation = 8.dp) {
+    val isUploading = imageUploadState is com.mobile.micasaestucasa.ui.viewmodels.chat.ImageUploadState.Uploading
+
+    Surface(color = CardSurface, shadowElevation = 8.dp) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-            if(selectedImage!=null)
-            {
-                Box(
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                ){
+            // preview immagine selezionata
+            if (selectedImage != null) {
+                Box(modifier = Modifier.size(72.dp).clip(RoundedCornerShape(12.dp))) {
                     AsyncImage(
-                        model=selectedImage,
-                        contentDescription="Preview",
+                        model = selectedImage,
+                        contentDescription = "Preview",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
-                    IconButton(onClick = onImageClear,
-                        modifier = Modifier.size(20.dp).align(Alignment.TopEnd).background(ErrorColor,CircleShape)){
-                        Icon(Icons.Rounded.Close,null,tint=CardSurface, modifier = Modifier.size(12.dp))
+                    // overlay caricamento
+                    if (isUploading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(HeadingText.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = CardSurface,
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    } else {
+                        // bottone rimuovi — solo se non sta caricando
+                        IconButton(
+                            onClick = onImageClear,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .align(Alignment.TopEnd)
+                                .background(ErrorColor, CircleShape)
+                        ) {
+                            Icon(
+                                Icons.Rounded.Close,
+                                null,
+                                tint = CardSurface,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
                     }
                 }
-                Spacer(modifier=Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
-            Row(verticalAlignment = Alignment.CenterVertically)
-            {
-                //gallery vtton
-                IconButton(onClick=onImagePick, modifier = Modifier.size(40.dp).clip(CircleShape).background(SkeletonLoader))
-                {
-                    Icon(Icons.Rounded.Image,null,tint=CaptionLabels, modifier = Modifier.size(20.dp))
-                }
-                Spacer(modifier=Modifier.width(8.dp))
-                //text inpt
-                OutlinedTextField(
-                    value         = text,
-                    onValueChange = onTextChange,
-                    placeholder   = { Text("Send a message", color = BorderDivider) },
-                    shape         = RoundedCornerShape(24.dp),
-                    colors        = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor      = Primario,
-                        unfocusedBorderColor    = BorderDivider,
-                        focusedContainerColor   = ScreenBackground,
-                        unfocusedContainerColor = ScreenBackground,
-                        cursorColor             = Primario
-                    ),
-                    modifier    = Modifier.weight(1f),
-                    maxLines    = 4,
-                    singleLine  = false
+
+            // errore upload
+            if (imageUploadState is com.mobile.micasaestucasa.ui.viewmodels.chat.ImageUploadState.Error) {
+                Text(
+                    text = imageUploadState.message,
+                    color = ErrorColor,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
-                Spacer(modifier=Modifier.width(8.dp))
-                //send btn
-                val canSend = text.isNotBlank() || selectedImage != null
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // bottone galleria — disabilitato durante upload
                 IconButton(
-                    onClick  = onSend,
-                    enabled  = canSend,
+                    onClick = onImagePick,
+                    enabled = !isUploading,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(if (isUploading) BorderDivider else SkeletonLoader)
+                ) {
+                    Icon(
+                        Icons.Rounded.Image,
+                        null,
+                        tint = if (isUploading) BorderDivider else CaptionLabels,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = onTextChange,
+                    enabled = !isUploading,
+                    placeholder = {
+                        Text(
+                            if (isUploading) "Caricamento..." else "Scrivi un messaggio...",
+                            color = BorderDivider
+                        )
+                    },
+                    shape = RoundedCornerShape(24.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Primario,
+                        unfocusedBorderColor = BorderDivider,
+                        focusedContainerColor = ScreenBackground,
+                        unfocusedContainerColor = ScreenBackground,
+                        cursorColor = Primario
+                    ),
+                    modifier = Modifier.weight(1f),
+                    maxLines = 4,
+                    singleLine = false
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                val canSend = (text.isNotBlank() || selectedImage != null) && !isUploading
+                IconButton(
+                    onClick = onSend,
+                    enabled = canSend,
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
                         .background(if (canSend) Primario else SkeletonLoader)
-                ){
-                    Icon(
-                        Icons.Rounded.Send, null,
-                        tint     = if (canSend) CardSurface else CaptionLabels,
-                        modifier = Modifier.size(20.dp)
-                    )
+                ) {
+                    if (isUploading) {
+                        CircularProgressIndicator(
+                            color = CardSurface,
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.Send,
+                            null,
+                            tint = if (canSend) CardSurface else CaptionLabels,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }
@@ -330,4 +525,42 @@ private fun ChatInputBar(
 private fun formatTime(timestamp: Long): String {
     if (timestamp == 0L) return ""
     return SimpleDateFormat("HH:mm", Locale.ITALY).format(Date(timestamp))
+}
+
+@Composable
+private fun PropertyChatHeader(title: String, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp, top = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(CardSurface)
+                .border(1.dp, Primario.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                .clickable { onClick() }
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    Icons.Rounded.Home,
+                    contentDescription = null,
+                    tint = Primario,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Vedi $title",
+                    color = Primario,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
 }

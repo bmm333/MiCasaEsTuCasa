@@ -27,4 +27,3 @@ class GetWishlistDataUseCase @Inject constructor(
         }
     }
 }
-

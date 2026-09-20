@@ -21,6 +21,7 @@ interface BookingRepo {
         startDate: String,
         endDate: String
     ): Result<Boolean>
+
     // fetch active bookings for a property (for calendar availability)
     suspend fun getBookingsForProperty(propertyId: String): Result<List<Booking>>
 }

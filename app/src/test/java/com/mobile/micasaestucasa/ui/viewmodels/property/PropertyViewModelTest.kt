@@ -81,6 +81,7 @@ class PropertyViewModelTest {
             getPropertyReviewsUseCase = getPropertyReviewsUseCase,
             replyToReviewUseCase = replyToReviewUseCase
         )
+        coEvery { userRepo.getUserById(any()) } returns Result.success(null)
     }
 
     // ── loadPropertyDetail ──────────────────────────────────────────────

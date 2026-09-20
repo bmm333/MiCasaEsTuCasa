@@ -28,8 +28,8 @@ class CreatePropertyUseCaseTest {
         capacity = 4,
         keywords = listOf("wifi", "piscina"),
         imageUrls = emptyList(),
-        availableFrom = "2026-06-01",
-        availableTo = "2026-08-31"
+        availableFrom = "2030-06-01",
+        availableTo = "2030-08-31"
     )
 
     @Before

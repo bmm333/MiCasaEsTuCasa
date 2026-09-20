@@ -43,6 +43,26 @@ class ManageKeywordsUseCase @Inject constructor(
     }
 
     /**
+     * Updates the label of an existing keyword
+     * */
+    suspend fun updateKeyword(keywordId: String, newLabel: String, adminId: String): Result<Unit> {
+        if (keywordId.isBlank()) {
+            return Result.failure(IllegalArgumentException("Keyword id not valid"))
+        }
+        if (newLabel.isBlank()) {
+            return Result.failure(IllegalArgumentException("Keyword label cannot be blank"))
+        }
+        if (adminId.isBlank()) {
+            return Result.failure(IllegalArgumentException("AdminID not valid"))
+        }
+        val user = userRepo.getCurrentUser()
+        if (user == null || !user.roles.contains(UserRole.ADMIN)) {
+            return Result.failure(SecurityException("Access denied"))
+        }
+        return adminRepo.updateKeyword(keywordId, newLabel, adminId)
+    }
+
+    /**
      * gets all the keywords avalible
      * accessible to everyone , dose not requrie admin access
      * */

@@ -18,12 +18,13 @@ fun PersonalInfoCard(
     fullName: String = "Mario Rossi",
     email: String = "mario.rossi@example.com",
     phone: String = "+39 123 456 7890",
-    address: String = "Via Roma 1, Milano"
+    address: String = "Via Roma 1, Milano",
+    onEditClick: () -> Unit = {}
 ) {
     ProfileSectionCard(
         title = "Personal Information",
         icon = Icons.Default.Person,
-        onEditClick = { /* Edit action */ }
+        onEditClick = onEditClick
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             InfoField(label = "LEGAL NAME", value = fullName)

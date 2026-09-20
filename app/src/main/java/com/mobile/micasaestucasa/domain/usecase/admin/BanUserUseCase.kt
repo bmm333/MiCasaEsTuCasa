@@ -30,4 +30,3 @@ class BanUserUseCase @Inject constructor(
         return adminRepo.banUser(targetUserId, adminId)
     }
 }
-

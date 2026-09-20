@@ -9,6 +9,8 @@ import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.util.Resource
 import com.mobile.micasaestucasa.ui.screens.profile.ProfileContent
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
+import com.mobile.micasaestucasa.ui.viewmodels.user.HostStats
+import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistUiState
 import org.junit.Rule
 import org.junit.Test
 
@@ -63,8 +65,12 @@ class ProfileComponentTests {
             MiCasaEsTuCasaTheme {
                 ProfileContent(
                     userState = Resource.Loading,
+                    wishlistState = WishlistUiState(),
+                    hostStats = HostStats(),
+                    isHost = false,
                     onLogout = {},
-                    onNavigateToSettings = {}
+                    onNavigateToSettings = {},
+                    navController = androidx.navigation.compose.rememberNavController()
                 )
             }
         }
@@ -81,8 +87,12 @@ class ProfileComponentTests {
             MiCasaEsTuCasaTheme {
                 ProfileContent(
                     userState = Resource.Success(testUser),
+                    wishlistState = WishlistUiState(),
+                    hostStats = HostStats(),
+                    isHost = false,
                     onLogout = { logoutClicked = true },
-                    onNavigateToSettings = {}
+                    onNavigateToSettings = {},
+                    navController = androidx.navigation.compose.rememberNavController()
                 )
             }
         }

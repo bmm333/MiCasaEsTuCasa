@@ -7,9 +7,13 @@ data class Review(
     val authorId: String = "",
     val targetId: String = "",
     val propertyId: String = "",
+    val hostId: String = "",
     val title: String = "",
     val body: String = "",
     val stars: Int = 0,
+    val hostStars: Int? = null,
     val hostReply: String? = null,
+    val authorName: String = "",
+    val authorProfilePicture: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

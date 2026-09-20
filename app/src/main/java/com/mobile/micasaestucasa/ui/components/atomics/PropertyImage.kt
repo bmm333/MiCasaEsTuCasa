@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.mobile.micasaestucasa.ui.theme.ImageStyle
 
-
 /**
  * Immagine hero di una proprietà immobiliare.
  *
@@ -16,26 +15,26 @@ import com.mobile.micasaestucasa.ui.theme.ImageStyle
  */
 @Composable
 fun PropertyImage(
-    imageUrl : String?,
-    modifier: Modifier= Modifier
-){
+    imageUrl: String?,
+    modifier: Modifier = Modifier
+) {
     CoreImage(
-        url=imageUrl,
-        style= ImageStyle.PropertyCard,
-        contentDescription="Immagine della propietà",
-        modifier=modifier
+        url = imageUrl,
+        style = ImageStyle.PropertyCard,
+        contentDescription = "Immagine della propietà",
+        modifier = modifier
     )
 }
 
 @Composable
 fun PropertyThumbnailImage(
-    imageUrl:String?,
-    modifier: Modifier= Modifier
-){
+    imageUrl: String?,
+    modifier: Modifier = Modifier
+) {
     CoreImage(
-        url=imageUrl,
-        style= ImageStyle.PropertyThumbnail,
-        contentDescription="Immagine della propietà",
-        modifier=modifier
+        url = imageUrl,
+        style = ImageStyle.PropertyThumbnail,
+        contentDescription = "Immagine della propietà",
+        modifier = modifier
     )
 }

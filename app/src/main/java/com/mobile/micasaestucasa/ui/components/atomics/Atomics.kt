@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.mobile.micasaestucasa.ui.theme.AppShapes
 import com.mobile.micasaestucasa.ui.theme.IconSize
 import com.mobile.micasaestucasa.ui.theme.Primario
@@ -134,6 +135,48 @@ fun AppAvatar(
 }
 
 @Composable
+fun AppAvatar(
+    imageUrl: String?,
+    modifier: Modifier = Modifier,
+    size: Dp = IconSize.Avatar,
+    showBorder: Boolean = false,
+    placeholderRes: Int = android.R.drawable.ic_menu_gallery
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .then(
+                if (showBorder) {
+                    Modifier.border(2.dp, MaterialTheme.colorScheme.primaryContainer, AppShapes.Avatar)
+                } else {
+                    Modifier
+                }
+            )
+            .padding(if (showBorder) 2.dp else 0.dp)
+    ) {
+        if (!imageUrl.isNullOrEmpty()) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "Avatar",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(AppShapes.Avatar)
+            )
+        } else {
+            Image(
+                painter = painterResource(id = placeholderRes),
+                contentDescription = "Avatar",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(AppShapes.Avatar)
+            )
+        }
+    }
+}
+
+@Composable
 fun RatingBadge(
     rating: Double,
     modifier: Modifier = Modifier
@@ -152,7 +195,7 @@ fun RatingBadge(
         )
         Spacer(modifier = Modifier.width(Spacing.ExtraSmall))
         Text(
-            text = rating.toString(),
+            text = "%.1f".format(rating),
             style = Typography.bodyLarge,
             color = Primario,
             fontWeight = FontWeight.Bold

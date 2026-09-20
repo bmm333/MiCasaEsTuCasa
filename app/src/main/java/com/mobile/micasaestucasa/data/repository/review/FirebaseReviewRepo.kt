@@ -63,6 +63,22 @@ class FirebaseReviewRepo @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun getHostReviews(hostId: String): Result<List<Review>> {
+        return try {
+            val snapshot = collection
+                .whereEqualTo("hostId", hostId)
+                .get().await()
+            Result.success(
+                snapshot.documents.mapNotNull {
+                    it.toObject(ReviewDto::class.java)?.toDomain()
+                }
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun deleteReview(
         reviewId: String,
         userId: String
@@ -149,7 +165,6 @@ class FirebaseReviewRepo @Inject constructor(
             val snapshot = collection
                 .whereEqualTo("targetId", renterId)
                 .whereEqualTo("reviewType", ReviewType.RENTER_REVIEW.name)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .get().await()
             Result.success(
                 snapshot.documents.mapNotNull {

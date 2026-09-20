@@ -15,5 +15,6 @@ data class Property(
     val availableFrom: String,
     val availableTo: String,
     val rating: Double = 0.0,
-    val reviewsCount: Int = 0
+    val reviewsCount: Int = 0,
+    val isOnHold: Boolean = false
 )

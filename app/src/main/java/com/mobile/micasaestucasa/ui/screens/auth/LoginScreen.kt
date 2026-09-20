@@ -21,12 +21,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -64,6 +66,7 @@ import com.mobile.micasaestucasa.ui.theme.ErrorColor
 import com.mobile.micasaestucasa.ui.theme.HeadingText
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.Sfumatura
+import com.mobile.micasaestucasa.ui.theme.Success
 import com.mobile.micasaestucasa.ui.viewmodels.auth.AuthViewModel
 
 @Composable
@@ -75,9 +78,16 @@ fun LoginScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val isAuthSuccessful by viewModel.isAuthSuccessful.collectAsState()
+    val passwordResetSent by viewModel.passwordResetSent.collectAsState()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Forgot password dialog state
+    var showForgotPasswordDialog by remember { mutableStateOf(false) }
+    var resetEmail by remember { mutableStateOf("") }
+    var resetErrorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(isAuthSuccessful) {
         if (isAuthSuccessful) onNavigateToHome()
@@ -204,6 +214,29 @@ fun LoginScreen(
                     .semantics { contentType = ContentType.Password }
             )
 
+            // Forgot password link
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = {
+                        resetEmail = email // pre-fill with login email
+                        resetErrorMessage = null
+                        viewModel.clearPasswordResetState()
+                        showForgotPasswordDialog = true
+                    },
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text(
+                        text = "Hai dimenticato la password?",
+                        color = Primario,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
             // Animated error message
             AnimatedVisibility(
                 visible = errorMessage != null,
@@ -266,6 +299,36 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(1.dp)
+                        .background(BorderDivider)
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(1.dp)
+                        .background(BorderDivider)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            com.mobile.micasaestucasa.ui.components.auth.GoogleSignInButton(
+                isLoading = isLoading,
+                onSignInSuccess = { idToken -> viewModel.signInWithGoogle(idToken) },
+                onSignInFailure = { e ->
+                    android.widget.Toast.makeText(context, "Google Sign-In Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -287,5 +350,179 @@ fun LoginScreen(
                 }
             }
         }
+    }
+
+    // Forgot password dialog
+    if (showForgotPasswordDialog) {
+        // Close dialog and reset state on success after a brief display
+        LaunchedEffect(passwordResetSent) {
+            if (passwordResetSent) {
+                kotlinx.coroutines.delay(3000)
+                showForgotPasswordDialog = false
+                viewModel.clearPasswordResetState()
+                viewModel.clearError()
+                resetErrorMessage = null
+            }
+        }
+
+        // Sync ViewModel error to local dialog error
+        LaunchedEffect(errorMessage) {
+            if (errorMessage != null && showForgotPasswordDialog) {
+                resetErrorMessage = errorMessage
+                viewModel.clearError()
+            }
+        }
+
+        AlertDialog(
+            onDismissRequest = {
+                showForgotPasswordDialog = false
+                viewModel.clearPasswordResetState()
+                viewModel.clearError()
+                resetErrorMessage = null
+            },
+            containerColor = CardSurface,
+            shape = RoundedCornerShape(16.dp),
+            title = {
+                Text(
+                    text = "Recupera password",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = HeadingText
+                )
+            },
+            text = {
+                Column {
+                    if (passwordResetSent) {
+                        // Success state
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Success.copy(alpha = 0.15f))
+                                .padding(horizontal = 12.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Rounded.CheckCircle,
+                                contentDescription = null,
+                                tint = Primario,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Email di recupero inviata. Controlla la tua casella.",
+                                color = HeadingText,
+                                fontSize = 14.sp
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Inserisci la tua email per ricevere il link di recupero password.",
+                            color = CaptionLabels,
+                            fontSize = 14.sp
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedTextField(
+                            value = resetEmail,
+                            onValueChange = {
+                                resetEmail = it
+                                resetErrorMessage = null
+                            },
+                            label = { Text("Email") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Rounded.Email,
+                                    contentDescription = null,
+                                    tint = CaptionLabels
+                                )
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(14.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = if (resetErrorMessage != null) ErrorColor else Primario,
+                                unfocusedBorderColor = if (resetErrorMessage != null) ErrorColor else BorderDivider,
+                                focusedLabelColor = if (resetErrorMessage != null) ErrorColor else Primario
+                            ),
+                            isError = resetErrorMessage != null,
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Done
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .semantics { contentType = ContentType.EmailAddress }
+                        )
+
+                        // Error message inside dialog
+                        AnimatedVisibility(
+                            visible = resetErrorMessage != null,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(ErrorColor.copy(alpha = 0.1f))
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Error,
+                                    contentDescription = null,
+                                    tint = ErrorColor,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = resetErrorMessage ?: "",
+                                    color = ErrorColor,
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                if (!passwordResetSent) {
+                    Button(
+                        onClick = { viewModel.resetPassword(resetEmail) },
+                        enabled = resetEmail.isNotBlank() && !isLoading,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Primario)
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = CardSurface,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = "Invia",
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showForgotPasswordDialog = false
+                        viewModel.clearPasswordResetState()
+                        viewModel.clearError()
+                        resetErrorMessage = null
+                    }
+                ) {
+                    Text(
+                        text = if (passwordResetSent) "Chiudi" else "Annulla",
+                        color = CaptionLabels
+                    )
+                }
+            }
+        )
     }
 }

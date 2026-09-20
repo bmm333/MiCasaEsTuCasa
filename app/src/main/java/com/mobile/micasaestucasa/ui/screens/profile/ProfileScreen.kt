@@ -15,7 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PrivacyTip
@@ -28,11 +28,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,71 +44,110 @@ import com.mobile.micasaestucasa.domain.model.user.UserRole
 import com.mobile.micasaestucasa.domain.util.Resource
 import com.mobile.micasaestucasa.ui.components.nav.DefaultBottomNavItems
 import com.mobile.micasaestucasa.ui.components.nav.MiCasaBottomNav
+import com.mobile.micasaestucasa.ui.components.nav.MiCasaConnectedBottomNav
+import com.mobile.micasaestucasa.ui.components.profile.DeleteAccountSection
 import com.mobile.micasaestucasa.ui.components.profile.HostBanner
+import com.mobile.micasaestucasa.ui.components.profile.HostDashboardCard
 import com.mobile.micasaestucasa.ui.components.profile.PersonalInfoCard
 import com.mobile.micasaestucasa.ui.components.profile.ProfileHeader
 import com.mobile.micasaestucasa.ui.components.profile.ProfileSectionCard
 import com.mobile.micasaestucasa.ui.components.profile.SettingsRow
 import com.mobile.micasaestucasa.ui.components.profile.WishlistCard
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
+import com.mobile.micasaestucasa.ui.theme.ScreenBackground
 import com.mobile.micasaestucasa.ui.viewmodels.auth.AuthViewModel
+import com.mobile.micasaestucasa.ui.viewmodels.user.HostStats
 import com.mobile.micasaestucasa.ui.viewmodels.user.UserViewModel
+import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistUiState
+import com.mobile.micasaestucasa.ui.viewmodels.wishlist.WishlistViewModel
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
     userViewModel: UserViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
+    wishlistViewModel: WishlistViewModel = hiltViewModel(),
     onNavigateToSettings: (String) -> Unit = {},
     onLogoutNavigate: () -> Unit = {},
     onNavigateToHostBookings: () -> Unit = {},
+    onNavigateToMyProperties: () -> Unit = {},
+    onNavigateToCreateProperty: () -> Unit = {},
+    onNavigateToHostIntro: () -> Unit = {},
     onNavigateToAdmin: () -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {},
     onNavigateBack: () -> Boolean
 ) {
     val userState by userViewModel.userState.collectAsStateWithLifecycle()
+    val hostStats by userViewModel.hostStats.collectAsStateWithLifecycle()
+    val isHost by userViewModel.isHost.collectAsStateWithLifecycle()
+    val wishlistState by wishlistViewModel.uiState.collectAsStateWithLifecycle()
 
-    // Refresh user data when the screen is shown
-    LaunchedEffect(Unit) {
-        userViewModel.loadUser()
+    // Refresh user & wishlist data when the screen is shown
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                userViewModel.loadUser()
+                wishlistViewModel.loadWishlist()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     ProfileContent(
         userState = userState,
+        wishlistState = wishlistState,
         navController = navController,
-        onLogout = { 
+        onLogout = {
             authViewModel.logout()
             onLogoutNavigate()
         },
         onNavigateToSettings = onNavigateToSettings,
         onNavigateToHostBookings = onNavigateToHostBookings,
-        onNavigateToAdmin = onNavigateToAdmin
+        onNavigateToMyProperties = onNavigateToMyProperties,
+        onNavigateToCreateProperty = onNavigateToCreateProperty,
+        onNavigateToHostIntro = onNavigateToHostIntro,
+        onNavigateToAdmin = onNavigateToAdmin,
+        onNavigateToEditProfile = onNavigateToEditProfile,
+        hostStats = hostStats,
+        isHost = isHost
     )
 }
 
 @Composable
 fun ProfileContent(
     userState: Resource<User?>,
+    wishlistState: WishlistUiState,
+    hostStats: HostStats,
+    isHost: Boolean,
     navController: NavController,
     onLogout: () -> Unit,
     onNavigateToSettings: (String) -> Unit,
     onNavigateToHostBookings: () -> Unit = {},
-    onNavigateToAdmin: () -> Unit = {}
+    onNavigateToMyProperties: () -> Unit = {},
+    onNavigateToCreateProperty: () -> Unit = {},
+    onNavigateToHostIntro: () -> Unit = {},
+    onNavigateToAdmin: () -> Unit = {},
+    onNavigateToEditProfile: () -> Unit = {}
 ) {
     Scaffold(
-        containerColor = Color(0xFFF7F7F7),
+        containerColor = ScreenBackground,
         bottomBar = {
-            MiCasaBottomNav(
+            MiCasaConnectedBottomNav(
                 items = DefaultBottomNavItems.items,
                 selectedRoute = "profile_screen",
                 onItemSelected = { route ->
                     when (route) {
-                        "home_screen"     -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Home) {
+                        "home_screen" -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Home) {
                             popUpTo(0)
                         }
-                        "saved_screen"    -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Wishlist)
-                        "trips_screen"    -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Trips)
+                        "saved_screen" -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Wishlist)
+                        "trips_screen" -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Trips)
                         "messages_screen" -> navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.ConversationList)
-                        "profile_screen"  -> { /* already here */ }
+                        "profile_screen" -> { /* already here */ }
                     }
                 }
             )
@@ -133,6 +171,16 @@ fun ProfileContent(
             }
             is Resource.Success -> {
                 val user = userState.data
+                val memberSince = remember(user?.createdAt) {
+                    user?.createdAt?.let {
+                        try {
+                            java.text.SimpleDateFormat("yyyy", java.util.Locale.getDefault()).format(java.util.Date(it))
+                        } catch (e: Exception) {
+                            "2024"
+                        }
+                    } ?: "2024"
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -142,32 +190,45 @@ fun ProfileContent(
                 ) {
                     item {
                         ProfileHeader(
-                            name = user?.name ?: "Guest",
-                            memberSince = "2024",
-                            bio = user?.bio ?: "Amo viaggiare e scoprire posti nuovi!",
-                            imageUrl = user?.profileImageUrl
+                            name = listOfNotNull(user?.name, user?.lastName?.takeIf { it.isNotBlank() })
+                                .joinToString(" ")
+                                .ifBlank { "Guest" },
+                            memberSince = memberSince,
+                            bio = user?.bio?.takeIf { it.isNotBlank() } ?: "Nessuna biografia inserita",
+                            imageUrl = user?.profileImageUrl,
+                            badge = user?.badge,
+                            onEditClick = { onNavigateToEditProfile() }
                         )
                     }
 
                     item {
                         PersonalInfoCard(
-                            fullName = user?.name ?: "",
+                            fullName = listOfNotNull(user?.name, user?.lastName?.takeIf { it.isNotBlank() })
+                                .joinToString(" ")
+                                .ifBlank { "" },
                             email = user?.email ?: "",
-                            phone = user?.phone?.takeIf { it.isNotEmpty() } ?: "+39 333 1234567",
-                            address = user?.address?.takeIf { it.isNotEmpty() } ?: "Via Roma 123, Milano"
+                            phone = user?.phone?.takeIf { it.isNotBlank() } ?: "Nessun numero di telefono inserito",
+                            address = user?.address?.takeIf { it.isNotBlank() } ?: "Nessun indirizzo inserito",
+                            onEditClick = { onNavigateToEditProfile() }
                         )
                     }
 
-                    if (user?.roles?.contains(UserRole.OWNER) == false && user?.roles?.contains(UserRole.ADMIN) == false) {
+                    if (!isHost && user?.roles?.contains(UserRole.ADMIN) == false) {
                         item {
                             PaddingWrapper {
-                                HostBanner()
+                                HostBanner(onGetStarted = onNavigateToHostIntro)
                             }
                         }
                     }
 
                     item {
-                        WishlistCard(count = 5)
+                        val wishlistCount = wishlistState.properties.size
+                        val imageUrls = wishlistState.properties.mapNotNull { it.imageUrls.firstOrNull() }
+                        WishlistCard(
+                            count = wishlistCount,
+                            imageUrls = imageUrls,
+                            onClick = { navController.navigate(com.mobile.micasaestucasa.ui.navigation.Route.Wishlist) }
+                        )
                     }
 
                     // Admin section
@@ -189,19 +250,15 @@ fun ProfileContent(
                     }
 
                     // Host section: link to received bookings
-                    if (user?.roles?.contains(UserRole.OWNER) == true) {
+                    if (isHost) {
                         item {
-                            ProfileSectionCard(
-                                title = "Hosting",
-                                icon = Icons.Default.Home
-                            ) {
-                                Column {
-                                    SettingsRow(
-                                        icon = Icons.Default.CalendarMonth,
-                                        label = "Prenotazioni ricevute",
-                                        onClick = { onNavigateToHostBookings() }
-                                    )
-                                }
+                            PaddingWrapper {
+                                HostDashboardCard(
+                                    stats = hostStats,
+                                    onNavigateToMyProperties = onNavigateToMyProperties,
+                                    onNavigateToHostBookings = onNavigateToHostBookings,
+                                    onNavigateToCreateProperty = onNavigateToCreateProperty
+                                )
                             }
                         }
                     }
@@ -213,6 +270,11 @@ fun ProfileContent(
                         ) {
                             Column {
                                 SettingsRow(
+                                    icon = Icons.Default.Edit,
+                                    label = "Modifica profilo",
+                                    onClick = { onNavigateToEditProfile() }
+                                )
+                                SettingsRow(
                                     icon = Icons.Default.Notifications,
                                     label = "Notifications",
                                     onClick = { onNavigateToSettings("notifications") }
@@ -223,6 +285,14 @@ fun ProfileContent(
                                     onClick = { onNavigateToSettings("privacy") }
                                 )
                             }
+                        }
+                    }
+
+                    item {
+                        PaddingWrapper {
+                            DeleteAccountSection(
+                                onAccountDeleted = { onLogout() }
+                            )
                         }
                     }
 
@@ -273,9 +343,13 @@ fun ProfileScreenPreview() {
                     phone = "+39 333 1234567"
                 )
             ),
+            wishlistState = WishlistUiState(),
+            hostStats = HostStats(),
+            isHost = false,
             navController = dummyNavController,
             onLogout = {},
-            onNavigateToSettings = {}
+            onNavigateToSettings = {},
+            onNavigateToEditProfile = {}
         )
     }
 }

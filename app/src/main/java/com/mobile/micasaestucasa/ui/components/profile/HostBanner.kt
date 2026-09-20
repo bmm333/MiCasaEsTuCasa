@@ -21,7 +21,7 @@ import com.mobile.micasaestucasa.ui.theme.Typography
 
 @Composable
 @Preview(showBackground = true, name = "Test")
-fun HostBanner() {
+fun HostBanner(onGetStarted: () -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -45,7 +45,7 @@ fun HostBanner() {
                 modifier = Modifier.padding(vertical = 8.dp)
             )
             Button(
-                onClick = { /* Action */ },
+                onClick = onGetStarted,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Primario),
                 shape = RoundedCornerShape(12.dp)

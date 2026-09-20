@@ -1,6 +1,7 @@
 package com.mobile.micasaestucasa.domain.usecase.property
 import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
+import com.mobile.micasaestucasa.domain.repository.user.UserRepo
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -12,6 +13,7 @@ import org.junit.Test
 
 class CreatePropertyUseCaseTest {
     private lateinit var propertyRepository: PropertyRepo
+    private lateinit var userRepository: UserRepo
     private lateinit var createPropertyUseCase: CreatePropertyUseCase
 
     private val validProperty = Property(
@@ -26,19 +28,21 @@ class CreatePropertyUseCaseTest {
         capacity = 4,
         keywords = listOf("wifi", "piscina"),
         imageUrls = emptyList(),
-        availableFrom = "2026-06-01",
-        availableTo = "2026-08-31"
+        availableFrom = "2030-06-01",
+        availableTo = "2030-08-31"
     )
 
     @Before
     fun setUp() {
         propertyRepository = mockk()
-        createPropertyUseCase = CreatePropertyUseCase(propertyRepository)
+        userRepository = mockk(relaxed = true)
+        createPropertyUseCase = CreatePropertyUseCase(propertyRepository, userRepository)
     }
 
     @Test
     fun `crea property con dati validi ritorna id`() = runTest {
         coEvery { propertyRepository.createProperty(any()) } returns Result.success("newId123")
+        coEvery { userRepository.getCurrentUser() } returns null
 
         val result = createPropertyUseCase(validProperty)
 

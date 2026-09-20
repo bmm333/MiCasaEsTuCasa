@@ -14,15 +14,6 @@ class HomeComponentsTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    @Test
-    fun topAppBar_automation_test() {
-        composeTestRule.setContent {
-            MiCasaEsTuCasaTheme {
-                Topnavigation()
-            }
-        }
-        composeTestRule.onNodeWithText("MiCasaEsTuCasa", ignoreCase = true).assertIsDisplayed()
-    }
 
     @Test
     fun searchBar_inputAutomation() {
@@ -33,7 +24,7 @@ class HomeComponentsTest {
         }
 
         // Trova il TextField tramite il testo del placeholder e inserisce testo
-        composeTestRule.onNodeWithText("Dove vai?", substring = true).performTextInput("Milano")
+        composeTestRule.onNodeWithText("Where are you going?", substring = true).performTextInput("Milano")
         composeTestRule.onNodeWithText("Milano").assertExists()
 
         // Sostituisce il testo

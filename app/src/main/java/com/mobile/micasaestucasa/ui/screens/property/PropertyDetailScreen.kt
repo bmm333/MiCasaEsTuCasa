@@ -1,5 +1,7 @@
 package com.mobile.micasaestucasa.ui.screens.property
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,7 +14,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -25,10 +26,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bathtub
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.KingBed
 import androidx.compose.material.icons.filled.Kitchen
+import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material.icons.filled.LocalLaundryService
 import androidx.compose.material.icons.filled.LocalParking
 import androidx.compose.material.icons.filled.LocationOn
@@ -36,7 +39,6 @@ import androidx.compose.material.icons.filled.Pool
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material.icons.filled.Laptop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -44,6 +46,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -58,6 +63,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,14 +71,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberMarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.mobile.micasaestucasa.domain.model.property.Property
+import com.mobile.micasaestucasa.domain.model.review.Review
+import com.mobile.micasaestucasa.ui.components.atomics.AppAvatar
+import com.mobile.micasaestucasa.ui.components.atomics.UserAvatarImage
 import com.mobile.micasaestucasa.ui.components.property.AmenityItem
 import com.mobile.micasaestucasa.ui.components.property.BookingBottomBar
 import com.mobile.micasaestucasa.ui.components.property.FeatureChip
-import com.mobile.micasaestucasa.ui.components.property.TransportCard
 import com.mobile.micasaestucasa.ui.theme.Accenti
 import com.mobile.micasaestucasa.ui.theme.CaptionLabels
+import com.mobile.micasaestucasa.ui.theme.Caution
 import com.mobile.micasaestucasa.ui.theme.ErrorColor
+import com.mobile.micasaestucasa.ui.theme.HeadingText
 import com.mobile.micasaestucasa.ui.theme.MiCasaEsTuCasaTheme
 import com.mobile.micasaestucasa.ui.theme.Primario
 import com.mobile.micasaestucasa.ui.theme.ScreenBackground
@@ -88,7 +106,7 @@ private val keywordIconMap: Map<String, ImageVector> = mapOf(
     "kitchen" to Icons.Default.Kitchen,
     "laundry" to Icons.Default.LocalLaundryService,
     "workspace" to Icons.Default.Laptop,
-    "bathtub" to Icons.Default.Bathtub,
+    "bathtub" to Icons.Default.Bathtub
 )
 
 private fun iconForKeyword(keyword: String): ImageVector {
@@ -104,15 +122,19 @@ private fun iconForKeyword(keyword: String): ImageVector {
 @Composable
 fun PropertyDetailScreen(
     propertyId: String,
+    currentUserId: String = "",
     onNavigateBack: () -> Unit,
-    onNavigateToBooking: (String) -> Unit = {},
+    onNavigateToBooking: (String, String, String, String, String, String) -> Unit = { _, _, _, _, _, _ -> },
     onNavigateToChat: (String) -> Unit = {},
     viewModel: PropertyViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isSaved by viewModel.isSaved.collectAsState()
+    val reviews by viewModel.propertyReviews.collectAsState()
 
     LaunchedEffect(propertyId) {
         viewModel.loadPropertyDetail(propertyId)
+        viewModel.checkIfSaved(propertyId)
     }
 
     when (val state = uiState) {
@@ -128,11 +150,31 @@ fun PropertyDetailScreen(
         }
 
         is PropertyUiState.DetailSuccess -> {
+            val isOwner = currentUserId.isNotBlank() && currentUserId == state.property.ownerId
             PropertyDetailContent(
                 property = state.property,
+                propertyOwner = state.propertyOwner,
+                reviews = reviews,
+                isSaved = isSaved,
+                currentUserId = currentUserId,
+                onFavoriteClick = { viewModel.toggleSaved(propertyId) },
                 onNavigateBack = onNavigateBack,
-                onBookClick = { onNavigateToBooking(propertyId) },
-                onChatClick = { onNavigateToChat(state.property.ownerId) }
+                onReplySubmit = { reviewId, replyText ->
+                    viewModel.replyToReview(reviewId, currentUserId, propertyId, replyText)
+                },
+                onBookClick = {
+                    onNavigateToBooking(
+                        propertyId,
+                        state.property.title,
+                        state.property.pricePerDay.toString(),
+                        state.property.ownerId,
+                        state.property.availableFrom,
+                        state.property.availableTo
+                    )
+                },
+                onChatClick = { onNavigateToChat(state.property.ownerId) },
+                showChatButton = !isOwner && currentUserId.isNotBlank(),
+                showBookButton = !isOwner
             )
         }
 
@@ -172,19 +214,30 @@ fun PropertyDetailScreen(
 @Composable
 fun PropertyDetailContent(
     property: Property,
+    propertyOwner: com.mobile.micasaestucasa.domain.model.user.User? = null,
+    reviews: List<Review> = emptyList(),
+    isSaved: Boolean = false,
+    currentUserId: String = "",
+    onFavoriteClick: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
+    onReplySubmit: (String, String) -> Unit = { _, _ -> },
     onBookClick: () -> Unit = {},
-    onChatClick: () -> Unit = {}
+    onChatClick: () -> Unit = {},
+    showChatButton: Boolean = true,
+    showBookButton: Boolean = true
 ) {
     Scaffold(
         containerColor = ScreenBackground,
         bottomBar = {
-            BookingBottomBar(
-                price = property.pricePerDay.toInt().toString(),
-                dates = "${property.availableFrom} — ${property.availableTo}",
-                onBookClick = onBookClick,
-                onChatClick = onChatClick
-            )
+            if (showBookButton || showChatButton) {
+                BookingBottomBar(
+                    price = property.pricePerDay.toInt().toString(),
+                    dates = "${property.availableFrom} — ${property.availableTo}",
+                    onBookClick = onBookClick,
+                    onChatClick = onChatClick,
+                    showChatButton = showChatButton
+                )
+            }
         }
     ) { paddingValues ->
         LazyColumn(
@@ -196,12 +249,20 @@ fun PropertyDetailContent(
             item {
                 ImageCarousel(
                     imageUrls = property.imageUrls,
+                    isSaved = isSaved,
+                    onFavoriteClick = onFavoriteClick,
+                    propertyTitle = property.title,
+                    propertyCity = property.city,
+                    propertyPrice = property.pricePerDay,
                     onBackClick = onNavigateBack
                 )
             }
 
             // ── 2. Title + Location + Rating ─────────────────────────
             item {
+                val displayRating = if (reviews.isNotEmpty()) reviews.map { it.stars }.average() else property.rating
+                val displayReviewsCount = if (reviews.isNotEmpty()) reviews.size else property.reviewsCount
+                
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -242,14 +303,14 @@ fun PropertyDetailContent(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = if (property.rating > 0) "%.1f".format(property.rating) else "New",
+                                text = if (displayRating > 0) "%.1f".format(displayRating) else "New",
                                 style = Typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            if (property.reviewsCount > 0) {
+                            if (displayReviewsCount > 0) {
                                 Text(
-                                    text = " (${property.reviewsCount})",
+                                    text = " ($displayReviewsCount)",
                                     style = Typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -306,7 +367,17 @@ fun PropertyDetailContent(
                 SectionDivider()
             }
 
-            // ── 9. Location Section ────────────────────────────────────
+            // ── 8b. Host Profile ───────────────────────────────────────
+            if (propertyOwner != null) {
+                item {
+                    HostProfileSection(host = propertyOwner)
+                }
+                item {
+                    SectionDivider()
+                }
+            }
+
+            // ── 9. Location Section with Map ───────────────────────────
             item {
                 LocationSection(
                     city = property.city,
@@ -315,14 +386,22 @@ fun PropertyDetailContent(
                 )
             }
 
-            // ── 10. Getting around ─────────────────────────────────────
+            // ── 10. Divider ────────────────────────────────────────────
             item {
-                Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
-                    TransportCard()
-                }
+                SectionDivider()
             }
 
-            // ── 11. Bottom spacing ─────────────────────────────────────
+            // ── 11. Reviews Section ────────────────────────────────────
+            item {
+                ReviewsSection(
+                    reviews = reviews,
+                    currentUserId = currentUserId,
+                    propertyOwnerId = property.ownerId,
+                    onReplySubmit = onReplySubmit
+                )
+            }
+
+            // ── 12. Bottom spacing ─────────────────────────────────────
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -338,6 +417,11 @@ fun PropertyDetailContent(
 @Composable
 private fun ImageCarousel(
     imageUrls: List<String>,
+    isSaved: Boolean,
+    onFavoriteClick: () -> Unit,
+    propertyTitle: String,
+    propertyCity: String,
+    propertyPrice: Double,
     onBackClick: () -> Unit
 ) {
     val images = imageUrls.ifEmpty {
@@ -396,8 +480,18 @@ private fun ImageCarousel(
             }
 
             Row {
+                val context = androidx.compose.ui.platform.LocalContext.current
                 IconButton(
-                    onClick = { /* Share */ },
+                    onClick = {
+                        val shareText = "Dai un'occhiata a questa splendida proprietà su Mi Casa Es Tu Casa: $propertyTitle a $propertyCity per soli $${propertyPrice.toInt()}/notte!"
+                        val sendIntent = android.content.Intent().apply {
+                            action = android.content.Intent.ACTION_SEND
+                            putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                            type = "text/plain"
+                        }
+                        val shareIntent = android.content.Intent.createChooser(sendIntent, "Condividi questa proprietà")
+                        context.startActivity(shareIntent)
+                    },
                     modifier = Modifier
                         .background(Color.White.copy(alpha = 0.25f), CircleShape)
                         .size(40.dp)
@@ -410,15 +504,15 @@ private fun ImageCarousel(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
-                    onClick = { /* Favorite */ },
+                    onClick = onFavoriteClick,
                     modifier = Modifier
                         .background(Color.White.copy(alpha = 0.25f), CircleShape)
                         .size(40.dp)
                 ) {
                     Icon(
-                        Icons.Default.FavoriteBorder,
-                        contentDescription = "Aggiungi ai preferiti",
-                        tint = Color.White
+                        if (isSaved) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = if (isSaved) "Rimuovi dai preferiti" else "Aggiungi ai preferiti",
+                        tint = if (isSaved) Color.Red else Color.White
                     )
                 }
             }
@@ -446,8 +540,11 @@ private fun ImageCarousel(
                             .size(if (isSelected) 8.dp else 6.dp)
                             .clip(CircleShape)
                             .background(
-                                if (isSelected) Color.White
-                                else Color.White.copy(alpha = 0.4f)
+                                if (isSelected) {
+                                    Color.White
+                                } else {
+                                    Color.White.copy(alpha = 0.4f)
+                                }
                             )
                     )
                 }
@@ -553,7 +650,7 @@ private fun AmenitiesSection(keywords: List<String>) {
     }
 }
 
-/** Location block with city name and coordinates */
+/** Location block with city name, coordinates and interactive map */
 @Composable
 private fun LocationSection(
     city: String,
@@ -566,7 +663,7 @@ private fun LocationSection(
             .padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
         Text(
-            text = "Location",
+            text = "Posizione",
             style = Typography.titleLarge,
             fontWeight = FontWeight.ExtraBold,
             color = MaterialTheme.colorScheme.onSurface
@@ -591,17 +688,61 @@ private fun LocationSection(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = city.ifEmpty { "Location not specified" },
+                text = city.ifEmpty { "Posizione non specificata" },
                 style = Typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
 
+        // Map — show only if coordinates are available
         if (latitude != 0.0 && longitude != 0.0) {
+            val context = LocalContext.current
+            Spacer(modifier = Modifier.height(12.dp))
+            val position = LatLng(latitude, longitude)
+            val cameraPositionState = rememberCameraPositionState {
+                this.position = CameraPosition.fromLatLngZoom(position, 14f)
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(14.dp))
+            ) {
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    onMapClick = {
+                        val uri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude(${Uri.encode(city)})")
+                        val intent = Intent(Intent.ACTION_VIEW, uri)
+                        intent.setPackage("com.google.android.apps.maps")
+                        if (intent.resolveActivity(context.packageManager) != null) {
+                            context.startActivity(intent)
+                        } else {
+                            // Fallback to browser if Maps app is not installed
+                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=$latitude,$longitude"))
+                            context.startActivity(browserIntent)
+                        }
+                    },
+                    uiSettings = MapUiSettings(
+                        zoomControlsEnabled = false,
+                        scrollGesturesEnabled = false,
+                        zoomGesturesEnabled = false,
+                        tiltGesturesEnabled = false,
+                        rotationGesturesEnabled = false
+                    ),
+                    properties = MapProperties()
+                ) {
+                    Marker(
+                        state = rememberMarkerState(position = position),
+                        title = city
+                    )
+                }
+            }
+        } else {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "%.4f, %.4f".format(latitude, longitude),
+                text = "Mappa non disponibile",
                 style = Typography.labelSmall,
                 color = CaptionLabels
             )
@@ -609,51 +750,247 @@ private fun LocationSection(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  Preview
-// ═══════════════════════════════════════════════════════════════════════
-@Preview(showBackground = true, showSystemUi = true, name = "Property Detail")
+/** Reviews Section */
 @Composable
-fun PropertyDetailScreenPreview() {
-    val fakeProperty = Property(
-        id = "preview_1",
-        ownerId = "owner_123",
-        title = "The Earth & Clay Villa",
-        description = "Perched on the edges of the ancient caldera, The Earth & Clay Villa is one " +
-                "better to be believed with one's eyes. Every corner has been curated with raw, " +
-                "minimal materials — dark travertine stone, hand-woven linens and local pottery — " +
-                "to create an atmosphere of profound tranquility.\n\n" +
-                "Wake up to the scent of wild sage and sea salt. This expansive terrace offers " +
-                "the kind of ocean view of the Aegean, where the blue of the sea melts into the " +
-                "sky in an endless horizon. This isn't just a place to stay; it is an invitation to breathe.",
-        latitude = 36.4161,
-        longitude = 25.4322,
-        city = "Santorini, Greece",
-        pricePerDay = 450.0,
-        capacity = 6,
-        keywords = listOf(
-            "Private Infinity Pool",
-            "High-speed Fiber WiFi",
-            "Chef's Kitchen",
-            "Free Valet Parking",
-            "Dedicated Workspace",
-            "In-suite Laundry"
-        ),
-        imageUrls = listOf(
-            "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
-            "https://images.unsplash.com/photo-1613490493576-7fde63acd811",
-            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750"
-        ),
-        availableFrom = "2026-06-12",
-        availableTo = "2026-06-18",
-        rating = 4.95,
-        reviewsCount = 128
-    )
+private fun ReviewsSection(
+    reviews: List<Review>,
+    currentUserId: String,
+    propertyOwnerId: String,
+    onReplySubmit: (String, String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = null,
+                tint = Accenti,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "${reviews.size} Recensioni",
+                style = Typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        if (reviews.isEmpty()) {
+            Text(
+                text = "Nessuna recensione disponibile.",
+                style = Typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            reviews.forEach { review ->
+                ReviewItem(
+                    review = review,
+                    currentUserId = currentUserId,
+                    propertyOwnerId = propertyOwnerId,
+                    onReplySubmit = onReplySubmit
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+}
 
-    MiCasaEsTuCasaTheme {
-        PropertyDetailContent(
-            property = fakeProperty,
-            onNavigateBack = {}
+@Composable
+private fun ReviewItem(
+    review: Review,
+    currentUserId: String = "",
+    propertyOwnerId: String = "",
+    onReplySubmit: (String, String) -> Unit = { _, _ -> }
+) {
+    var showReplyDialog by remember { mutableStateOf(false) }
+    var replyText by remember { mutableStateOf("") }
+    val isOwner = currentUserId.isNotBlank() && currentUserId == propertyOwnerId
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            UserAvatarImage(
+                imageUrl = review.authorProfilePicture,
+                userName = review.authorName,
+                modifier = Modifier.size(40.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = review.authorName,
+                    style = Typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(review.createdAt)),
+                    style = Typography.labelSmall,
+                    color = CaptionLabels
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            repeat(5) { i ->
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = if (i < review.stars) Accenti else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = review.body,
+            style = Typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        
+        if (!review.hostReply.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surface,
+                        RoundedCornerShape(8.dp)
+                    )
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = "Risposta dell'Host",
+                    style = Typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = review.hostReply,
+                    style = Typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else if (isOwner) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Rispondi",
+                style = Typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = Primario,
+                modifier = Modifier
+                    .clickable { showReplyDialog = true }
+                    .padding(vertical = 4.dp)
+            )
+        }
+    }
+
+    if (showReplyDialog) {
+        AlertDialog(
+            onDismissRequest = { showReplyDialog = false },
+            title = { Text("Rispondi alla recensione") },
+            text = {
+                OutlinedTextField(
+                    value = replyText,
+                    onValueChange = { replyText = it },
+                    label = { Text("La tua risposta") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (replyText.isNotBlank()) {
+                            onReplySubmit(review.id, replyText)
+                            showReplyDialog = false
+                        }
+                    }
+                ) {
+                    Text("Invia")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReplyDialog = false }) {
+                    Text("Annulla")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun HostProfileSection(host: com.mobile.micasaestucasa.domain.model.user.User) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Informazioni sull'host",
+            style = Typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = HeadingText,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            AppAvatar(
+                imageUrl = host.profileImageUrl,
+                size = 64.dp,
+                modifier = Modifier
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = host.name,
+                    style = Typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = HeadingText
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Rating",
+                        tint = Caution,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (host.avgRating > 0) "%.1f".format(host.avgRating) else "New",
+                        style = Typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = HeadingText
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "•",
+                        style = Typography.bodyMedium,
+                        color = CaptionLabels
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = host.badge.name.replace("_", " "),
+                        style = Typography.bodyMedium,
+                        color = Primario
+                    )
+                }
+            }
+        }
     }
 }

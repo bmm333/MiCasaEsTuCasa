@@ -34,13 +34,20 @@ class SearchAvaliblePropertiesUseCase @Inject constructor(
         if (query.guestsCount <= 0) {
             return Result.failure(IllegalArgumentException("Guest count must be at least 1"))
         }
-        if (query.startDate >= query.endDate) {
-            return Result.failure(IllegalArgumentException("Start date must be before end date"))
+        
+        val isDateSearch = query.startDate.isNotBlank() && query.endDate.isNotBlank()
+        var nights = 1
+        
+        if (isDateSearch) {
+            if (query.startDate >= query.endDate) {
+                return Result.failure(IllegalArgumentException("Start date must be before end date"))
+            }
+            nights = calculateNights(query.startDate, query.endDate)
+            if (nights <= 0) {
+                return Result.failure(IllegalArgumentException("Stay should be at least 1 night"))
+            }
         }
-        val nights = calculateNights(query.startDate, query.endDate)
-        if (nights <= 0) {
-            return Result.failure(IllegalArgumentException("Stay should be at least 1 night"))
-        }
+
         val propertiesResult = propertyRepo.searchProperties(
             city = query.city,
             startDate = query.startDate,
@@ -54,12 +61,16 @@ class SearchAvaliblePropertiesUseCase @Inject constructor(
         val properties = propertiesResult.getOrThrow()
         // we need to check avaliblity for each property of the result , therefore we need to paralellize this operation to not block using a corutinescope
         val results = properties.mapNotNull { property ->
-            val ovelapResult = bookingRepo.hasOverlappingBooking(
-                propertyId = property.id,
-                startDate = query.startDate,
-                endDate = query.endDate
-            )
-            val isAvalible = ovelapResult.getOrDefault(true).not()
+            val isAvalible = if (isDateSearch) {
+                val ovelapResult = bookingRepo.hasOverlappingBooking(
+                    propertyId = property.id,
+                    startDate = query.startDate,
+                    endDate = query.endDate
+                )
+                ovelapResult.getOrDefault(true).not()
+            } else {
+                true
+            }
             // price filetr
             if (query.maxPricePerDay != null && property.pricePerDay > query.maxPricePerDay) {
                 return@mapNotNull null

@@ -2,7 +2,9 @@ package com.mobile.micasaestucasa.domain.usecase.booking
 
 import com.mobile.micasaestucasa.domain.model.booking.Booking
 import com.mobile.micasaestucasa.domain.model.booking.BookingStatus
+import com.mobile.micasaestucasa.domain.model.property.Property
 import com.mobile.micasaestucasa.domain.repository.booking.BookingRepo
+import com.mobile.micasaestucasa.domain.repository.property.PropertyRepo
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -17,7 +19,24 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class CreateBookingUseCaseTest {
     private lateinit var bookingRepo: BookingRepo
+    private lateinit var propertyRepo: PropertyRepo
     private lateinit var createBookingUseCase: CreateBookingUseCase
+
+    private val validProperty = Property(
+        id = "prop123",
+        ownerId = "host789",
+        title = "Test Property",
+        description = "Desc",
+        latitude = 0.0,
+        longitude = 0.0,
+        city = "Milano",
+        pricePerDay = 100.0,
+        capacity = 4,
+        keywords = emptyList(),
+        imageUrls = emptyList(),
+        availableFrom = "2026-06-01",
+        availableTo = "2026-12-31"
+    )
 
     private val validBooking = Booking(
         id = "",
@@ -36,8 +55,10 @@ class CreateBookingUseCaseTest {
     @Before
     fun setUp() {
         bookingRepo = mockk()
+        propertyRepo = mockk()
+        coEvery { propertyRepo.getPropertyById(any()) } returns Result.success(validProperty)
     }
-    private fun buildUseCase() = CreateBookingUseCase(bookingRepo)
+    private fun buildUseCase() = CreateBookingUseCase(bookingRepo, propertyRepo)
 
     // il happy path
     @Test

@@ -66,11 +66,14 @@ exports.onBookingUpdate = functions.region("europe-west1").firestore
             title = "Prenotazione rifiutata";
             body = "La tua richiesta di prenotazione è stata rifiutata";
             type = "BOOKING_REJECTED";
-        } else if (after.status === "CANCELLED") {
-            title = "Prenotazione annullata";
-            body = "Una prenotazione è stata annullata";
-            type = "BOOKING_CANCELLED";
-        } else {
+        }
+        else if(after.status=="COMPLETED")
+        {
+            title="Booking Completed";
+            body ="You have completed your stay";
+            type="BOOKING_COMPLETED";
+        }
+        else {
             return null;
         }
 

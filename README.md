@@ -25,9 +25,8 @@ The repository enforces quality standards through automated testing and CI pipel
 - **CI/CD Pipeline**: Configured via GitLab CI (`.gitlab-ci.yml`) using Dockerized Android build environments. Stages include static analysis (ktlint), automated testing, coverage verification, and artifact generation (APK).
 
 ## Setup & Configuration
-1. Clone the repository.
-2. Add the required `google-services.json` file generated from your Firebase console into the `app/` directory.
-3. Build the project using Gradle (`./gradlew assembleDebug`).
+1. Clone repository.
+2. Build project using Gradle (`./gradlew assembleDebug`).
 
 ## Authors
 - Arben Mema

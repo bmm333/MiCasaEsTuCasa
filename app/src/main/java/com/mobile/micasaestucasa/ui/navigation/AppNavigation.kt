@@ -191,9 +191,10 @@ fun AppNavigation(
                 ownerId = currentUserId,
                 onNavigateBack = { navController.popBackStack() },
                 onPublished = {
-                    navController.navigate(Route.MyProperties) {
-                        popUpTo(Route.Home) { inclusive = false }
+                    navController.navigate(Route.Home) {
+                        popUpTo(0) { inclusive = true }
                     }
+                    navController.navigate(Route.MyProperties)
                 }
             )
         }

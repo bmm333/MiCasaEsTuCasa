@@ -180,6 +180,7 @@ class FirebaseChatRepo @Inject constructor(private val firestore: FirebaseFirest
             // merge dedup and resorting
             val merged = (asHost + asRenter)
                 .distinctBy { it.id }
+                .filter { it.lastMessage.isNotBlank() }
                 .sortedByDescending { it.lastMessageTimestamp }
             Result.success(merged)
         } catch (e: Exception) {

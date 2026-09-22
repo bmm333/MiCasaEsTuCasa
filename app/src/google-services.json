@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "353881933642",
+    "project_id": "micasaestucasa-9dc1b",
+    "storage_bucket": "micasaestucasa-9dc1b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353881933642:android:2a9e1e3ee298b9796ca3b3",
+        "android_client_info": {
+          "package_name": "com.mobile.micasaestucasa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "353881933642-d8rjdfu2t11j0414mrudao4ccmp25p2c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mobile.micasaestucasa",
+            "certificate_hash": "e26ea3c07a7c923d433edd0b55267cb77f45a684"
+          }
+        },
+        {
+          "client_id": "353881933642-e6rd2tpdeh8lff96hptc6turpa87gasq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmx08JoHvfkr46mJSp_JAkY7ub_oz_J-8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "353881933642-e6rd2tpdeh8lff96hptc6turpa87gasq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+app/src/google-services.json
+/.idea/deploymentTargetSelector.xml
+log.txt
+deps.txt

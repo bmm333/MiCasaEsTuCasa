@@ -1,0 +1,586 @@
+package com.mobile.micasaestucasa.ui.screens.booking
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material.icons.rounded.CreditCard
+import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.mobile.micasaestucasa.domain.model.booking.Booking
+import com.mobile.micasaestucasa.domain.model.booking.BookingStatus
+import com.mobile.micasaestucasa.ui.components.atomics.MiCasaPrimaryButton
+import com.mobile.micasaestucasa.ui.theme.BorderDivider
+import com.mobile.micasaestucasa.ui.theme.CaptionLabels
+import com.mobile.micasaestucasa.ui.theme.CardSurface
+import com.mobile.micasaestucasa.ui.theme.ErrorColor
+import com.mobile.micasaestucasa.ui.theme.HeadingText
+import com.mobile.micasaestucasa.ui.theme.Primario
+import com.mobile.micasaestucasa.ui.theme.ScreenBackground
+import com.mobile.micasaestucasa.ui.theme.Secondary
+import com.mobile.micasaestucasa.ui.theme.SecondaryText
+import com.mobile.micasaestucasa.ui.theme.SkeletonLoader
+import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingUiState
+import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingViewModel
+import com.mobile.micasaestucasa.ui.viewmodels.booking.PaymentUiStatus
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
+
+/**
+ * Booking request screen handles date selection, guests count, effective cost, and mocked payment.
+ *
+ * Dates are selected via Material3 DatePickerDialog (no manual text input).
+ * Payment is a mock flow with a 2-second simulated delay — no real payment provider is integrated.
+ * */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BookingRequestScreen(
+    propertyId: String,
+    propertyTitle: String,
+    pricePerDay: Double,
+    hostId: String,
+    availableFrom: String = "",
+    availableTo: String = "",
+    currentUserId: String,
+    onNavigateBack: () -> Unit,
+    onBookingSuccess: () -> Unit,
+    viewModel: BookingViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val paymentState by viewModel.paymentState.collectAsState()
+    val unavailableDates by viewModel.unavailableDatesMillis.collectAsState()
+    LaunchedEffect(propertyId) {
+        viewModel.loadUnavailableDates(propertyId)
+    }
+
+    val availabilityWindow = remember(availableFrom, availableTo) {
+        try {
+            if (availableFrom.isNotBlank() && availableTo.isNotBlank()) {
+                LocalDate.parse(availableFrom) to LocalDate.parse(availableTo)
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    val selectableDates = remember(unavailableDates, availabilityWindow) {
+        object : androidx.compose.material3.SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val date = Instant.ofEpochMilli(utcTimeMillis)
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDate()
+                val today = LocalDate.now()
+                if (date.isBefore(today)) return false
+                availabilityWindow?.let { (from, to) ->
+                    if (date.isBefore(from) || date.isAfter(to)) return false
+                }
+                return utcTimeMillis !in unavailableDates
+            }
+        }
+    }
+
+    // DatePicker state
+    val startDatePickerState = rememberDatePickerState(selectableDates = selectableDates)
+    val endDatePickerState = rememberDatePickerState(selectableDates = selectableDates)
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
+    var guestsCount by remember { mutableIntStateOf(1) }
+    var showPaymentDialog by remember { mutableStateOf(false) }
+
+    val startDate = startDatePickerState.selectedDateMillis?.let {
+        millisToIso(it)
+    } ?: ""
+    val endDate = endDatePickerState.selectedDateMillis?.let {
+        millisToIso(it)
+    } ?: ""
+
+    val nights = calculateNights(startDate, endDate)
+    val totalPrice = nights * pricePerDay
+
+    LaunchedEffect(uiState) {
+        if (uiState is BookingUiState.BookingCreated) showPaymentDialog = true
+    }
+    LaunchedEffect(uiState, paymentState) {
+        if (uiState is BookingUiState.BookingCreated &&
+            paymentState is PaymentUiStatus.Success
+        ) {
+            onBookingSuccess()
+        }
+    }
+
+    if (showStartPicker) {
+        DatePickerDialog(
+            onDismissRequest = { showStartPicker = false },
+            confirmButton = {
+                TextButton(onClick = { showStartPicker = false }) {
+                    Text("OK", color = Primario)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStartPicker = false }) {
+                    Text("Annulla", color = CaptionLabels)
+                }
+            }
+        ) {
+            DatePicker(
+                state = startDatePickerState,
+                colors = DatePickerDefaults.colors(
+                    selectedDayContainerColor = Primario,
+                    todayDateBorderColor = Primario
+                )
+            )
+        }
+    }
+
+    if (showEndPicker) {
+        DatePickerDialog(
+            onDismissRequest = { showEndPicker = false },
+            confirmButton = {
+                TextButton(onClick = { showEndPicker = false }) {
+                    Text("OK", color = Primario)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEndPicker = false }) {
+                    Text("Annulla", color = CaptionLabels)
+                }
+            }
+        ) {
+            DatePicker(
+                state = endDatePickerState,
+                colors = DatePickerDefaults.colors(
+                    selectedDayContainerColor = Primario,
+                    todayDateBorderColor = Primario
+                )
+            )
+        }
+    }
+
+    if (showPaymentDialog) {
+        MockPaymentDialog(
+            totalPrice = totalPrice,
+            paymentState = paymentState,
+            onConfirm = {
+                val bookingId = (uiState as? BookingUiState.BookingCreated)?.bookingId ?: ""
+                viewModel.processPayment(bookingId)
+            },
+            onDismiss = { showPaymentDialog = false }
+        )
+    }
+
+    Scaffold(
+        containerColor = ScreenBackground,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Prenota",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = HeadingText
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Rounded.ArrowBackIosNew, null, tint = HeadingText)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = CardSurface)
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Property info
+            SectionCard("Proprietà") {
+                Text(
+                    propertyTitle,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = HeadingText
+                )
+                Text(
+                    "€${pricePerDay.toInt()} / notte",
+                    fontSize = 14.sp,
+                    color = CaptionLabels
+                )
+            }
+
+            SectionCard("Quando") {
+                if (availableFrom.isNotBlank() && availableTo.isNotBlank()) {
+                    Text(
+                        "Disponibile: $availableFrom — $availableTo",
+                        fontSize = 12.sp,
+                        color = CaptionLabels,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    DateButton(
+                        label = "Check-in",
+                        value = if (startDate.isBlank()) "Seleziona" else startDate,
+                        onClick = { showStartPicker = true },
+                        modifier = Modifier.weight(1f)
+                    )
+                    DateButton(
+                        label = "Check-out",
+                        value = if (endDate.isBlank()) "Seleziona" else endDate,
+                        onClick = { showEndPicker = true },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                if (nights > 0) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "$nights ${if (nights == 1) "notte" else "notti"}",
+                        fontSize = 13.sp,
+                        color = Secondary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            // Guests count
+            SectionCard("Ospiti") {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    Arrangement.SpaceBetween,
+                    Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            "Ospiti",
+                            fontSize = 15.sp,
+                            color = HeadingText,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            "Max capacità selezionata",
+                            fontSize = 12.sp,
+                            color = CaptionLabels
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { if (guestsCount > 1) guestsCount-- },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(SkeletonLoader)
+                        ) {
+                            Icon(
+                                Icons.Rounded.Remove,
+                                null,
+                                tint = HeadingText,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Text(
+                            "$guestsCount",
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 20.sp,
+                            color = HeadingText
+                        )
+                        IconButton(
+                            onClick = { guestsCount++ },
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(Primario)
+                        ) {
+                            Icon(
+                                Icons.Rounded.Add,
+                                null,
+                                tint = CardSurface,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Price summary
+            if (nights > 0) {
+                SectionCard("Riepilogo") {
+                    PriceRow(
+                        "€${pricePerDay.toInt()} × $nights notti",
+                        "€${(pricePerDay * nights).toInt()}"
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    HorizontalDivider(color = BorderDivider)
+                    Spacer(Modifier.height(8.dp))
+                    PriceRow("Totale", "€${totalPrice.toInt()}", bold = true)
+                }
+            }
+
+            if (uiState is BookingUiState.Error) {
+                Text(
+                    (uiState as BookingUiState.Error).message,
+                    color = ErrorColor,
+                    fontSize = 13.sp
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            MiCasaPrimaryButton(
+                text = "Richiedi prenotazione",
+                onClick = {
+                    val booking = Booking(
+                        id = "",
+                        propertyId = propertyId,
+                        renterId = currentUserId,
+                        hostId = hostId,
+                        startDate = startDate,
+                        endDate = endDate,
+                        guestsCount = guestsCount,
+                        pricePerDay = pricePerDay,
+                        totalPrice = totalPrice,
+                        status = BookingStatus.REQUESTED,
+                        idempotencyKey = ""
+                    )
+                    viewModel.createBooking(booking)
+                },
+                enabled = startDate.isNotBlank() && endDate.isNotBlank() && nights > 0 &&
+                    uiState !is BookingUiState.Loading,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun DateButton(
+    label: String,
+    value: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(ScreenBackground)
+            .clickable { onClick() }
+            .padding(12.dp)
+    ) {
+        Text(
+            label,
+            fontSize = 11.sp,
+            color = CaptionLabels,
+            fontWeight = FontWeight.Medium
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            value,
+            fontSize = 14.sp,
+            color = if (value == "Seleziona") BorderDivider else HeadingText,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
+private fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(CardSurface)
+            .padding(16.dp)
+    ) {
+        Text(
+            text = title,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
+            color = HeadingText
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        content()
+    }
+}
+
+@Composable
+private fun PriceRow(label: String, value: String, bold: Boolean = false) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            color = if (bold) HeadingText else SecondaryText,
+            fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal
+        )
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            color = HeadingText,
+            fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal
+        )
+    }
+}
+
+@Composable
+private fun MockPaymentDialog(
+    totalPrice: Double,
+    paymentState: PaymentUiStatus,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(CardSurface)
+                .padding(28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            when (paymentState) {
+                is PaymentUiStatus.Processing -> {
+                    CircularProgressIndicator(color = Primario)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "Elaborazione pagamento...",
+                        color = CaptionLabels,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                else -> {
+                    // Icon
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(Primario.copy(alpha = 0.10f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Rounded.CreditCard,
+                            contentDescription = null,
+                            tint = Primario,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(
+                        "Conferma pagamento",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = HeadingText,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Totale da pagare",
+                        fontSize = 13.sp,
+                        color = CaptionLabels,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "€${totalPrice.toInt()}",
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = HeadingText,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "Demo – nessun pagamento reale",
+                        fontSize = 11.sp,
+                        color = CaptionLabels,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    MiCasaPrimaryButton(
+                        text = "Paga ora",
+                        onClick = onConfirm,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "Annulla",
+                            color = CaptionLabels,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun millisToIso(millis: Long): String {
+    val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.ITALY)
+    return sdf.format(java.util.Date(millis))
+}
+
+private fun calculateNights(start: String, end: String): Int {
+    return try {
+        val s = java.time.LocalDate.parse(start)
+        val e = java.time.LocalDate.parse(end)
+        java.time.temporal.ChronoUnit.DAYS.between(s, e).toInt().coerceAtLeast(0)
+    } catch (e: Exception) { 0 }
+}

@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.mobile.micasaestucasa.domain.model.booking.Booking
@@ -36,7 +38,9 @@ import com.mobile.micasaestucasa.ui.theme.*
 import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingUiState
 import com.mobile.micasaestucasa.ui.viewmodels.booking.BookingViewModel
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 
 private data class TabItem(val label: String, val count: Int)
@@ -134,10 +138,22 @@ fun TripsScreen(
                 is BookingUiState.Error -> Box(Modifier.fillMaxSize(), Alignment.Center) { Text((uiState as BookingUiState.Error).message, color = ErrorColor) }
                 else -> HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Top) { page ->
                     when (page) {
-                        0 -> BookingTab(upcoming, Icons.Rounded.Luggage, "Nessun viaggio in arrivo", "I tuoi prossimi soggiorni appariranno qui") { booking ->
-                            UpcomingCard(booking, onCancel = { viewModel.cancelBooking(booking.id, currentUserId) },
+                                0 -> BookingTab(upcoming, Icons.Rounded.Luggage, "Nessun viaggio in arrivo", "I tuoi prossimi soggiorni appariranno qui") { booking ->
+                            UpcomingCard(booking,
+                                onCancel = { viewModel.cancelBooking(booking.id, currentUserId) },
                                 onChat = { onNavigateToChat(booking.hostId, currentUserId, booking.propertyId) },
-                                onClick = { onNavigateToProperty(booking.propertyId) })
+                                onClick = { onNavigateToProperty(booking.propertyId) },
+                                onEdit = { newStart, newEnd, newGuests ->
+                                    viewModel.updateBooking(
+                                        bookingId = booking.id,
+                                        renterId = currentUserId,
+                                        newStartDate = newStart,
+                                        newEndDate = newEnd,
+                                        newGuestsCount = newGuests,
+                                        pricePerDay = booking.pricePerDay
+                                    )
+                                }
+                            )
                         }
                         1 -> BookingTab(active, Icons.Rounded.Home, "Nessun soggiorno in corso", "I soggiorni attivi appariranno qui") { booking ->
                             ActiveCard(booking, onChat = { onNavigateToChat(booking.hostId, currentUserId, booking.propertyId) },
@@ -218,11 +234,43 @@ private fun <T> BookingTab(items: List<T>, emptyIcon: ImageVector, emptyTitle: S
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun UpcomingCard(booking: Booking, onCancel: () -> Unit, onChat: () -> Unit, onClick: () -> Unit) {
+private fun UpcomingCard(
+    booking: Booking,
+    onCancel: () -> Unit,
+    onChat: () -> Unit,
+    onClick: () -> Unit,
+    onEdit: (newStart: String, newEnd: String, newGuests: Int) -> Unit = { _, _, _ -> }
+) {
     val daysUntil = remember(booking.startDate) {
         try { ChronoUnit.DAYS.between(LocalDate.now(), LocalDate.parse(booking.startDate)).toInt() } catch (_: Exception) { 0 }
     }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var showCancelDialog by remember { mutableStateOf(false) }
+
+    if (showEditDialog) {
+        EditBookingDialog(
+            booking = booking,
+            onDismiss = { showEditDialog = false },
+            onConfirm = { newStart, newEnd, newGuests ->
+                onEdit(newStart, newEnd, newGuests)
+                showEditDialog = false
+            }
+        )
+    }
+
+    if (showCancelDialog) {
+        RefundCancelDialog(
+            totalPrice = booking.totalPrice,
+            onConfirm = {
+                showCancelDialog = false
+                onCancel()
+            },
+            onDismiss = { showCancelDialog = false }
+        )
+    }
+
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(CardSurface)) {
         Box(Modifier.fillMaxWidth().background(when { daysUntil <= 3 -> Primario; daysUntil <= 7 -> Caution; else -> Secondary }).padding(horizontal = 16.dp, vertical = 10.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -248,6 +296,36 @@ private fun UpcomingCard(booking: Booking, onCancel: () -> Unit, onChat: () -> U
                             Icon(Icons.Rounded.Close, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(4.dp))
                             Text("Cancella", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         }
+                    }
+                }
+                // bottone modifica: solo per booking REQUESTED
+                if (booking.status == BookingStatus.REQUESTED) {
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = { showEditDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Secondary),
+                        border = BorderStroke(1.dp, Secondary)
+                    ) {
+                        Icon(Icons.Rounded.Edit, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Modifica prenotazione", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+                // bottone cancella con conferma rimborso: solo per booking ACCEPTED
+                if (booking.status == BookingStatus.ACCEPTED) {
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = { showCancelDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorColor),
+                        border = BorderStroke(1.dp, ErrorColor)
+                    ) {
+                        Icon(Icons.Rounded.Cancel, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Cancella prenotazione", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -420,3 +498,248 @@ private fun CancelledCard(booking: Booking) {
         }
     }
 }
+
+@Composable
+private fun RefundCancelDialog(
+    totalPrice: Double,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(CardSurface)
+                .padding(28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Icona avviso
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(ErrorColor.copy(alpha = 0.10f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Rounded.Warning,
+                    contentDescription = null,
+                    tint = ErrorColor,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+
+            Text(
+                "Cancella prenotazione",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = HeadingText,
+                textAlign = TextAlign.Center
+            )
+
+            Text(
+                "Stai per cancellare una prenotazione già confermata dall'host.\n\nLa prenotazione verrà eliminata e riceverai un rimborso completo.",
+                fontSize = 14.sp,
+                color = SecondaryText,
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            )
+
+            // Importo rimborso
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Success.copy(alpha = 0.15f))
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Rimborso previsto", fontSize = 14.sp, color = HeadingText, fontWeight = FontWeight.Medium)
+                Text(
+                    "€${totalPrice.toInt()}",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Secondary
+                )
+            }
+
+            HorizontalDivider(color = BorderDivider)
+
+            // Bottoni
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ErrorColor)
+                ) {
+                    Text("Sì, cancella prenotazione", fontWeight = FontWeight.SemiBold, color = CardSurface)
+                }
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = HeadingText),
+                    border = BorderStroke(1.dp, BorderDivider)
+                ) {
+                    Text("Torna indietro", fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditBookingDialog(
+    booking: Booking,
+    onDismiss: () -> Unit,
+    onConfirm: (newStart: String, newEnd: String, newGuests: Int) -> Unit
+) {
+    val startPickerState = rememberDatePickerState(
+        initialSelectedDateMillis = try {
+            LocalDate.parse(booking.startDate)
+                .atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        } catch (_: Exception) { null }
+    )
+    val endPickerState = rememberDatePickerState(
+        initialSelectedDateMillis = try {
+            LocalDate.parse(booking.endDate)
+                .atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        } catch (_: Exception) { null }
+    )
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
+    var guests by remember { mutableIntStateOf(booking.guestsCount) }
+
+    val startDate = startPickerState.selectedDateMillis?.let { millisToIsoDate(it) } ?: booking.startDate
+    val endDate = endPickerState.selectedDateMillis?.let { millisToIsoDate(it) } ?: booking.endDate
+    val nights = try {
+        val s = LocalDate.parse(startDate); val e = LocalDate.parse(endDate)
+        ChronoUnit.DAYS.between(s, e).toInt().coerceAtLeast(0)
+    } catch (_: Exception) { 0 }
+    val newTotal = nights * booking.pricePerDay
+
+    if (showStartPicker) {
+        DatePickerDialog(
+            onDismissRequest = { showStartPicker = false },
+            confirmButton = { TextButton(onClick = { showStartPicker = false }) { Text("OK", color = Primario) } },
+            dismissButton = { TextButton(onClick = { showStartPicker = false }) { Text("Annulla", color = CaptionLabels) } }
+        ) {
+            DatePicker(
+                state = startPickerState,
+                colors = DatePickerDefaults.colors(selectedDayContainerColor = Primario, todayDateBorderColor = Primario)
+            )
+        }
+    }
+    if (showEndPicker) {
+        DatePickerDialog(
+            onDismissRequest = { showEndPicker = false },
+            confirmButton = { TextButton(onClick = { showEndPicker = false }) { Text("OK", color = Primario) } },
+            dismissButton = { TextButton(onClick = { showEndPicker = false }) { Text("Annulla", color = CaptionLabels) } }
+        ) {
+            DatePicker(
+                state = endPickerState,
+                colors = DatePickerDefaults.colors(selectedDayContainerColor = Primario, todayDateBorderColor = Primario)
+            )
+        }
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(CardSurface)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text("Modifica prenotazione", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = HeadingText)
+
+            // Date buttons
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                // Check-in
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(ScreenBackground)
+                        .clickable { showStartPicker = true }
+                        .padding(12.dp)
+                ) {
+                    Text("Check-in", fontSize = 11.sp, color = CaptionLabels, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(4.dp))
+                    Text(startDate, fontSize = 14.sp, color = HeadingText, fontWeight = FontWeight.SemiBold)
+                }
+                // Check-out
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(ScreenBackground)
+                        .clickable { showEndPicker = true }
+                        .padding(12.dp)
+                ) {
+                    Text("Check-out", fontSize = 11.sp, color = CaptionLabels, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(4.dp))
+                    Text(endDate, fontSize = 14.sp, color = HeadingText, fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            if (nights > 0) {
+                Text("$nights ${if (nights == 1) "notte" else "notti"} · €${newTotal.toInt()} totale",
+                    fontSize = 13.sp, color = Secondary, fontWeight = FontWeight.Medium)
+            }
+
+            // Guests stepper
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Ospiti", fontSize = 15.sp, color = HeadingText, fontWeight = FontWeight.Medium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = { if (guests > 1) guests-- },
+                        modifier = Modifier.size(36.dp).clip(RoundedCornerShape(50.dp)).background(SkeletonLoader)
+                    ) { Icon(Icons.Rounded.Remove, null, tint = HeadingText, modifier = Modifier.size(16.dp)) }
+                    Text("$guests", modifier = Modifier.padding(horizontal = 16.dp),
+                        fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = HeadingText)
+                    IconButton(
+                        onClick = { guests++ },
+                        modifier = Modifier.size(36.dp).clip(RoundedCornerShape(50.dp)).background(Primario)
+                    ) { Icon(Icons.Rounded.Add, null, tint = CardSurface, modifier = Modifier.size(16.dp)) }
+                }
+            }
+
+            HorizontalDivider(color = BorderDivider)
+
+            // Buttons
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = CaptionLabels),
+                    border = BorderStroke(1.dp, BorderDivider)
+                ) { Text("Annulla", fontWeight = FontWeight.SemiBold) }
+
+                Button(
+                    onClick = { if (nights > 0) onConfirm(startDate, endDate, guests) },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Secondary),
+                    enabled = nights > 0
+                ) { Text("Salva", fontWeight = FontWeight.SemiBold, color = CardSurface) }
+            }
+        }
+    }
+}
+
+private fun millisToIsoDate(millis: Long): String {
+    return Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate().toString()
+}
+

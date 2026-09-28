@@ -299,4 +299,58 @@ class FirebaseBookingRepo @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun updateBooking(
+        bookingId: String,
+        renterId: String,
+        newStartDate: String,
+        newEndDate: String,
+        newGuestsCount: Int,
+        newTotalPrice: Double
+    ): Result<Unit> {
+        return try {
+            // prima controlla overlap su altri booking (escluso se stesso)
+            val overlapSnapshot = bookingsCollection
+                .whereEqualTo("propertyId", bookingsCollection.document(bookingId).get().await().getString("propertyId") ?: "")
+                .whereIn("status", listOf(BookingStatus.REQUESTED.name, BookingStatus.ACCEPTED.name))
+                .get().await()
+
+            val hasOverlap = overlapSnapshot.documents.any { doc ->
+                if (doc.id == bookingId) return@any false // escludi il booking stesso
+                val existingStart = doc.getString("startDate") ?: return@any false
+                val existingEnd = doc.getString("endDate") ?: return@any false
+                !(newEndDate <= existingStart || newStartDate >= existingEnd)
+            }
+            if (hasOverlap) {
+                return Result.failure(IllegalStateException("Le nuove date si sovrappongono con un'altra prenotazione"))
+            }
+
+            firestore.runTransaction { transaction ->
+                val docRef = bookingsCollection.document(bookingId)
+                val doc = transaction.get(docRef)
+                if (doc.getString("renterId") != renterId) {
+                    throw FirebaseFirestoreException(
+                        "Non autorizzato",
+                        FirebaseFirestoreException.Code.PERMISSION_DENIED
+                    )
+                }
+                if (doc.getString("status") != BookingStatus.REQUESTED.name) {
+                    throw FirebaseFirestoreException(
+                        "Puoi modificare solo prenotazioni in attesa di conferma",
+                        FirebaseFirestoreException.Code.FAILED_PRECONDITION
+                    )
+                }
+                transaction.update(docRef, mapOf(
+                    "startDate" to newStartDate,
+                    "endDate" to newEndDate,
+                    "guestsCount" to newGuestsCount,
+                    "totalPrice" to newTotalPrice
+                ))
+            }.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
+

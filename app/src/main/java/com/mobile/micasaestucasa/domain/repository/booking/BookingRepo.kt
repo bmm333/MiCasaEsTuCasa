@@ -24,4 +24,14 @@ interface BookingRepo {
 
     // fetch active bookings for a property (for calendar availability)
     suspend fun getBookingsForProperty(propertyId: String): Result<List<Booking>>
+
+    // modifica date/ospiti di un booking REQUESTED (solo il renter può farlo)
+    suspend fun updateBooking(
+        bookingId: String,
+        renterId: String,
+        newStartDate: String,
+        newEndDate: String,
+        newGuestsCount: Int,
+        newTotalPrice: Double
+    ): Result<Unit>
 }

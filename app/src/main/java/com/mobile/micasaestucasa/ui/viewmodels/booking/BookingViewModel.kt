@@ -10,6 +10,7 @@ import com.mobile.micasaestucasa.domain.usecase.booking.CreateBookingUseCase
 import com.mobile.micasaestucasa.domain.usecase.booking.GetBookingsForHostUseCase
 import com.mobile.micasaestucasa.domain.usecase.booking.GetBookingsForRenterUseCase
 import com.mobile.micasaestucasa.domain.usecase.booking.RejectBookingUseCase
+import com.mobile.micasaestucasa.domain.usecase.booking.UpdateBookingUseCase
 import com.mobile.micasaestucasa.domain.usecase.property.GetPropertyByIdUseCase
 import com.mobile.micasaestucasa.domain.usecase.review.GetUserReviewsUseCase
 import com.mobile.micasaestucasa.domain.usecase.user.GetUserByIdUseCase
@@ -30,6 +31,7 @@ class BookingViewModel @Inject constructor(
     private val acceptBookingUseCase: AcceptBookingUseCase,
     private val rejectBookingUseCase: RejectBookingUseCase,
     private val cancelBookingUseCase: CancelBookingUseCase,
+    private val updateBookingUseCase: UpdateBookingUseCase,
     private val getBookingsForRenter: GetBookingsForRenterUseCase,
     private val getBookingsForHost: GetBookingsForHostUseCase,
     private val bookingRepo: BookingRepo,
@@ -134,6 +136,38 @@ class BookingViewModel @Inject constructor(
     }
     fun resetState() { _uiState.value = BookingUiState.Idle }
     fun resetPaymentState() { _paymentStatus.value = PaymentUiStatus.Idle }
+
+    /**
+     * Modifica le date e il numero di ospiti di una prenotazione REQUESTED.
+     * Solo il renter può farlo. Dopo successo ricarica i suoi booking.
+     * @param bookingId id del booking da modificare
+     * @param renterId UID del renter (verificato lato repo)
+     * @param newStartDate nuova data di inizio (yyyy-MM-dd)
+     * @param newEndDate nuova data di fine (yyyy-MM-dd)
+     * @param newGuestsCount nuovo numero di ospiti
+     * @param pricePerDay prezzo per notte (per ricalcolo totale)
+     */
+    fun updateBooking(
+        bookingId: String,
+        renterId: String,
+        newStartDate: String,
+        newEndDate: String,
+        newGuestsCount: Int,
+        pricePerDay: Double
+    ) {
+        viewModelScope.launch {
+            _uiState.value = BookingUiState.Loading
+            updateBookingUseCase(bookingId, renterId, newStartDate, newEndDate, newGuestsCount, pricePerDay)
+                .onSuccess {
+                    _uiState.value = BookingUiState.ActionSuccess
+                }
+                .onFailure {
+                    _uiState.value = BookingUiState.Error(
+                        it.message ?: "Errore nella modifica del booking"
+                    )
+                }
+        }
+    }
     fun loadRenterBookings(renterId: String) {
         viewModelScope.launch {
             _uiState.value = BookingUiState.Loading
